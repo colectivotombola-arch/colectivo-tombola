@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comprar boleto – Colectivo Tómbola</title>
+<link rel="stylesheet" href="style.css">
+<script src="script.js" defer></script>
+</head>
+<body>
+<header>
+  <h1>Comprar boleto</h1>
+  <p class="tagline">Participa en nuestra rifa</p>
+</header>
+<main>
+  <form id="purchase-form">
+    <label for="name">Nombre completo:</label>
+    <input type="text" id="name" name="name" required>
+
+    <label for="cedula">Cédula (opcional):</label>
+    <input type="text" id="cedula" name="cedula" pattern="[0-9]{10}">
+
+    <label for="number">Número a escoger:</label>
+    <input type="number" id="number" name="number" min="1" max="99999" required>
+
+    <label for="payment">Método de pago (simulado):</label>
+    <select id="payment" name="payment" required>
+      <option value="">-- Selecciona --</option>
+      <option value="transferencia">Transferencia</option>
+      <option value="tarjeta">Tarjeta</option>
+      <option value="efectivo">Pago en efectivo</option>
+    </select>
+
+    <button type="submit">Registrar boleto</button>
+  </form>
+
+  <div id="ticket-container" class="ticket" style="display:none;">
+    <h3>Tu boleto</h3>
+    <p><strong>Nombre:</strong> <span id="ticket-name"></span></p>
+    <p><strong>Número:</strong> <span id="ticket-number"></span></p>
+    <a id="download-link" href="#" class="btn" download="boleto.pdf">Descargar boleto</a>
+  </div>
+</main>
+<footer>
+  <p>&copy; 2025 Colectivo Tómbola</p>
+</footer>
+</body>
+</html>

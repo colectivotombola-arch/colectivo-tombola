@@ -1,0 +1,31 @@
+Manual de instalación – Colectivo Tómbola (Versión demo)
+=======================================================
+
+Este paquete contiene una versión de demostración de la página web de Colectivo Tómbola. Los archivos se distribuyen en formato HTML/CSS/JS sin backend, por lo que no gestionan bases de datos ni pagos reales. Se incluye para mostrar la estructura y el flujo de compra de boletos y administración.
+
+Contenido del paquete
+---------------------
+- `index.html`: Página principal con la descripción del sorteo y botones de navegación.
+- `purchase.html`: Formulario para comprar un número de rifa (simulado). El sistema muestra un boleto en pantalla con el nombre y número seleccionado.
+- `results.html`: Página para mostrar el número y ganador de la rifa. Actualmente muestra texto de “Próximamente…”.
+- `admin.html`: Panel de administración básico donde se pueden ver participantes (no funcional), registrar el número ganador y crear nuevas rifas. Este panel es estático.
+- `style.css`: Hojas de estilos para el sitio.
+- `script.js`: Lógica en el lado del cliente para mostrar el boleto tras la compra.
+- `manual.txt`: Este manual.
+
+Instalación
+-----------
+1. Descomprime el archivo ZIP en la carpeta pública de tu servicio de hosting (por ejemplo, `/public_html/` en Hostinger).
+2. Accede al dominio o subdominio que hayas configurado y asegúrate de que `index.html` se cargue por defecto.
+3. Para probar la compra de boletos, abre `purchase.html` desde el menú de la página principal. Completa el formulario y verifica que aparece un boleto en pantalla con tu nombre y número.
+4. El panel de administración (`admin.html`) se puede restringir mediante contraseña en un entorno real. En esta demo no hay autenticación.
+5. La página de resultados (`results.html`) deberá actualizarse manualmente con el ganador cuando realices el sorteo.
+
+Personalización
+---------------
+- Puedes modificar los textos, colores y estilos editando `style.css` y los archivos HTML.
+- Para activar pagos reales y gestionar participantes, se recomienda integrar un backend con una base de datos y pasarela de pago como PayPhone o Kushki.
+
+Advertencia legal
+-----------------
+Esta versión es de demostración y no cumple con los requisitos legales de un sorteo real. Para operar legalmente una rifa en Ecuador, asegúrate de contar con la autorización de la Junta de Beneficencia o del Ministerio del Interior y de cumplir todas las normativas vigentes.

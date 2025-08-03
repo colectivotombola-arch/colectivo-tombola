@@ -1,0 +1,113 @@
+/* Basic styling for Colectivo Tómbola demo */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0a0a23;
+  color: #fdfdfd;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+header {
+  background: #1a1a3d;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+header h1 {
+  margin: 0;
+  font-size: 2em;
+}
+.tagline {
+  font-style: italic;
+  color: #a7a7ff;
+}
+.hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+}
+.hero h2 {
+  margin-top: 0;
+  font-size: 2.2em;
+  color: #ffda44;
+}
+.buttons {
+  margin-top: 30px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+}
+.btn {
+  background: #ffda44;
+  color: #0a0a23;
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background 0.3s ease;
+}
+.btn:hover {
+  background: #ffbe00;
+}
+footer {
+  background: #1a1a3d;
+  text-align: center;
+  padding: 10px;
+  font-size: 0.9em;
+}
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+form label {
+  font-weight: bold;
+}
+form input, form select, form button {
+  padding: 10px;
+  border-radius: 4px;
+  border: none;
+  font-size: 1em;
+}
+form button {
+  background: #ffda44;
+  color: #0a0a23;
+  cursor: pointer;
+}
+form button:hover {
+  background: #ffbe00;
+}
+.ticket {
+  background: #1a1a3d;
+  border: 1px dashed #ffda44;
+  padding: 20px;
+  margin-top: 20px;
+  text-align: center;
+  border-radius: 6px;
+}
+.ticket h3 {
+  margin-top: 0;
+  color: #ffda44;
+}
+#admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+}
+#admin-table th, #admin-table td {
+  border: 1px solid #444;
+  padding: 10px;
+  text-align: left;
+}
+#admin-table th {
+  background: #1a1a3d;
+}
