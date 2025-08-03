@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const Header = () => {
   return (
@@ -18,11 +19,13 @@ const Header = () => {
           </div>
           
           <div className="flex items-center space-x-4">
-            <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-              Iniciar Sesión
-            </Button>
+            <Link to="/login">
+              <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+                Panel Admin
+              </Button>
+            </Link>
             <Button className="bg-gradient-aqua hover:shadow-aqua transition-all duration-300">
-              Registrarse
+              Comprar Números
             </Button>
           </div>
         </div>
