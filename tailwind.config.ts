@@ -52,6 +52,10 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				aqua: {
+					DEFAULT: 'hsl(var(--aqua-glow))',
+					bright: 'hsl(var(--aqua-bright))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -88,7 +92,16 @@ export default {
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'glow': 'glow 2s ease-in-out infinite alternate',
+				'float': 'float 3s ease-in-out infinite'
+			},
+			backgroundImage: {
+				'gradient-aqua': 'var(--gradient-aqua)'
+			},
+			boxShadow: {
+				'aqua': 'var(--shadow-aqua)',
+				'aqua-lg': '0 0 50px hsl(174 100% 50% / 0.4)'
 			}
 		}
 	},
