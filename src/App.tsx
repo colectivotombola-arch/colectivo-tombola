@@ -8,6 +8,9 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminSettings from "./pages/AdminSettings";
+import ComprarNumeros from "./pages/ComprarNumeros";
+import ConsultarNumeros from "./pages/ConsultarNumeros";
+import DetallesActividad from "./pages/DetallesActividad";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +41,9 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/comprar" element={<ComprarNumeros />} />
+            <Route path="/consultar" element={<ConsultarNumeros />} />
+            <Route path="/detalles" element={<DetallesActividad />} />
             <Route path="/admin" element={
               <ProtectedRoute>
                 <AdminDashboard />

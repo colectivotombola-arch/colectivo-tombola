@@ -19,14 +19,16 @@ const Header = () => {
           </div>
           
           <div className="flex items-center space-x-4">
-            <Link to="/login">
+            <Link to="/admin">
               <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
                 Panel Admin
               </Button>
             </Link>
-            <Button className="bg-gradient-aqua hover:shadow-aqua transition-all duration-300">
-              Comprar Números
-            </Button>
+            <Link to="/comprar">
+              <Button className="bg-gradient-aqua hover:shadow-aqua transition-all duration-300">
+                Comprar Números
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

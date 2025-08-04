@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 import toyotaFortuner from "@/assets/toyota-fortuner.jpg";
 import chevroletOnix from "@/assets/chevrolet-onix.jpg";
 
@@ -88,12 +89,16 @@ const HeroSection = () => {
             {/* Action Buttons */}
             <div className="text-center mt-12">
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" className="bg-gradient-aqua hover:shadow-aqua-lg text-xl px-8 py-4 font-bold transition-all duration-300">
-                  JUGAR AHORA
-                </Button>
-                <Button size="lg" variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground text-xl px-8 py-4 font-bold">
-                  VER DETALLES
-                </Button>
+                <Link to="/comprar">
+                  <Button size="lg" className="bg-gradient-aqua hover:shadow-aqua-lg text-xl px-8 py-4 font-bold transition-all duration-300">
+                    JUGAR AHORA
+                  </Button>
+                </Link>
+                <Link to="/detalles">
+                  <Button size="lg" variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground text-xl px-8 py-4 font-bold">
+                    VER DETALLES
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
