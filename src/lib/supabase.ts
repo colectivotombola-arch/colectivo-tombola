@@ -42,25 +42,42 @@ export interface RaffleNumber {
   created_at?: string
 }
 
-// Mock API functions (since no tables exist yet)
+// Real API functions using Supabase
 export const siteSettingsAPI = {
   async get(): Promise<SiteSettings | null> {
-    // Return default settings since no database table exists
-    return {
-      site_name: "Tombola Premium",
-      site_logo: "",
-      primary_color: "#000000",
-      secondary_color: "#ffffff",
-      whatsapp_number: "+593123456789",
-      instagram_video_url: "",
-      hero_title: "JUEGA",
-      hero_subtitle: "Gana increíbles premios"
+    try {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('*')
+        .limit(1)
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching site settings:', error);
+      return null;
     }
   },
 
   async update(settings: Partial<SiteSettings>): Promise<SiteSettings | null> {
-    console.log('Settings update attempted:', settings)
-    return null
+    try {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .update({
+          ...settings,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', (await supabase.from('site_settings').select('id').limit(1).single()).data?.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error updating site settings:', error);
+      return null;
+    }
   }
 }
 
