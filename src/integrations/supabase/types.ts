@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      dynamic_settings: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       media_uploads: {
         Row: {
           created_at: string
@@ -44,6 +74,50 @@ export type Database = {
         }
         Relationships: []
       }
+      prizes: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          image_url: string | null
+          name: string
+          position: number
+          raffle_id: string | null
+          updated_at: string
+          value: number | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          image_url?: string | null
+          name: string
+          position?: number
+          raffle_id?: string | null
+          updated_at?: string
+          value?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          position?: number
+          raffle_id?: string | null
+          updated_at?: string
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prizes_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "raffles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -65,6 +139,104 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      raffle_numbers: {
+        Row: {
+          buyer_email: string | null
+          buyer_name: string
+          buyer_phone: string
+          created_at: string
+          id: string
+          number_value: number
+          payment_method: string | null
+          payment_status: string | null
+          purchase_date: string
+          raffle_id: string
+        }
+        Insert: {
+          buyer_email?: string | null
+          buyer_name: string
+          buyer_phone: string
+          created_at?: string
+          id?: string
+          number_value: number
+          payment_method?: string | null
+          payment_status?: string | null
+          purchase_date?: string
+          raffle_id: string
+        }
+        Update: {
+          buyer_email?: string | null
+          buyer_name?: string
+          buyer_phone?: string
+          created_at?: string
+          id?: string
+          number_value?: number
+          payment_method?: string | null
+          payment_status?: string | null
+          purchase_date?: string
+          raffle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raffle_numbers_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "raffles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      raffles: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string
+          draw_date: string | null
+          end_date: string | null
+          id: string
+          price_per_number: number
+          prize_image: string | null
+          start_date: string | null
+          status: string
+          title: string
+          total_numbers: number
+          updated_at: string
+          winner_number: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description: string
+          draw_date?: string | null
+          end_date?: string | null
+          id?: string
+          price_per_number?: number
+          prize_image?: string | null
+          start_date?: string | null
+          status?: string
+          title: string
+          total_numbers?: number
+          updated_at?: string
+          winner_number?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          draw_date?: string | null
+          end_date?: string | null
+          id?: string
+          price_per_number?: number
+          prize_image?: string | null
+          start_date?: string | null
+          status?: string
+          title?: string
+          total_numbers?: number
+          updated_at?: string
+          winner_number?: number | null
         }
         Relationships: []
       }

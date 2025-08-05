@@ -52,10 +52,10 @@ const AdminDashboard = () => {
   ];
 
   const quickActions = [
-    { title: 'Nueva Actividad', description: 'Crear una nueva rifa', icon: Plus, href: '/admin/activities/new' },
+    { title: 'Nueva Actividad', description: 'Crear una nueva rifa', icon: Plus, href: '/admin/raffles' },
     { title: 'Gestionar Premios', description: 'Administrar vehículos y premios', icon: Car, href: '/admin/prizes' },
+    { title: 'Ver Números', description: 'Gestionar números vendidos', icon: Eye, href: '/admin/numbers' },
     { title: 'Configuración', description: 'Ajustes del sitio web', icon: Settings, href: '/admin/settings' },
-    { title: 'Ver Sitio', description: 'Ir al sitio público', icon: Eye, href: '/' },
   ];
 
   return (
