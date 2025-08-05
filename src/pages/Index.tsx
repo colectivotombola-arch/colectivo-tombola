@@ -76,7 +76,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header settings={settings} />
       <HeroSection settings={settings} />
-      <GallerySection settings={settings} />
+      <GallerySection />
       
       {/* Instagram Videos Section */}
       {settings?.instagram_video_url && (
