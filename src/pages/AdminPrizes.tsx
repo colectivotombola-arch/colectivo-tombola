@@ -5,7 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { prizesAPI, rafflesAPI, Prize, Raffle } from '@/lib/supabase';
+import { prizesAPI, rafflesAPI } from '@/lib/supabase';
+import type { Prize, Raffle } from '@/lib/supabase';
 import { ArrowLeft, Save, Plus, Edit, Trash2, Gift, Car } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
