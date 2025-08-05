@@ -10,6 +10,8 @@ import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminSettings from "./pages/AdminSettings";
 import AdminRaffles from "./pages/AdminRaffles";
+import AdminPrizes from "./pages/AdminPrizes";
+import AdminNewActivity from "./pages/AdminNewActivity";
 import ComprarNumeros from "./pages/ComprarNumeros";
 import ConsultarNumeros from "./pages/ConsultarNumeros";
 import DetallesActividad from "./pages/DetallesActividad";
@@ -33,6 +35,8 @@ const App = () => (
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="/admin/raffles" element={<AdminRaffles />} />
+            <Route path="/admin/prizes" element={<AdminPrizes />} />
+            <Route path="/admin/activities/new" element={<AdminNewActivity />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
