@@ -30,21 +30,9 @@ const App = () => (
             <Route path="/comprar" element={<ComprarNumeros />} />
             <Route path="/consultar" element={<ConsultarNumeros />} />
             <Route path="/detalles" element={<DetallesActividad />} />
-            <Route path="/admin" element={
-              <ProtectedRoute requireAdmin={true}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/settings" element={
-              <ProtectedRoute requireAdmin={true}>
-                <AdminSettings />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/raffles" element={
-              <ProtectedRoute requireAdmin={true}>
-                <AdminRaffles />
-              </ProtectedRoute>
-            } />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/settings" element={<AdminSettings />} />
+            <Route path="/admin/raffles" element={<AdminRaffles />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
