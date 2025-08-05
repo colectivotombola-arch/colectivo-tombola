@@ -62,36 +62,36 @@ export const siteSettingsAPI = {
   },
 
   async update(settings: Partial<SiteSettings>): Promise<SiteSettings | null> {
-    const { data: existing } = await supabase
-      .from('site_settings')
-      .select('id')
-      .single()
+    try {
+      // First try to get existing settings
+      const { data: existing } = await supabase
+        .from('site_settings')
+        .select('id')
+        .maybeSingle();
 
-    if (existing) {
-      const { data, error } = await supabase
-        .from('site_settings')
-        .update({ ...settings, updated_at: new Date().toISOString() })
-        .eq('id', existing.id)
-        .select()
-        .single()
-      
-      if (error) {
-        console.error('Error updating site settings:', error)
-        return null
+      if (existing) {
+        const { data, error } = await supabase
+          .from('site_settings')
+          .update({ ...settings, updated_at: new Date().toISOString() })
+          .eq('id', existing.id)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        return data;
+      } else {
+        const { data, error } = await supabase
+          .from('site_settings')
+          .insert({ ...settings, created_at: new Date().toISOString() })
+          .select()
+          .single();
+        
+        if (error) throw error;
+        return data;
       }
-      return data
-    } else {
-      const { data, error } = await supabase
-        .from('site_settings')
-        .insert({ ...settings, created_at: new Date().toISOString() })
-        .select()
-        .single()
-      
-      if (error) {
-        console.error('Error creating site settings:', error)
-        return null
-      }
-      return data
+    } catch (error) {
+      console.error('Error in siteSettingsAPI.update:', error);
+      return null;
     }
   }
 }

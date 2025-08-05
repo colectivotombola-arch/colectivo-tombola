@@ -20,7 +20,6 @@ const Index = () => {
       const data = await siteSettingsAPI.get();
       if (data) {
         setSettings(data);
-        // Apply dynamic styles
         applyDynamicStyles(data);
       }
     } catch (error) {
@@ -33,7 +32,6 @@ const Index = () => {
   const applyDynamicStyles = (settings: SiteSettings) => {
     const root = document.documentElement;
     
-    // Convert hex to HSL
     const hexToHsl = (hex: string) => {
       const r = parseInt(hex.slice(1, 3), 16) / 255;
       const g = parseInt(hex.slice(3, 5), 16) / 255;
