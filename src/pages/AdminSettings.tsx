@@ -6,14 +6,18 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, Upload } from 'lucide-react';
+import { ArrowLeft, Save, Upload, Video, Instagram } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { createClient } from '@supabase/supabase-js';
 
 const AdminSettings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [settings, setSettings] = useState({
+    id: '',
     site_name: 'PROYECTOS FLORES',
     site_tagline: 'Cumpliendo sueños',
     primary_color: '#00e5cc',
@@ -23,29 +27,159 @@ const AdminSettings = () => {
     logo_url: ''
   });
 
+  // Initialize Supabase client
+  const supabase = createClient(
+    import.meta.env.VITE_SUPABASE_URL!,
+    import.meta.env.VITE_SUPABASE_ANON_KEY!
+  );
+
   useEffect(() => {
-    // Load settings from localStorage for demo
-    const savedSettings = localStorage.getItem('demo_settings');
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
-    }
+    loadSettings();
   }, []);
+
+  const loadSettings = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('get-site-settings');
+      
+      if (error) throw error;
+      
+      if (data) {
+        setSettings(data);
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar las configuraciones",
+        variant: "destructive"
+      });
+    }
+  };
 
   const handleSave = async () => {
     setLoading(true);
     
-    // Save to localStorage for demo purposes
-    localStorage.setItem('demo_settings', JSON.stringify(settings));
-    
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast({
-      title: "¡Guardado!",
-      description: "Configuración actualizada correctamente",
-    });
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('No authenticated session');
+      }
+
+      const { data, error } = await supabase.functions.invoke('update-site-settings', {
+        body: settings,
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        }
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "¡Guardado!",
+        description: "Configuración actualizada correctamente",
+      });
+      
+      // Update local state with saved data
+      if (data) {
+        setSettings(data);
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo guardar la configuración",
+        variant: "destructive"
+      });
+    }
     
     setLoading(false);
+  };
+
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingLogo(true);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No authenticated session');
+
+      // Upload file to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `logos/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('media')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('media')
+        .getPublicUrl(filePath);
+
+      // Update settings with new logo URL
+      handleInputChange('logo_url', publicUrl);
+      
+      toast({
+        title: "¡Logo subido!",
+        description: "Logo actualizado correctamente",
+      });
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo subir el logo",
+        variant: "destructive"
+      });
+    }
+    
+    setUploadingLogo(false);
+  };
+
+  const handleInstagramVideoUpload = async (instagramUrl: string) => {
+    if (!instagramUrl.trim()) return;
+
+    setUploadingVideo(true);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No authenticated session');
+
+      // Save Instagram video URL to database
+      const { error } = await supabase.functions.invoke('upload-media', {
+        body: {
+          file_name: 'Instagram Video',
+          file_url: instagramUrl,
+          file_type: 'instagram_video',
+          instagram_post_url: instagramUrl,
+          raffle_id: null // For site-wide videos
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "¡Video de Instagram agregado!",
+        description: "Video guardado correctamente",
+      });
+    } catch (error) {
+      console.error('Error saving Instagram video:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo guardar el video de Instagram",
+        variant: "destructive"
+      });
+    }
+    
+    setUploadingVideo(false);
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -113,9 +247,21 @@ const AdminSettings = () => {
                     onChange={(e) => handleInputChange('logo_url', e.target.value)}
                     placeholder="https://ejemplo.com/logo.png"
                   />
-                  <Button variant="outline" size="icon">
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    disabled={uploadingLogo}
+                    onClick={() => document.getElementById('logo-upload')?.click()}
+                  >
                     <Upload className="w-4 h-4" />
                   </Button>
+                  <input
+                    id="logo-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    style={{ display: 'none' }}
+                  />
                 </div>
               </div>
             </CardContent>
@@ -192,6 +338,50 @@ const AdminSettings = () => {
                     placeholder="+1 234 567 8900"
                   />
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Instagram Videos */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Instagram className="w-5 h-5" />
+                <span>Videos de Instagram</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="instagram_url">URL del Video de Instagram</Label>
+                <div className="flex space-x-2">
+                  <Input
+                    id="instagram_url"
+                    placeholder="https://www.instagram.com/p/..."
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleInstagramVideoUpload(e.currentTarget.value);
+                        e.currentTarget.value = '';
+                      }
+                    }}
+                  />
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    disabled={uploadingVideo}
+                    onClick={() => {
+                      const input = document.getElementById('instagram_url') as HTMLInputElement;
+                      if (input?.value) {
+                        handleInstagramVideoUpload(input.value);
+                        input.value = '';
+                      }
+                    }}
+                  >
+                    <Video className="w-4 h-4" />
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Pega la URL completa del post de Instagram. Los videos se mostrarán en la página principal.
+                </p>
               </div>
             </CardContent>
           </Card>

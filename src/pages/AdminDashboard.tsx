@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,9 +12,74 @@ import {
   Plus,
   Eye
 } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
 
 const AdminDashboard = () => {
   const { user, signOut } = useAuth();
+  const [stats, setStats] = useState({
+    activeRaffles: 0,
+    totalNumbers: 0,
+    soldNumbers: 0,
+    totalRevenue: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  // Initialize Supabase client
+  const supabase = createClient(
+    import.meta.env.VITE_SUPABASE_URL!,
+    import.meta.env.VITE_SUPABASE_ANON_KEY!
+  );
+
+  useEffect(() => {
+    loadDashboardStats();
+  }, []);
+
+  const loadDashboardStats = async () => {
+    try {
+      // Get active raffles count
+      const { data: raffles, error: rafflesError } = await supabase
+        .from('raffles')
+        .select('id, total_numbers, price_per_number')
+        .eq('status', 'active');
+
+      if (rafflesError) throw rafflesError;
+
+      // Get sold numbers count
+      const { data: soldNumbers, error: soldError } = await supabase
+        .from('raffle_numbers')
+        .select('id, raffle_id')
+        .eq('is_sold', true);
+
+      if (soldError) throw soldError;
+
+      // Calculate stats
+      const activeRaffles = raffles?.length || 0;
+      const totalNumbers = raffles?.reduce((sum, raffle) => sum + raffle.total_numbers, 0) || 0;
+      const soldCount = soldNumbers?.length || 0;
+      
+      // Calculate revenue
+      let totalRevenue = 0;
+      if (raffles && soldNumbers) {
+        soldNumbers.forEach(soldNumber => {
+          const raffle = raffles.find(r => r.id === soldNumber.raffle_id);
+          if (raffle) {
+            totalRevenue += raffle.price_per_number;
+          }
+        });
+      }
+
+      setStats({
+        activeRaffles,
+        totalNumbers,
+        soldNumbers: soldCount,
+        totalRevenue
+      });
+    } catch (error) {
+      console.error('Error loading dashboard stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const dashboardStats = [
     { title: 'Actividades Activas', value: '1', icon: Car, color: 'bg-primary' },
