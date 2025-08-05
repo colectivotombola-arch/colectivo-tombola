@@ -50,7 +50,7 @@ export const siteSettingsAPI = {
         .from('site_settings')
         .select('*')
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
@@ -62,18 +62,41 @@ export const siteSettingsAPI = {
 
   async update(settings: Partial<SiteSettings>): Promise<SiteSettings | null> {
     try {
-      const { data, error } = await supabase
+      // First get the existing settings ID
+      const { data: existingSettings } = await supabase
         .from('site_settings')
-        .update({
-          ...settings,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', (await supabase.from('site_settings').select('id').limit(1).single()).data?.id)
-        .select()
-        .single();
+        .select('id')
+        .limit(1)
+        .maybeSingle();
 
-      if (error) throw error;
-      return data;
+      if (!existingSettings) {
+        // Create new settings if none exist
+        const { data, error } = await supabase
+          .from('site_settings')
+          .insert({
+            ...settings,
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      } else {
+        // Update existing settings
+        const { data, error } = await supabase
+          .from('site_settings')
+          .update({
+            ...settings,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingSettings.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      }
     } catch (error) {
       console.error('Error updating site settings:', error);
       return null;

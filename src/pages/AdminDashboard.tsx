@@ -15,7 +15,7 @@ import {
 
 
 const AdminDashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
   const [stats, setStats] = useState({
     activeRaffles: 0,
     totalNumbers: 0,
