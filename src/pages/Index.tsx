@@ -4,6 +4,7 @@ import { siteSettingsAPI, SiteSettings } from '@/lib/supabase';
 import { HeroSection } from '@/components/HeroSection';
 import GallerySection from '@/components/GallerySection';
 import { Header } from '@/components/Header';
+import { Link } from 'react-router-dom';
 
 const Index = () => {
   const { toast } = useToast();
@@ -139,9 +140,9 @@ const Index = () => {
             <div>
               <h4 className="font-semibold mb-4">Enlaces Rápidos</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="/comprar" className="hover:text-primary transition-colors">Comprar Números</a></li>
-                <li><a href="/consultar" className="hover:text-primary transition-colors">Consultar Números</a></li>
-                <li><a href="/detalles" className="hover:text-primary transition-colors">Detalles de Actividad</a></li>
+                <li><Link to="/comprar" className="hover:text-primary transition-colors">Comprar Números</Link></li>
+                <li><Link to="/consultar" className="hover:text-primary transition-colors">Consultar Números</Link></li>
+                <li><Link to="/detalles" className="hover:text-primary transition-colors">Detalles de Actividad</Link></li>
               </ul>
             </div>
             <div>

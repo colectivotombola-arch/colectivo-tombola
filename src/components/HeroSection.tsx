@@ -1,5 +1,6 @@
 import { SiteSettings } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 interface HeroSectionProps {
   settings: SiteSettings | null;
@@ -105,19 +106,23 @@ export const HeroSection = ({ settings }: HeroSectionProps) => {
 
         {/* Botones de Acción */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center max-w-md mx-auto">
-          <Button 
-            size="lg" 
-            className="w-full bg-primary hover:bg-primary/90 text-black font-bold text-lg px-8 py-4"
-          >
-            COMPRAR NÚMEROS
-          </Button>
-          <Button 
-            variant="outline" 
-            size="lg" 
-            className="w-full border-primary text-primary hover:bg-primary hover:text-black font-bold text-lg px-8 py-4"
-          >
-            VER DETALLES
-          </Button>
+          <Link to="/comprar" className="w-full">
+            <Button 
+              size="lg" 
+              className="w-full bg-primary hover:bg-primary/90 text-black font-bold text-lg px-8 py-4"
+            >
+              COMPRAR NÚMEROS
+            </Button>
+          </Link>
+          <Link to="/detalles" className="w-full">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="w-full border-primary text-primary hover:bg-primary hover:text-black font-bold text-lg px-8 py-4"
+            >
+              VER DETALLES
+            </Button>
+          </Link>
         </div>
 
         {/* Información adicional */}

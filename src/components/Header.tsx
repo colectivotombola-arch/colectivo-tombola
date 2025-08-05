@@ -1,4 +1,5 @@
 import { SiteSettings } from '@/lib/supabase';
+import { Link } from 'react-router-dom';
 
 interface HeaderProps {
   settings: SiteSettings | null;
@@ -10,7 +11,7 @@ export const Header = ({ settings }: HeaderProps) => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-3">
+          <Link to="/" className="flex items-center space-x-3">
             {settings?.site_logo && (
               <img 
                 src={settings.site_logo} 
@@ -27,7 +28,7 @@ export const Header = ({ settings }: HeaderProps) => {
               </h1>
               <p className="text-xs text-gray-400">Cumpliendo sueños</p>
             </div>
-          </div>
+          </Link>
 
           {/* Nueva Actividad Badge */}
           <div className="hidden md:block">
@@ -38,30 +39,30 @@ export const Header = ({ settings }: HeaderProps) => {
 
           {/* Navigation */}
           <nav className="flex items-center space-x-6">
-            <a 
-              href="/comprar" 
+            <Link 
+              to="/comprar" 
               className="text-white hover:text-primary transition-colors font-medium"
             >
               COMPRAR
-            </a>
-            <a 
-              href="/consultar" 
+            </Link>
+            <Link 
+              to="/consultar" 
               className="text-white hover:text-primary transition-colors font-medium"
             >
               CONSULTAR
-            </a>
-            <a 
-              href="/detalles" 
+            </Link>
+            <Link 
+              to="/detalles" 
               className="text-white hover:text-primary transition-colors font-medium"
             >
               DETALLES
-            </a>
-            <a 
-              href="/admin" 
+            </Link>
+            <Link 
+              to="/admin" 
               className="text-gray-400 hover:text-primary transition-colors text-sm"
             >
               ADMIN
-            </a>
+            </Link>
           </nav>
         </div>
       </div>
