@@ -1,9 +1,6 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/integrations/supabase/client'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '')
+export { supabase }
 
 // Database schemas
 export interface SiteSettings {
@@ -45,152 +42,58 @@ export interface RaffleNumber {
   created_at?: string
 }
 
-// API functions
+// Mock API functions (since no tables exist yet)
 export const siteSettingsAPI = {
   async get(): Promise<SiteSettings | null> {
-    const { data, error } = await supabase
-      .from('site_settings')
-      .select('*')
-      .single()
-    
-    if (error && error.code !== 'PGRST116') {
-      console.error('Error fetching site settings:', error)
-      return null
+    // Return default settings since no database table exists
+    return {
+      site_name: "Tombola Premium",
+      site_logo: "",
+      primary_color: "#000000",
+      secondary_color: "#ffffff",
+      whatsapp_number: "+593123456789",
+      instagram_video_url: "",
+      hero_title: "JUEGA",
+      hero_subtitle: "Gana increíbles premios"
     }
-    
-    return data
   },
 
   async update(settings: Partial<SiteSettings>): Promise<SiteSettings | null> {
-    try {
-      // First try to get existing settings
-      const { data: existing } = await supabase
-        .from('site_settings')
-        .select('id')
-        .maybeSingle();
-
-      if (existing) {
-        const { data, error } = await supabase
-          .from('site_settings')
-          .update({ ...settings, updated_at: new Date().toISOString() })
-          .eq('id', existing.id)
-          .select()
-          .single();
-        
-        if (error) throw error;
-        return data;
-      } else {
-        const { data, error } = await supabase
-          .from('site_settings')
-          .insert({ ...settings, created_at: new Date().toISOString() })
-          .select()
-          .single();
-        
-        if (error) throw error;
-        return data;
-      }
-    } catch (error) {
-      console.error('Error in siteSettingsAPI.update:', error);
-      return null;
-    }
+    console.log('Settings update attempted:', settings)
+    return null
   }
 }
 
 export const rafflesAPI = {
   async getAll(): Promise<Raffle[]> {
-    const { data, error } = await supabase
-      .from('raffles')
-      .select('*')
-      .order('created_at', { ascending: false })
-    
-    if (error) {
-      console.error('Error fetching raffles:', error)
-      return []
-    }
-    
-    return data || []
+    // Return empty array since no database table exists
+    return []
   },
 
   async create(raffle: Omit<Raffle, 'id' | 'created_at'>): Promise<Raffle | null> {
-    const { data, error } = await supabase
-      .from('raffles')
-      .insert({ ...raffle, created_at: new Date().toISOString() })
-      .select()
-      .single()
-    
-    if (error) {
-      console.error('Error creating raffle:', error)
-      return null
-    }
-    
-    return data
+    console.log('Raffle creation attempted:', raffle)
+    return null
   },
 
   async update(id: string, updates: Partial<Raffle>): Promise<Raffle | null> {
-    const { data, error } = await supabase
-      .from('raffles')
-      .update({ ...updates, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .select()
-      .single()
-    
-    if (error) {
-      console.error('Error updating raffle:', error)
-      return null
-    }
-    
-    return data
+    console.log('Raffle update attempted:', id, updates)
+    return null
   },
 
   async delete(id: string): Promise<boolean> {
-    const { error } = await supabase
-      .from('raffles')
-      .delete()
-      .eq('id', id)
-    
-    if (error) {
-      console.error('Error deleting raffle:', error)
-      return false
-    }
-    
-    return true
+    console.log('Raffle deletion attempted:', id)
+    return false
   }
 }
 
 export const raffleNumbersAPI = {
   async getByRaffle(raffleId: string): Promise<RaffleNumber[]> {
-    const { data, error } = await supabase
-      .from('raffle_numbers')
-      .select('*')
-      .eq('raffle_id', raffleId)
-      .order('number')
-    
-    if (error) {
-      console.error('Error fetching raffle numbers:', error)
-      return []
-    }
-    
-    return data || []
+    console.log('Raffle numbers fetch attempted:', raffleId)
+    return []
   },
 
   async purchaseNumber(raffleId: string, number: number, buyerName: string, buyerPhone: string): Promise<boolean> {
-    const { error } = await supabase
-      .from('raffle_numbers')
-      .insert({
-        raffle_id: raffleId,
-        number,
-        buyer_name: buyerName,
-        buyer_phone: buyerPhone,
-        is_sold: true,
-        sold_at: new Date().toISOString(),
-        created_at: new Date().toISOString()
-      })
-    
-    if (error) {
-      console.error('Error purchasing number:', error)
-      return false
-    }
-    
-    return true
+    console.log('Number purchase attempted:', raffleId, number, buyerName, buyerPhone)
+    return false
   }
 }
