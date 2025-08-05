@@ -7,7 +7,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { siteSettingsAPI, SiteSettings } from '@/lib/supabase';
-import { ArrowLeft, Save, Upload, Video, Instagram } from 'lucide-react';
+import { 
+  ArrowLeft, 
+  Save, 
+  Upload, 
+  Video, 
+  Instagram, 
+  CreditCard, 
+  DollarSign,
+  Facebook,
+  Twitter,
+  Globe,
+  Mail
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const AdminSettings = () => {
@@ -20,9 +32,37 @@ const AdminSettings = () => {
     secondary_color: '#1a1a1a',
     whatsapp_number: '',
     instagram_video_url: '',
-    hero_title: '¡Participa y Gana Premios Increíbles!',
-    hero_subtitle: 'Rifas seguras y transparentes con los mejores premios del mercado. Tu próximo premio te espera.'
+    hero_title: 'TOYOTA FORTUNER 4X4 + CHEVROLET ONIX TURBO RS 0km',
+    hero_subtitle: 'Rifas seguras y transparentes con los mejores premios del mercado'
   });
+  
+  // Estados adicionales para funcionalidades completas
+  const [paymentSettings, setPaymentSettings] = useState({
+    paypal_email: '',
+    bank_account: '',
+    bank_name: '',
+    account_holder: '',
+    routing_number: '',
+    stripe_public_key: '',
+    mercadopago_access_token: ''
+  });
+
+  const [socialMedia, setSocialMedia] = useState({
+    facebook_url: '',
+    instagram_url: '',
+    tiktok_url: '',
+    twitter_url: '',
+    youtube_url: ''
+  });
+
+  const [emailSettings, setEmailSettings] = useState({
+    smtp_host: '',
+    smtp_port: '',
+    smtp_user: '',
+    smtp_password: '',
+    from_email: ''
+  });
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -51,14 +91,20 @@ const AdminSettings = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const result = await siteSettingsAPI.update(settings);
+      // Combinar todas las configuraciones
+      const allSettings = {
+        ...settings,
+        payment_settings: JSON.stringify(paymentSettings),
+        social_media: JSON.stringify(socialMedia),
+        email_settings: JSON.stringify(emailSettings)
+      };
+
+      const result = await siteSettingsAPI.update(allSettings);
       if (result) {
         toast({
           title: "¡Éxito!",
-          description: "Configuraciones guardadas correctamente. Recarga la página para ver los cambios.",
+          description: "Todas las configuraciones se guardaron correctamente",
         });
-        // Update local storage to reflect changes immediately
-        localStorage.setItem('site_settings', JSON.stringify(result));
       } else {
         throw new Error('Failed to save settings');
       }
@@ -74,28 +120,6 @@ const AdminSettings = () => {
     }
   };
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      // For now, we'll use a placeholder. In a real implementation, you'd upload to Supabase Storage
-      const imageUrl = URL.createObjectURL(file);
-      setSettings(prev => ({ ...prev, site_logo: imageUrl }));
-      toast({
-        title: "Imagen cargada",
-        description: "La imagen se ha cargado correctamente",
-      });
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo cargar la imagen",
-        variant: "destructive",
-      });
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -107,7 +131,7 @@ const AdminSettings = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-card border-b border-border">
+      <header className="bg-card border-b border-border sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -119,7 +143,7 @@ const AdminSettings = () => {
                 <ArrowLeft className="w-4 h-4" />
                 <span>Volver</span>
               </Button>
-              <h1 className="text-2xl font-bold text-foreground">Configuración del Sitio</h1>
+              <h1 className="text-2xl font-bold text-foreground">Panel de Configuración Completa</h1>
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-muted-foreground">{user?.email}</span>
@@ -132,93 +156,59 @@ const AdminSettings = () => {
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto space-y-8">
-          {/* Información General */}
+        <div className="max-w-6xl mx-auto space-y-8">
+          
+          {/* Configuración General del Sitio */}
           <Card>
             <CardHeader>
-              <CardTitle>Información General del Sitio</CardTitle>
+              <CardTitle className="flex items-center space-x-2">
+                <Globe className="w-5 h-5" />
+                <span>Configuración General del Sitio</span>
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="site_name">Nombre del Sitio</Label>
-                <Input
-                  id="site_name"
-                  value={settings.site_name}
-                  onChange={(e) => setSettings(prev => ({ ...prev, site_name: e.target.value }))}
-                  placeholder="Ej: Tombola Premium"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="site_name">Nombre del Sitio</Label>
+                  <Input
+                    id="site_name"
+                    value={settings.site_name}
+                    onChange={(e) => setSettings(prev => ({ ...prev, site_name: e.target.value }))}
+                    placeholder="TOMBOLA PREMIUM"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="whatsapp_number">WhatsApp de Contacto</Label>
+                  <Input
+                    id="whatsapp_number"
+                    value={settings.whatsapp_number || ''}
+                    onChange={(e) => setSettings(prev => ({ ...prev, whatsapp_number: e.target.value }))}
+                    placeholder="+573001234567"
+                  />
+                </div>
               </div>
               
               <div>
-                <Label htmlFor="hero_title">Título Principal de la Página</Label>
+                <Label htmlFor="hero_title">Título Principal de la Actividad</Label>
                 <Input
                   id="hero_title"
                   value={settings.hero_title}
                   onChange={(e) => setSettings(prev => ({ ...prev, hero_title: e.target.value }))}
-                  placeholder="Ej: ¡Participa y Gana Premios Increíbles!"
+                  placeholder="TOYOTA FORTUNER 4X4 + CHEVROLET ONIX TURBO RS 0km"
                 />
               </div>
               
               <div>
-                <Label htmlFor="hero_subtitle">Subtítulo de la Página</Label>
+                <Label htmlFor="hero_subtitle">Descripción del Sitio</Label>
                 <Textarea
                   id="hero_subtitle"
                   value={settings.hero_subtitle}
                   onChange={(e) => setSettings(prev => ({ ...prev, hero_subtitle: e.target.value }))}
-                  placeholder="Ej: Rifas seguras y transparentes con los mejores premios"
+                  placeholder="Rifas seguras y transparentes con los mejores premios del mercado"
                   rows={3}
                 />
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Logo */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Logo del Sitio</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {settings.site_logo && (
-                  <div className="flex items-center space-x-4">
-                    <img 
-                      src={settings.site_logo} 
-                      alt="Logo actual" 
-                      className="w-24 h-24 object-contain border border-border rounded"
-                    />
-                    <span className="text-muted-foreground">Logo actual</span>
-                  </div>
-                )}
-                <div>
-                  <Label htmlFor="logo_upload">Subir Nuevo Logo</Label>
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      id="logo_upload"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                    />
-                    <Button 
-                      variant="outline" 
-                      onClick={() => document.getElementById('logo_upload')?.click()}
-                      className="flex items-center space-x-2"
-                    >
-                      <Upload className="w-4 h-4" />
-                      <span>Seleccionar Imagen</span>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Colores */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Colores del Sitio</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="primary_color">Color Primario (Aqua)</Label>
@@ -259,60 +249,231 @@ const AdminSettings = () => {
             </CardContent>
           </Card>
 
-          {/* Contacto */}
+          {/* Métodos de Pago */}
           <Card>
             <CardHeader>
-              <CardTitle>Información de Contacto</CardTitle>
+              <CardTitle className="flex items-center space-x-2">
+                <CreditCard className="w-5 h-5" />
+                <span>Métodos de Pago y Cuentas Bancarias</span>
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="paypal_email">Email de PayPal</Label>
+                  <Input
+                    id="paypal_email"
+                    value={paymentSettings.paypal_email}
+                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, paypal_email: e.target.value }))}
+                    placeholder="pagos@tuempresa.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="stripe_public_key">Clave Pública de Stripe</Label>
+                  <Input
+                    id="stripe_public_key"
+                    value={paymentSettings.stripe_public_key}
+                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, stripe_public_key: e.target.value }))}
+                    placeholder="pk_live_..."
+                  />
+                </div>
+              </div>
+
               <div>
-                <Label htmlFor="whatsapp_number">Número de WhatsApp</Label>
+                <Label htmlFor="mercadopago_access_token">Token de MercadoPago</Label>
                 <Input
-                  id="whatsapp_number"
-                  value={settings.whatsapp_number || ''}
-                  onChange={(e) => setSettings(prev => ({ ...prev, whatsapp_number: e.target.value }))}
-                  placeholder="Ej: +573001234567"
+                  id="mercadopago_access_token"
+                  value={paymentSettings.mercadopago_access_token}
+                  onChange={(e) => setPaymentSettings(prev => ({ ...prev, mercadopago_access_token: e.target.value }))}
+                  placeholder="APP_USR-..."
                 />
-                <p className="text-sm text-muted-foreground mt-1">
-                  Los usuarios podrán contactarte a este número para consultas
-                </p>
+              </div>
+
+              <div className="border-t pt-4">
+                <h4 className="font-semibold mb-4">Información Bancaria</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="bank_name">Nombre del Banco</Label>
+                    <Input
+                      id="bank_name"
+                      value={paymentSettings.bank_name}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, bank_name: e.target.value }))}
+                      placeholder="Banco Nacional"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="account_holder">Titular de la Cuenta</Label>
+                    <Input
+                      id="account_holder"
+                      value={paymentSettings.account_holder}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, account_holder: e.target.value }))}
+                      placeholder="Nombre Completo"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="bank_account">Número de Cuenta</Label>
+                    <Input
+                      id="bank_account"
+                      value={paymentSettings.bank_account}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, bank_account: e.target.value }))}
+                      placeholder="1234567890"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="routing_number">Código de Ruta/Swift</Label>
+                    <Input
+                      id="routing_number"
+                      value={paymentSettings.routing_number}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, routing_number: e.target.value }))}
+                      placeholder="SWIFT123"
+                    />
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Instagram Video */}
+          {/* Redes Sociales */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Instagram className="w-5 h-5" />
-                <span>Video de Instagram</span>
+                <span>Redes Sociales e Integración</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="facebook_url">Facebook URL</Label>
+                  <div className="flex items-center space-x-2">
+                    <Facebook className="w-4 h-4 text-blue-600" />
+                    <Input
+                      id="facebook_url"
+                      value={socialMedia.facebook_url}
+                      onChange={(e) => setSocialMedia(prev => ({ ...prev, facebook_url: e.target.value }))}
+                      placeholder="https://facebook.com/tuempresa"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="instagram_url">Instagram URL</Label>
+                  <div className="flex items-center space-x-2">
+                    <Instagram className="w-4 h-4 text-pink-600" />
+                    <Input
+                      id="instagram_url"
+                      value={socialMedia.instagram_url}
+                      onChange={(e) => setSocialMedia(prev => ({ ...prev, instagram_url: e.target.value }))}
+                      placeholder="https://instagram.com/tuempresa"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="tiktok_url">TikTok URL</Label>
+                  <div className="flex items-center space-x-2">
+                    <Video className="w-4 h-4 text-black" />
+                    <Input
+                      id="tiktok_url"
+                      value={socialMedia.tiktok_url}
+                      onChange={(e) => setSocialMedia(prev => ({ ...prev, tiktok_url: e.target.value }))}
+                      placeholder="https://tiktok.com/@tuempresa"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="twitter_url">Twitter/X URL</Label>
+                  <div className="flex items-center space-x-2">
+                    <Twitter className="w-4 h-4 text-blue-400" />
+                    <Input
+                      id="twitter_url"
+                      value={socialMedia.twitter_url}
+                      onChange={(e) => setSocialMedia(prev => ({ ...prev, twitter_url: e.target.value }))}
+                      placeholder="https://twitter.com/tuempresa"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div>
-                <Label htmlFor="instagram_video_url">URL del Video de Instagram</Label>
+                <Label htmlFor="instagram_video_url">URL del Video de Instagram (para incrustar)</Label>
                 <Input
                   id="instagram_video_url"
                   value={settings.instagram_video_url || ''}
                   onChange={(e) => setSettings(prev => ({ ...prev, instagram_video_url: e.target.value }))}
-                  placeholder="Ej: https://www.instagram.com/reel/..."
+                  placeholder="https://www.instagram.com/reel/..."
                 />
-                <p className="text-sm text-muted-foreground mt-2">
-                  Pega la URL completa del video de Instagram que quieres mostrar en tu página principal
-                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Configuración de Email */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Mail className="w-5 h-5" />
+                <span>Configuración de Email</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="smtp_host">Servidor SMTP</Label>
+                  <Input
+                    id="smtp_host"
+                    value={emailSettings.smtp_host}
+                    onChange={(e) => setEmailSettings(prev => ({ ...prev, smtp_host: e.target.value }))}
+                    placeholder="smtp.gmail.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="smtp_port">Puerto SMTP</Label>
+                  <Input
+                    id="smtp_port"
+                    value={emailSettings.smtp_port}
+                    onChange={(e) => setEmailSettings(prev => ({ ...prev, smtp_port: e.target.value }))}
+                    placeholder="587"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="smtp_user">Usuario SMTP</Label>
+                  <Input
+                    id="smtp_user"
+                    value={emailSettings.smtp_user}
+                    onChange={(e) => setEmailSettings(prev => ({ ...prev, smtp_user: e.target.value }))}
+                    placeholder="usuario@gmail.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="smtp_password">Contraseña SMTP</Label>
+                  <Input
+                    id="smtp_password"
+                    type="password"
+                    value={emailSettings.smtp_password}
+                    onChange={(e) => setEmailSettings(prev => ({ ...prev, smtp_password: e.target.value }))}
+                    placeholder="contraseña_de_aplicación"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="from_email">Email de Envío</Label>
+                <Input
+                  id="from_email"
+                  value={emailSettings.from_email}
+                  onChange={(e) => setEmailSettings(prev => ({ ...prev, from_email: e.target.value }))}
+                  placeholder="noreply@tuempresa.com"
+                />
               </div>
             </CardContent>
           </Card>
 
           {/* Botón Guardar */}
-          <div className="flex justify-end">
+          <div className="flex justify-end sticky bottom-4">
             <Button 
               onClick={handleSave} 
               disabled={saving}
-              className="flex items-center space-x-2 bg-primary hover:bg-primary/90"
+              className="flex items-center space-x-2 bg-primary hover:bg-primary/90 text-black font-bold px-8 py-4 text-lg shadow-lg"
             >
-              <Save className="w-4 h-4" />
-              <span>{saving ? 'Guardando...' : 'Guardar Cambios'}</span>
+              <Save className="w-5 h-5" />
+              <span>{saving ? 'Guardando...' : 'Guardar Toda la Configuración'}</span>
             </Button>
           </div>
         </div>
