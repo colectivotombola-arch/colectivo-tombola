@@ -7,9 +7,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { rafflesAPI, Raffle } from '@/lib/supabase';
 import { ArrowLeft, Plus, Edit, Trash2, Eye, Trophy, Users, DollarSign } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { createClient } from '@supabase/supabase-js';
+import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -19,42 +19,21 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
-interface Raffle {
-  id: string;
-  title: string;
-  description: string;
-  prize_description: string;
-  total_numbers: number;
-  price_per_number: number;
-  status: 'active' | 'paused' | 'completed' | 'cancelled';
-  image_url?: string;
-  video_url?: string;
-  instagram_video_url?: string;
-  created_at: string;
-}
-
 const AdminRaffles = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [raffles, setRaffles] = useState<Raffle[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [newRaffle, setNewRaffle] = useState({
     title: '',
     description: '',
-    prize_description: '',
+    prize_image: '',
     total_numbers: 1000,
-    price_per_number: 10.00,
-    image_url: '',
-    video_url: '',
-    instagram_video_url: ''
+    price_per_number: 25.00,
   });
-
-  // Initialize Supabase client
-  const supabase = createClient(
-    import.meta.env.VITE_SUPABASE_URL!,
-    import.meta.env.VITE_SUPABASE_ANON_KEY!
-  );
 
   useEffect(() => {
     loadRaffles();
@@ -62,14 +41,8 @@ const AdminRaffles = () => {
 
   const loadRaffles = async () => {
     try {
-      const { data, error } = await supabase
-        .from('raffles')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      setRaffles(data || []);
+      const data = await rafflesAPI.getAll();
+      setRaffles(data);
     } catch (error) {
       console.error('Error loading raffles:', error);
       toast({
@@ -83,54 +56,72 @@ const AdminRaffles = () => {
   };
 
   const createRaffle = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No authenticated session');
-
-      const { data, error } = await supabase
-        .from('raffles')
-        .insert([newRaffle])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Create raffle numbers
-      const numbers = Array.from({ length: newRaffle.total_numbers }, (_, i) => ({
-        raffle_id: data.id,
-        number_value: i + 1,
-        is_sold: false
-      }));
-
-      const { error: numbersError } = await supabase
-        .from('raffle_numbers')
-        .insert(numbers);
-
-      if (numbersError) throw numbersError;
-
+    if (!newRaffle.title || !newRaffle.description) {
       toast({
-        title: "¡Rifa creada!",
-        description: "La rifa se creó correctamente con todos sus números",
+        title: "Error",
+        description: "Por favor completa todos los campos requeridos",
+        variant: "destructive"
       });
+      return;
+    }
 
-      setIsCreateDialogOpen(false);
-      setNewRaffle({
-        title: '',
-        description: '',
-        prize_description: '',
-        total_numbers: 1000,
-        price_per_number: 10.00,
-        image_url: '',
-        video_url: '',
-        instagram_video_url: ''
-      });
+    setCreating(true);
+    try {
+      const raffleData = {
+        ...newRaffle,
+        status: 'active' as const
+      };
+
+      const result = await rafflesAPI.create(raffleData);
       
-      loadRaffles();
+      if (result) {
+        toast({
+          title: "¡Rifa creada!",
+          description: `Se creó la rifa "${result.title}" con ${result.total_numbers} números`,
+        });
+
+        setIsCreateDialogOpen(false);
+        setNewRaffle({
+          title: '',
+          description: '',
+          prize_image: '',
+          total_numbers: 1000,
+          price_per_number: 25.00,
+        });
+        
+        loadRaffles();
+      }
     } catch (error) {
       console.error('Error creating raffle:', error);
       toast({
         title: "Error",
         description: "No se pudo crear la rifa",
+        variant: "destructive"
+      });
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const deleteRaffle = async (id: string) => {
+    if (!confirm('¿Estás seguro de que quieres eliminar esta rifa?')) {
+      return;
+    }
+
+    try {
+      const success = await rafflesAPI.delete(id);
+      if (success) {
+        toast({
+          title: "Rifa eliminada",
+          description: "La rifa se eliminó correctamente",
+        });
+        loadRaffles();
+      }
+    } catch (error) {
+      console.error('Error deleting raffle:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar la rifa",
         variant: "destructive"
       });
     }
@@ -166,114 +157,110 @@ const AdminRaffles = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link to="/admin">
-                <Button variant="ghost" size="icon">
-                  <ArrowLeft className="w-4 h-4" />
-                </Button>
-              </Link>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/admin')}
+                className="flex items-center space-x-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Volver</span>
+              </Button>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Gestión de Rifas</h1>
                 <p className="text-muted-foreground">Administra tus rifas y sorteos</p>
               </div>
             </div>
             
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-gradient-aqua hover:shadow-aqua">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nueva Rifa
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Crear Nueva Rifa</DialogTitle>
-                  <DialogDescription>
-                    Completa la información para crear una nueva rifa
-                  </DialogDescription>
-                </DialogHeader>
-                
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="title">Título de la Rifa</Label>
+            <div className="flex items-center space-x-4">
+              <span className="text-muted-foreground">{user?.email}</span>
+              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-gradient-aqua hover:shadow-aqua">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nueva Rifa
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Crear Nueva Rifa</DialogTitle>
+                    <DialogDescription>
+                      Completa la información para crear una nueva rifa
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="title">Título de la Rifa *</Label>
                       <Input
                         id="title"
                         value={newRaffle.title}
                         onChange={(e) => setNewRaffle(prev => ({ ...prev, title: e.target.value }))}
-                        placeholder="Gran Rifa Toyota Fortuner 2024"
+                        placeholder="Ej: Gran Rifa Toyota Fortuner 2024"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="prize_description">Premio Principal</Label>
+                    
+                    <div>
+                      <Label htmlFor="description">Descripción *</Label>
+                      <Textarea
+                        id="description"
+                        value={newRaffle.description}
+                        onChange={(e) => setNewRaffle(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Describe los premios y detalles de la rifa..."
+                        rows={4}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="prize_image">URL de la Imagen del Premio</Label>
                       <Input
-                        id="prize_description"
-                        value={newRaffle.prize_description}
-                        onChange={(e) => setNewRaffle(prev => ({ ...prev, prize_description: e.target.value }))}
-                        placeholder="Toyota Fortuner 2024"
+                        id="prize_image"
+                        value={newRaffle.prize_image}
+                        onChange={(e) => setNewRaffle(prev => ({ ...prev, prize_image: e.target.value }))}
+                        placeholder="Ej: https://ejemplo.com/toyota-fortuner.jpg"
                       />
                     </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Descripción</Label>
-                    <Textarea
-                      id="description"
-                      value={newRaffle.description}
-                      onChange={(e) => setNewRaffle(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Descripción detallada de la rifa..."
-                      rows={3}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="total_numbers">Total de Números</Label>
-                      <Input
-                        id="total_numbers"
-                        type="number"
-                        value={newRaffle.total_numbers}
-                        onChange={(e) => setNewRaffle(prev => ({ ...prev, total_numbers: parseInt(e.target.value) }))}
-                        min="1"
-                      />
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="total_numbers">Total de Números</Label>
+                        <Input
+                          id="total_numbers"
+                          type="number"
+                          value={newRaffle.total_numbers}
+                          onChange={(e) => setNewRaffle(prev => ({ ...prev, total_numbers: parseInt(e.target.value) || 1000 }))}
+                          min="1"
+                          max="10000"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="price_per_number">Precio por Número ($)</Label>
+                        <Input
+                          id="price_per_number"
+                          type="number"
+                          step="0.01"
+                          value={newRaffle.price_per_number}
+                          onChange={(e) => setNewRaffle(prev => ({ ...prev, price_per_number: parseFloat(e.target.value) || 25.00 }))}
+                          min="0.01"
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="price_per_number">Precio por Número ($)</Label>
-                      <Input
-                        id="price_per_number"
-                        type="number"
-                        step="0.01"
-                        value={newRaffle.price_per_number}
-                        onChange={(e) => setNewRaffle(prev => ({ ...prev, price_per_number: parseFloat(e.target.value) }))}
-                        min="0.01"
-                      />
+                    
+                    <div className="flex justify-end space-x-2 pt-4">
+                      <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                        Cancelar
+                      </Button>
+                      <Button 
+                        onClick={createRaffle}
+                        className="bg-gradient-aqua hover:shadow-aqua"
+                        disabled={creating || !newRaffle.title || !newRaffle.description}
+                      >
+                        {creating ? 'Creando...' : 'Crear Rifa'}
+                      </Button>
                     </div>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="image_url">URL de la Imagen</Label>
-                    <Input
-                      id="image_url"
-                      value={newRaffle.image_url}
-                      onChange={(e) => setNewRaffle(prev => ({ ...prev, image_url: e.target.value }))}
-                      placeholder="https://ejemplo.com/imagen.jpg"
-                    />
-                  </div>
-                  
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                      Cancelar
-                    </Button>
-                    <Button 
-                      onClick={createRaffle}
-                      className="bg-gradient-aqua hover:shadow-aqua"
-                      disabled={!newRaffle.title || !newRaffle.prize_description}
-                    >
-                      Crear Rifa
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </div>
       </header>
@@ -283,7 +270,7 @@ const AdminRaffles = () => {
           <div className="text-center py-12">
             <Trophy className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground mb-2">No hay rifas creadas</h3>
-            <p className="text-muted-foreground mb-4">Crea tu primera rifa para comenzar</p>
+            <p className="text-muted-foreground mb-4">Crea tu primera rifa para comenzar a vender números</p>
             <Button 
               onClick={() => setIsCreateDialogOpen(true)}
               className="bg-gradient-aqua hover:shadow-aqua"
@@ -296,12 +283,15 @@ const AdminRaffles = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {raffles.map((raffle) => (
               <Card key={raffle.id} className="overflow-hidden">
-                {raffle.image_url && (
+                {raffle.prize_image && (
                   <div className="aspect-video bg-muted">
                     <img 
-                      src={raffle.image_url} 
+                      src={raffle.prize_image} 
                       alt={raffle.title}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = '/placeholder.svg';
+                      }}
                     />
                   </div>
                 )}
@@ -310,8 +300,8 @@ const AdminRaffles = () => {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <CardTitle className="text-lg">{raffle.title}</CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {raffle.prize_description}
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                        {raffle.description}
                       </p>
                     </div>
                     {getStatusBadge(raffle.status)}
@@ -325,7 +315,7 @@ const AdminRaffles = () => {
                         <Users className="w-4 h-4 mr-1" />
                         Números
                       </span>
-                      <span className="font-medium">{raffle.total_numbers}</span>
+                      <span className="font-medium">{raffle.total_numbers.toLocaleString()}</span>
                     </div>
                     
                     <div className="flex items-center justify-between text-sm">
@@ -337,15 +327,35 @@ const AdminRaffles = () => {
                     </div>
                     
                     <div className="flex items-center space-x-2 pt-2">
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => navigate(`/comprar?raffle=${raffle.id}`)}
+                      >
                         <Eye className="w-4 h-4 mr-1" />
                         Ver
                       </Button>
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => {
+                          // TODO: Implement edit functionality
+                          toast({
+                            title: "Próximamente",
+                            description: "La función de editar estará disponible pronto"
+                          });
+                        }}
+                      >
                         <Edit className="w-4 h-4 mr-1" />
                         Editar
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => deleteRaffle(raffle.id!)}
+                      >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
