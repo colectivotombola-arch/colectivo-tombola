@@ -53,7 +53,7 @@ const Login = () => {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@proyectosflores.com"
+                placeholder="admin@tombola.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

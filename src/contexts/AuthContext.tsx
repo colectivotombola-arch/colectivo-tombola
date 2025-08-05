@@ -31,13 +31,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     // Demo authentication - replace with real Supabase when ready
-    if (email === 'admin@proyectosflores.com' && password === 'admin123') {
+    if (email === 'admin@tombola.com' && password === '815358') {
       const user = { id: '1', email };
       setUser(user);
       localStorage.setItem('demo_user', JSON.stringify(user));
       return { error: null };
     }
-    return { error: { message: 'Credenciales incorrectas. Usa: admin@proyectosflores.com / admin123' } };
+    return { error: { message: 'Credenciales incorrectas. Usa: admin@tombola.com / 815358' } };
   };
 
   const signUp = async (email: string, password: string) => {
