@@ -10,7 +10,8 @@ import {
   ImageIcon, 
   LogOut,
   Plus,
-  Eye
+  Eye,
+  DollarSign
 } from 'lucide-react';
 
 

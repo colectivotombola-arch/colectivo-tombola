@@ -12,7 +12,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminSettings from "./pages/AdminSettings";
 import AdminRaffles from "./pages/AdminRaffles";
 import AdminPrizes from "./pages/AdminPrizes";
-import AdminNumbers from "./pages/AdminNumbers";
+import AdminSales from "./pages/AdminSales";
 import AdminNewActivity from "./pages/AdminNewActivity";
 import ComprarNumeros from "./pages/ComprarNumeros";
 import ConsultarNumeros from "./pages/ConsultarNumeros";
@@ -39,7 +39,7 @@ const App = () => (
             <Route path="/admin/settings" element={<ProtectedRoute requireAdmin><AdminSettings /></ProtectedRoute>} />
             <Route path="/admin/raffles" element={<ProtectedRoute requireAdmin><AdminRaffles /></ProtectedRoute>} />
             <Route path="/admin/prizes" element={<ProtectedRoute requireAdmin><AdminPrizes /></ProtectedRoute>} />
-            <Route path="/admin/numbers" element={<ProtectedRoute requireAdmin><AdminNumbers /></ProtectedRoute>} />
+            <Route path="/admin/sales" element={<ProtectedRoute requireAdmin><AdminSales /></ProtectedRoute>} />
             <Route path="/admin/activities/new" element={<ProtectedRoute requireAdmin><AdminNewActivity /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
