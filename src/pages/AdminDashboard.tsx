@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Car, 
@@ -15,7 +15,7 @@ import {
 
 
 const AdminDashboard = () => {
-  const { user, signOut, isAdmin } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     activeRaffles: 0,
     totalNumbers: 0,
@@ -73,9 +73,9 @@ const AdminDashboard = () => {
             </div>
             <div className="flex items-center space-x-4">
               <Badge variant="outline" className="border-primary text-primary">
-                {user?.email}
+                Admin
               </Badge>
-              <Button variant="outline" onClick={signOut} className="flex items-center space-x-2">
+              <Button variant="outline" onClick={() => navigate('/')} className="flex items-center space-x-2">
                 <LogOut className="w-4 h-4" />
                 <span>Salir</span>
               </Button>
@@ -122,13 +122,15 @@ const AdminDashboard = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {quickActions.map((action, index) => (
-                <Card key={index} className="cursor-pointer hover:shadow-aqua transition-all duration-300 border-primary/20">
-                  <CardContent className="p-6 text-center">
-                    <action.icon className="w-12 h-12 text-primary mx-auto mb-4" />
-                    <h3 className="font-semibold text-foreground mb-2">{action.title}</h3>
-                    <p className="text-sm text-muted-foreground">{action.description}</p>
-                  </CardContent>
-                </Card>
+                <Link key={index} to={action.href}>
+                  <Card className="cursor-pointer hover:shadow-aqua transition-all duration-300 border-primary/20 h-full">
+                    <CardContent className="p-6 text-center">
+                      <action.icon className="w-12 h-12 text-primary mx-auto mb-4" />
+                      <h3 className="font-semibold text-foreground mb-2">{action.title}</h3>
+                      <p className="text-sm text-muted-foreground">{action.description}</p>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           </CardContent>
