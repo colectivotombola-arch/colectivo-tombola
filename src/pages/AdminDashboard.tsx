@@ -12,7 +12,7 @@ import {
   Plus,
   Eye
 } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
+
 
 const AdminDashboard = () => {
   const { user, signOut } = useAuth();
@@ -24,11 +24,6 @@ const AdminDashboard = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  // Initialize Supabase client
-  const supabase = createClient(
-    import.meta.env.VITE_SUPABASE_URL!,
-    import.meta.env.VITE_SUPABASE_ANON_KEY!
-  );
 
   useEffect(() => {
     loadDashboardStats();
@@ -36,43 +31,12 @@ const AdminDashboard = () => {
 
   const loadDashboardStats = async () => {
     try {
-      // Get active raffles count
-      const { data: raffles, error: rafflesError } = await supabase
-        .from('raffles')
-        .select('id, total_numbers, price_per_number')
-        .eq('status', 'active');
-
-      if (rafflesError) throw rafflesError;
-
-      // Get sold numbers count
-      const { data: soldNumbers, error: soldError } = await supabase
-        .from('raffle_numbers')
-        .select('id, raffle_id')
-        .eq('is_sold', true);
-
-      if (soldError) throw soldError;
-
-      // Calculate stats
-      const activeRaffles = raffles?.length || 0;
-      const totalNumbers = raffles?.reduce((sum, raffle) => sum + raffle.total_numbers, 0) || 0;
-      const soldCount = soldNumbers?.length || 0;
-      
-      // Calculate revenue
-      let totalRevenue = 0;
-      if (raffles && soldNumbers) {
-        soldNumbers.forEach(soldNumber => {
-          const raffle = raffles.find(r => r.id === soldNumber.raffle_id);
-          if (raffle) {
-            totalRevenue += raffle.price_per_number;
-          }
-        });
-      }
-
+      // Mock data for now - this will be replaced with real Supabase data later
       setStats({
-        activeRaffles,
-        totalNumbers,
-        soldNumbers: soldCount,
-        totalRevenue
+        activeRaffles: 1,
+        totalNumbers: 1000,
+        soldNumbers: 450,
+        totalRevenue: 22500
       });
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
