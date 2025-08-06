@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Link, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Car, 
@@ -10,13 +10,12 @@ import {
   ImageIcon, 
   LogOut,
   Plus,
-  Eye,
-  DollarSign
+  Eye
 } from 'lucide-react';
 
 
 const AdminDashboard = () => {
-  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const [stats, setStats] = useState({
     activeRaffles: 0,
     totalNumbers: 0,
@@ -53,10 +52,10 @@ const AdminDashboard = () => {
   ];
 
   const quickActions = [
-    { title: 'Nueva Actividad', description: 'Crear una nueva rifa', icon: Plus, href: '/admin/raffles' },
+    { title: 'Nueva Actividad', description: 'Crear una nueva rifa', icon: Plus, href: '/admin/activities/new' },
     { title: 'Gestionar Premios', description: 'Administrar vehículos y premios', icon: Car, href: '/admin/prizes' },
-    { title: 'Ver Números', description: 'Gestionar números vendidos', icon: Eye, href: '/admin/numbers' },
     { title: 'Configuración', description: 'Ajustes del sitio web', icon: Settings, href: '/admin/settings' },
+    { title: 'Ver Sitio', description: 'Ir al sitio público', icon: Eye, href: '/' },
   ];
 
   return (
@@ -69,14 +68,14 @@ const AdminDashboard = () => {
               <LayoutDashboard className="w-8 h-8 text-primary" />
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Panel Administrativo</h1>
-                <p className="text-muted-foreground">Sistema de Rifas</p>
+                <p className="text-muted-foreground">Proyectos Flores</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <Badge variant="outline" className="border-primary text-primary">
-                Admin
+                {user?.email}
               </Badge>
-              <Button variant="outline" onClick={() => navigate('/')} className="flex items-center space-x-2">
+              <Button variant="outline" onClick={signOut} className="flex items-center space-x-2">
                 <LogOut className="w-4 h-4" />
                 <span>Salir</span>
               </Button>
@@ -123,15 +122,13 @@ const AdminDashboard = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {quickActions.map((action, index) => (
-                <Link key={index} to={action.href}>
-                  <Card className="cursor-pointer hover:shadow-aqua transition-all duration-300 border-primary/20 h-full">
-                    <CardContent className="p-6 text-center">
-                      <action.icon className="w-12 h-12 text-primary mx-auto mb-4" />
-                      <h3 className="font-semibold text-foreground mb-2">{action.title}</h3>
-                      <p className="text-sm text-muted-foreground">{action.description}</p>
-                    </CardContent>
-                  </Card>
-                </Link>
+                <Card key={index} className="cursor-pointer hover:shadow-aqua transition-all duration-300 border-primary/20">
+                  <CardContent className="p-6 text-center">
+                    <action.icon className="w-12 h-12 text-primary mx-auto mb-4" />
+                    <h3 className="font-semibold text-foreground mb-2">{action.title}</h3>
+                    <p className="text-sm text-muted-foreground">{action.description}</p>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </CardContent>

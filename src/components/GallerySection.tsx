@@ -7,7 +7,7 @@ interface GallerySectionProps {
 }
 
 const GallerySection = ({ settings }: GallerySectionProps) => {
-  // Imágenes de la galería
+  // Imágenes de ejemplo como en Proyecto Flores
   const galleryImages = [
     "/src/assets/toyota-fortuner.jpg",
     "/src/assets/chevrolet-onix.jpg",

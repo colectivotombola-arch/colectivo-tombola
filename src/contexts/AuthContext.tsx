@@ -1,128 +1,63 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import type { User, Session } from '@supabase/supabase-js';
+
+// Temporary mock for demo purposes until Supabase is fully configured
+interface User {
+  id: string;
+  email: string;
+}
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
   loading: boolean;
-  userRole: string | null;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
-  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState<string | null>(null);
-
-  const fetchUserRole = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId);
-      
-      if (error) throw error;
-      
-      // Check if user has admin role, otherwise use the first role
-      const adminRole = data?.find(roleData => roleData.role === 'admin');
-      const userRole = adminRole ? 'admin' : data?.[0]?.role || null;
-      
-      setUserRole(userRole);
-    } catch (error) {
-      console.error('Error fetching user role:', error);
-      setUserRole(null);
-    }
-  };
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          // Fetch user role after auth state change
-          setTimeout(() => {
-            fetchUserRole(session.user.id);
-          }, 0);
-        } else {
-          setUserRole(null);
-        }
-        
-        setLoading(false);
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserRole(session.user.id);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    // Check if user is logged in from localStorage (demo purposes)
+    const savedUser = localStorage.getItem('demo_user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+    setLoading(false);
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      return { error };
-    } catch (error) {
-      return { error };
+    // Demo authentication - replace with real Supabase when ready
+    if (email === 'admin@tombola.com' && password === '815358') {
+      const user = { id: '1', email };
+      setUser(user);
+      localStorage.setItem('demo_user', JSON.stringify(user));
+      return { error: null };
     }
+    return { error: { message: 'Credenciales incorrectas. Usa: admin@tombola.com / 815358' } };
   };
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
-    try {
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            full_name: fullName || '',
-          }
-        }
-      });
-      return { error };
-    } catch (error) {
-      return { error };
-    }
+  const signUp = async (email: string, password: string) => {
+    const user = { id: Math.random().toString(), email };
+    setUser(user);
+    localStorage.setItem('demo_user', JSON.stringify(user));
+    return { error: null };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUserRole(null);
+    setUser(null);
+    localStorage.removeItem('demo_user');
   };
-
-  const isAdmin = userRole === 'admin';
 
   const value = {
     user,
-    session,
     loading,
-    userRole,
     signIn,
     signUp,
     signOut,
-    isAdmin,
   };
 
   return (

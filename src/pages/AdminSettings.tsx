@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,6 +23,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 const AdminSettings = () => {
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [settings, setSettings] = useState<SiteSettings>({
@@ -144,8 +146,8 @@ const AdminSettings = () => {
               <h1 className="text-2xl font-bold text-foreground">Panel de Configuración Completa</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-muted-foreground">Admin</span>
-              <Button variant="outline" onClick={() => navigate('/')}>
+              <span className="text-muted-foreground">{user?.email}</span>
+              <Button variant="outline" onClick={signOut}>
                 Salir
               </Button>
             </div>

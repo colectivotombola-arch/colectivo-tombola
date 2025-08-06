@@ -25,20 +25,9 @@ serve(async (req) => {
     if (!authHeader) throw new Error("No authorization header");
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: authError } = await supabaseClient.auth.getUser(token);
+    const { data: userData } = await supabaseClient.auth.getUser(token);
     
-    if (authError || !userData.user) throw new Error("User not authenticated");
-
-    // Check if user has admin role
-    const { data: userRole, error: roleError } = await supabaseClient
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userData.user.id)
-      .single();
-
-    if (roleError || userRole?.role !== 'admin') {
-      throw new Error("User does not have admin privileges");
-    }
+    if (!userData.user) throw new Error("User not authenticated");
 
     // Update site settings
     const { data, error } = await supabaseClient
