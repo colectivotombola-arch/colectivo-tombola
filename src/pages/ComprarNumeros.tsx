@@ -1,37 +1,60 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, Star, Gift } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { rafflesAPI, siteSettingsAPI, type Raffle, type SiteSettings } from '@/lib/supabase';
 import toyotaFortuner from "@/assets/toyota-fortuner.jpg";
 import chevroletOnix from "@/assets/chevrolet-onix.jpg";
 
 const ComprarNumeros = () => {
   const [selectedPackage, setSelectedPackage] = useState<number | null>(null);
-  
-  // Datos de la actividad actual
-  const activityData = {
-    number: 33,
-    prize1: "TOYOTA FORTUNER 4X4",
-    prize2: "CHEVROLET ONIX TURBO RS 0km",
-    pricePerNumber: 1.50,
-    soldPercentage: 81.28,
-    isActive: false, // Los números se agotaron
-    instantPrizes: [
-      { number: "00939", claimed: false },
-      { number: "19302", claimed: true },
-      { number: "28346", claimed: false },
-      { number: "39373", claimed: true },
-      { number: "41907", claimed: false },
-      { number: "51418", claimed: true },
-      { number: "69821", claimed: false },
-      { number: "70283", claimed: false },
-      { number: "86512", claimed: true },
-      { number: "10127", claimed: true },
-    ]
+  const [raffle, setRaffle] = useState<Raffle | null>(null);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const [raffleData, settingsData] = await Promise.all([
+        rafflesAPI.getActive(),
+        siteSettingsAPI.get()
+      ]);
+      
+      setRaffle(raffleData);
+      setSettings(settingsData);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-primary">Cargando actividad...</div>
+      </div>
+    );
+  }
+
+  if (!raffle) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">No hay actividades activas</h2>
+          <Link to="/">
+            <Button>Volver al inicio</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const packages = [
     { numbers: 6, price: 9, popular: false },
@@ -43,11 +66,14 @@ const ComprarNumeros = () => {
   ];
 
   const handlePurchase = (packageNumbers: number, price: number) => {
-    if (!activityData.isActive) return;
+    if (raffle.status !== 'active') return;
     
     // Aquí iría la integración con el sistema de pagos
     // Por ahora simularemos el proceso
-    alert(`Comprando ${packageNumbers} números por $${price}. Serás redirigido al checkout.`);
+    const whatsappNumber = settings?.whatsapp_number || '0999053073';
+    const message = `Hola, quiero comprar ${packageNumbers} números para la actividad ${raffle.title} por $${price}`;
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   return (
@@ -62,8 +88,8 @@ const ComprarNumeros = () => {
               </Button>
             </Link>
             <div className="text-center flex-1">
-              <h1 className="text-2xl font-bold text-foreground">ACTIVIDAD #{activityData.number}</h1>
-              <p className="text-muted-foreground">{activityData.prize1} + {activityData.prize2}</p>
+              <h1 className="text-2xl font-bold text-foreground">ACTIVIDAD ACTUAL</h1>
+              <p className="text-muted-foreground">{raffle.title}</p>
             </div>
           </div>
         </div>
@@ -72,7 +98,7 @@ const ComprarNumeros = () => {
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         
         {/* Status Banner */}
-        {!activityData.isActive && (
+        {raffle.status !== 'active' && (
           <Card className="mb-8 border-destructive bg-destructive/10">
             <CardContent className="pt-6">
               <div className="text-center">
@@ -80,7 +106,7 @@ const ComprarNumeros = () => {
                   ¡LO SENTIMOS, LOS NÚMEROS PARA ESTA ACTIVIDAD SE AGOTARON!
                 </h2>
                 <p className="text-muted-foreground">
-                  Los vehículos se jugarán en un live en nuestra cuenta oficial de Instagram, síguenos para mantenerte al tanto.
+                  Los premios se jugarán en un live en nuestra cuenta oficial de Instagram, síguenos para mantenerte al tanto.
                 </p>
               </div>
             </CardContent>
@@ -99,21 +125,21 @@ const ComprarNumeros = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
                   <div className="text-white">
-                    <h3 className="text-xl font-bold">TOYOTA FORTUNER 4X4</h3>
-                    <p className="text-sm">PRIMERA SUERTE</p>
+                    <h3 className="text-xl font-bold">{raffle.title}</h3>
+                    <p className="text-sm">PRIMER PREMIO</p>
                   </div>
                 </div>
               </div>
               <div className="relative">
                 <img 
                   src={chevroletOnix} 
-                  alt="Chevrolet Onix Turbo RS" 
+                  alt="Segundo premio" 
                   className="w-full h-64 object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
                   <div className="text-white">
-                    <h3 className="text-xl font-bold">CHEVROLET ONIX TURBO RS</h3>
-                    <p className="text-sm">SEGUNDA SUERTE</p>
+                    <h3 className="text-xl font-bold">{raffle.description}</h3>
+                    <p className="text-sm">SEGUNDO PREMIO</p>
                   </div>
                 </div>
               </div>
@@ -134,12 +160,16 @@ const ComprarNumeros = () => {
               <div>
                 <div className="flex justify-between text-sm mb-2">
                   <span>Números Vendidos:</span>
-                  <span className="font-bold">{activityData.soldPercentage}%</span>
+                  <span className="font-bold">{raffle.sold_percentage?.toFixed(2) || 0}%</span>
                 </div>
-                <Progress value={activityData.soldPercentage} className="h-3" />
+                <Progress value={raffle.sold_percentage || 0} className="h-3" />
+                <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                  <span>{raffle.numbers_sold || 0} vendidos</span>
+                  <span>{raffle.total_numbers} total</span>
+                </div>
               </div>
               <p className="text-sm text-muted-foreground">
-                Los vehículos se jugarán una vez vendida la totalidad de los números, es decir, cuando la barra de progreso llegue al 100%. 
+                Los premios se jugarán una vez vendida la totalidad de los números, es decir, cuando la barra de progreso llegue al 100%. 
                 Se hará tomando los 5 números de la primera y segunda suerte de la suertuda (programa de la lotería nacional).
               </p>
             </div>
@@ -159,9 +189,9 @@ const ComprarNumeros = () => {
               ¡Hay 10 números bendecidos con premios en efectivo! Realiza tu compra y revisa si tienes uno de los siguientes números:
             </p>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-              {activityData.instantPrizes.map((prize) => (
+              {raffle.instant_prizes?.map((prize, index) => (
                 <div 
-                  key={prize.number}
+                  key={index}
                   className={`text-center p-3 rounded-lg border-2 ${
                     prize.claimed 
                       ? 'bg-muted border-muted-foreground line-through text-muted-foreground' 
@@ -171,7 +201,11 @@ const ComprarNumeros = () => {
                   <div className="text-lg font-mono">{prize.number}</div>
                   {prize.claimed && <div className="text-xs">¡Premio Entregado!</div>}
                 </div>
-              ))}
+              )) || (
+                <div className="col-span-full text-center text-muted-foreground">
+                  No hay premios instantáneos configurados
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -203,7 +237,7 @@ const ComprarNumeros = () => {
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="text-center">¡ADQUIERE TUS NÚMEROS!</CardTitle>
-            <p className="text-center text-muted-foreground">Valor de la Unidad: ${activityData.pricePerNumber}</p>
+            <p className="text-center text-muted-foreground">Valor de la Unidad: ${raffle.price_per_number}</p>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -214,8 +248,8 @@ const ComprarNumeros = () => {
                     selectedPackage === pkg.numbers 
                       ? 'ring-2 ring-primary shadow-aqua' 
                       : 'hover:shadow-md'
-                  } ${!activityData.isActive ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  onClick={() => activityData.isActive && setSelectedPackage(pkg.numbers)}
+                  } ${raffle.status !== 'active' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  onClick={() => raffle.status === 'active' && setSelectedPackage(pkg.numbers)}
                 >
                   {pkg.popular && (
                     <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-primary">
@@ -224,16 +258,16 @@ const ComprarNumeros = () => {
                   )}
                   <CardContent className="text-center p-6">
                     <div className="text-lg font-bold mb-2">x{pkg.numbers} Números</div>
-                    <div className="text-3xl font-black text-primary mb-4">${pkg.price}</div>
+                    <div className="text-3xl font-black text-primary mb-4">${(pkg.numbers * raffle.price_per_number).toFixed(2)}</div>
                     <Button 
                       className="w-full bg-gradient-aqua hover:shadow-aqua"
-                      disabled={!activityData.isActive}
+                      disabled={raffle.status !== 'active'}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handlePurchase(pkg.numbers, pkg.price);
+                        handlePurchase(pkg.numbers, pkg.numbers * raffle.price_per_number);
                       }}
                     >
-                      {activityData.isActive ? 'COMPRAR' : 'AGOTADO'}
+                      {raffle.status === 'active' ? 'COMPRAR' : 'AGOTADO'}
                     </Button>
                   </CardContent>
                 </Card>
@@ -254,9 +288,15 @@ const ComprarNumeros = () => {
               </p>
               <Button 
                 className="w-full bg-gradient-aqua hover:shadow-aqua"
-                disabled={!activityData.isActive}
+                disabled={raffle.status !== 'active'}
+                onClick={() => {
+                  const whatsappNumber = settings?.whatsapp_number || '0999053073';
+                  const message = `Hola, quiero comprar una cantidad personalizada de números para la actividad ${raffle.title}`;
+                  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+                  window.open(whatsappUrl, '_blank');
+                }}
               >
-                {activityData.isActive ? 'COMPRAR CANTIDAD PERSONALIZADA' : 'AGOTADO'}
+                {raffle.status === 'active' ? 'COMPRAR CANTIDAD PERSONALIZADA' : 'AGOTADO'}
               </Button>
             </CardContent>
           </Card>

@@ -53,6 +53,7 @@ const AdminDashboard = () => {
 
   const quickActions = [
     { title: 'Nueva Actividad', description: 'Crear una nueva rifa', icon: Plus, href: '/admin/activities/new' },
+    { title: 'Premios Instantáneos', description: 'Configurar números bendecidos', icon: Car, href: '/admin/instant-prizes' },
     { title: 'Gestionar Premios', description: 'Administrar vehículos y premios', icon: Car, href: '/admin/prizes' },
     { title: 'Configuración', description: 'Ajustes del sitio web', icon: Settings, href: '/admin/settings' },
     { title: 'Ver Sitio', description: 'Ir al sitio público', icon: Eye, href: '/' },

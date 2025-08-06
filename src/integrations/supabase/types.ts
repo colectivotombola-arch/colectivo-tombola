@@ -14,16 +14,341 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      dynamic_settings: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
+      media_uploads: {
+        Row: {
+          created_at: string
+          file_path: string
+          file_size: number | null
+          filename: string
+          id: string
+          mime_type: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          file_size?: number | null
+          filename: string
+          id?: string
+          mime_type?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          file_size?: number | null
+          filename?: string
+          id?: string
+          mime_type?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
+      prizes: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          image_url: string | null
+          name: string
+          position: number
+          raffle_id: string | null
+          updated_at: string
+          value: number | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          image_url?: string | null
+          name: string
+          position?: number
+          raffle_id?: string | null
+          updated_at?: string
+          value?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          position?: number
+          raffle_id?: string | null
+          updated_at?: string
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prizes_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "raffles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      raffle_numbers: {
+        Row: {
+          buyer_email: string | null
+          buyer_name: string
+          buyer_phone: string
+          created_at: string
+          id: string
+          number_value: number
+          payment_method: string | null
+          payment_status: string | null
+          purchase_date: string
+          raffle_id: string
+        }
+        Insert: {
+          buyer_email?: string | null
+          buyer_name: string
+          buyer_phone: string
+          created_at?: string
+          id?: string
+          number_value: number
+          payment_method?: string | null
+          payment_status?: string | null
+          purchase_date?: string
+          raffle_id: string
+        }
+        Update: {
+          buyer_email?: string | null
+          buyer_name?: string
+          buyer_phone?: string
+          created_at?: string
+          id?: string
+          number_value?: number
+          payment_method?: string | null
+          payment_status?: string | null
+          purchase_date?: string
+          raffle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raffle_numbers_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "raffles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      raffles: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string
+          draw_date: string | null
+          end_date: string | null
+          id: string
+          instant_prizes: Json | null
+          numbers_sold: number | null
+          price_per_number: number
+          prize_image: string | null
+          sold_percentage: number | null
+          start_date: string | null
+          status: string
+          title: string
+          total_numbers: number
+          updated_at: string
+          winner_number: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description: string
+          draw_date?: string | null
+          end_date?: string | null
+          id?: string
+          instant_prizes?: Json | null
+          numbers_sold?: number | null
+          price_per_number?: number
+          prize_image?: string | null
+          sold_percentage?: number | null
+          start_date?: string | null
+          status?: string
+          title: string
+          total_numbers?: number
+          updated_at?: string
+          winner_number?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          draw_date?: string | null
+          end_date?: string | null
+          id?: string
+          instant_prizes?: Json | null
+          numbers_sold?: number | null
+          price_per_number?: number
+          prize_image?: string | null
+          sold_percentage?: number | null
+          start_date?: string | null
+          status?: string
+          title?: string
+          total_numbers?: number
+          updated_at?: string
+          winner_number?: number | null
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          email_settings: Json | null
+          hero_subtitle: string
+          hero_title: string
+          id: string
+          instagram_video_url: string | null
+          logo_url: string | null
+          payment_settings: Json | null
+          primary_color: string
+          secondary_color: string
+          site_name: string
+          site_tagline: string | null
+          social_media: Json | null
+          updated_at: string
+          whatsapp_number: string | null
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          email_settings?: Json | null
+          hero_subtitle?: string
+          hero_title?: string
+          id?: string
+          instagram_video_url?: string | null
+          logo_url?: string | null
+          payment_settings?: Json | null
+          primary_color?: string
+          secondary_color?: string
+          site_name?: string
+          site_tagline?: string | null
+          social_media?: Json | null
+          updated_at?: string
+          whatsapp_number?: string | null
+        }
+        Update: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          email_settings?: Json | null
+          hero_subtitle?: string
+          hero_title?: string
+          id?: string
+          instagram_video_url?: string | null
+          logo_url?: string | null
+          payment_settings?: Json | null
+          primary_color?: string
+          secondary_color?: string
+          site_name?: string
+          site_tagline?: string | null
+          social_media?: Json | null
+          updated_at?: string
+          whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +475,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const

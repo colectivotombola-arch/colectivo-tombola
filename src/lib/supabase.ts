@@ -16,6 +16,9 @@ export interface SiteSettings {
   instagram_video_url?: string
   hero_title: string
   hero_subtitle: string
+  social_media?: string | object
+  payment_settings?: string | object
+  email_settings?: string | object
   created_at?: string
   updated_at?: string
 }
@@ -30,8 +33,17 @@ export interface Raffle {
   status: 'active' | 'completed' | 'cancelled'
   draw_date?: string
   winner_number?: number
+  instant_prizes?: InstantPrize[]
+  numbers_sold?: number
+  sold_percentage?: number
   created_at?: string
   updated_at?: string
+}
+
+export interface InstantPrize {
+  number: string
+  claimed: boolean
+  prize_amount?: number
 }
 
 export interface RaffleNumber {
@@ -108,7 +120,30 @@ export const rafflesAPI = {
       return []
     }
     
-    return data || []
+    return (data || []).map(raffle => ({
+      ...raffle,
+      instant_prizes: raffle.instant_prizes || []
+    }))
+  },
+
+  async getActive(): Promise<Raffle | null> {
+    const { data, error } = await supabase
+      .from('raffles')
+      .select('*')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+    
+    if (error) {
+      console.error('Error fetching active raffle:', error)
+      return null
+    }
+    
+    return data ? {
+      ...data,
+      instant_prizes: data.instant_prizes || []
+    } : null
   },
 
   async create(raffle: Omit<Raffle, 'id' | 'created_at'>): Promise<Raffle | null> {

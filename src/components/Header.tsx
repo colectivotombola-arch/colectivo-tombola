@@ -1,7 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import type { SiteSettings } from "@/lib/supabase";
 
-const Header = () => {
+interface HeaderProps {
+  settings?: SiteSettings | null;
+}
+
+const Header = ({ settings }: HeaderProps) => {
   return (
     <header className="bg-black/95 backdrop-blur-sm sticky top-0 z-50 border-b border-primary/20">
       <div className="container mx-auto px-4">
@@ -10,8 +15,8 @@ const Header = () => {
           <Link to="/" className="flex items-center space-x-3">
             <div>
               <h1 className="text-xl font-bold text-white">
-                <span className="text-primary">TOMBOLA</span>
-                <span className="text-white ml-2">PREMIUM</span>
+                <span className="text-primary">{settings?.site_name?.split(' ')[0] || 'COLECTIVO'}</span>
+                <span className="text-white ml-2">{settings?.site_name?.split(' ')[1] || 'TOMBOLA'}</span>
               </h1>
               <p className="text-xs text-gray-400">Cumpliendo sueños</p>
             </div>
