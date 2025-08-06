@@ -69,7 +69,7 @@ const AdminDashboard = () => {
               <LayoutDashboard className="w-8 h-8 text-primary" />
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Panel Administrativo</h1>
-                <p className="text-muted-foreground">Proyectos Flores</p>
+                <p className="text-muted-foreground">Sistema de Rifas</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">

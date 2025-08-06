@@ -1,7 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { type SiteSettings } from '@/lib/supabase';
 
-const HeroSection = () => {
+interface HeroSectionProps {
+  settings?: SiteSettings | null;
+}
+
+const HeroSection = ({ settings }: HeroSectionProps) => {
   return (
     <section className="relative bg-gradient-to-b from-gray-100 to-white py-20">
       <div className="container mx-auto px-4 text-center">
@@ -12,7 +17,7 @@ const HeroSection = () => {
         
         {/* Subtítulo de Actividad */}
         <h2 className="text-2xl md:text-4xl font-bold text-black mb-8">
-          TOYOTA FORTUNER 4X4 + CHEVROLET ONIX TURBO RS 0km
+          {settings?.hero_title || 'TOYOTA FORTUNER 4X4 + CHEVROLET ONIX TURBO RS 0km'}
         </h2>
         
         <h3 className="text-xl md:text-2xl font-semibold text-black mb-12">

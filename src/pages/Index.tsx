@@ -2,13 +2,29 @@ import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import GallerySection from "@/components/GallerySection";
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { siteSettingsAPI, type SiteSettings } from '@/lib/supabase';
 
 const Index = () => {
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const settingsData = await siteSettingsAPI.get();
+        setSettings(settingsData);
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      }
+    };
+    loadSettings();
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      <HeroSection />
-      <GallerySection />
+      <Header settings={settings} />
+      <HeroSection settings={settings} />
+      <GallerySection settings={settings} />
       
       {/* Contact Section */}
       <section className="py-16 bg-primary/10">
@@ -39,10 +55,10 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
               <h3 className="text-xl font-bold mb-4 text-primary">
-                Tombola Premium
+                {settings?.site_name || 'Tombola Premium'}
               </h3>
               <p className="text-gray-400">
-                Rifas seguras y transparentes con los mejores premios
+                {settings?.site_tagline || 'Rifas seguras y transparentes con los mejores premios'}
               </p>
             </div>
             <div>
@@ -76,7 +92,7 @@ const Index = () => {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 Tombola Premium. Todos los derechos reservados.</p>
+            <p>&copy; 2024 {settings?.site_name || 'Tombola Premium'}. Todos los derechos reservados.</p>
           </div>
         </div>
       </footer>
