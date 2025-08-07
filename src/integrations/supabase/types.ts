@@ -142,6 +142,47 @@ export type Database = {
         }
         Relationships: []
       }
+      purchase_settings: {
+        Row: {
+          allow_custom_quantity: boolean | null
+          created_at: string | null
+          email_notifications_enabled: boolean | null
+          id: string
+          payment_methods: Json | null
+          raffle_id: string | null
+          terms_and_conditions: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          allow_custom_quantity?: boolean | null
+          created_at?: string | null
+          email_notifications_enabled?: boolean | null
+          id?: string
+          payment_methods?: Json | null
+          raffle_id?: string | null
+          terms_and_conditions?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          allow_custom_quantity?: boolean | null
+          created_at?: string | null
+          email_notifications_enabled?: boolean | null
+          id?: string
+          payment_methods?: Json | null
+          raffle_id?: string | null
+          terms_and_conditions?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_settings_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: true
+            referencedRelation: "raffles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       raffle_numbers: {
         Row: {
           buyer_email: string | null
@@ -189,6 +230,44 @@ export type Database = {
           },
         ]
       }
+      raffle_packages: {
+        Row: {
+          created_at: string | null
+          display_order: number | null
+          id: string
+          is_popular: boolean | null
+          price_per_ticket: number
+          raffle_id: string | null
+          ticket_count: number
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_popular?: boolean | null
+          price_per_ticket?: number
+          raffle_id?: string | null
+          ticket_count: number
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_popular?: boolean | null
+          price_per_ticket?: number
+          raffle_id?: string | null
+          ticket_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raffle_packages_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "raffles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       raffles: {
         Row: {
           created_at: string
@@ -198,6 +277,8 @@ export type Database = {
           end_date: string | null
           id: string
           instant_prizes: Json | null
+          max_tickets_per_purchase: number | null
+          min_tickets_per_purchase: number | null
           numbers_sold: number | null
           price_per_number: number
           prize_image: string | null
@@ -217,6 +298,8 @@ export type Database = {
           end_date?: string | null
           id?: string
           instant_prizes?: Json | null
+          max_tickets_per_purchase?: number | null
+          min_tickets_per_purchase?: number | null
           numbers_sold?: number | null
           price_per_number?: number
           prize_image?: string | null
@@ -236,6 +319,8 @@ export type Database = {
           end_date?: string | null
           id?: string
           instant_prizes?: Json | null
+          max_tickets_per_purchase?: number | null
+          min_tickets_per_purchase?: number | null
           numbers_sold?: number | null
           price_per_number?: number
           prize_image?: string | null

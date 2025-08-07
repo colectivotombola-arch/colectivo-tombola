@@ -4,16 +4,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, Star, Gift } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { rafflesAPI, siteSettingsAPI, type Raffle, type SiteSettings } from '@/lib/supabase';
+import { Link, useNavigate } from 'react-router-dom';
+import { rafflesAPI, siteSettingsAPI, supabase, type Raffle, type SiteSettings } from '@/lib/supabase';
 import toyotaFortuner from "@/assets/toyota-fortuner.jpg";
 import chevroletOnix from "@/assets/chevrolet-onix.jpg";
 
 const ComprarNumeros = () => {
-  const [selectedPackage, setSelectedPackage] = useState<number | null>(null);
+  const navigate = useNavigate();
+  const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [raffle, setRaffle] = useState<Raffle | null>(null);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);
+  const [packages, setPackages] = useState<any[]>([]);
 
   useEffect(() => {
     loadData();
@@ -28,6 +30,17 @@ const ComprarNumeros = () => {
       
       setRaffle(raffleData);
       setSettings(settingsData);
+      
+      if (raffleData) {
+        // Cargar paquetes personalizados para esta rifa
+        const { data: packagesData } = await supabase
+          .from('raffle_packages')
+          .select('*')
+          .eq('raffle_id', raffleData.id)
+          .order('display_order');
+        
+        setPackages(packagesData || []);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -56,24 +69,9 @@ const ComprarNumeros = () => {
     );
   }
 
-  const packages = [
-    { numbers: 6, price: 9, popular: false },
-    { numbers: 8, price: 12, popular: false },
-    { numbers: 10, price: 15, popular: true },
-    { numbers: 20, price: 30, popular: false },
-    { numbers: 50, price: 75, popular: false },
-    { numbers: 100, price: 150, popular: false },
-  ];
-
-  const handlePurchase = (packageNumbers: number, price: number) => {
-    if (raffle.status !== 'active') return;
-    
-    // Aquí iría la integración con el sistema de pagos
-    // Por ahora simularemos el proceso
-    const whatsappNumber = settings?.whatsapp_number || '0999053073';
-    const message = `Hola, quiero comprar ${packageNumbers} números para la actividad ${raffle.title} por $${price}`;
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+  const handlePurchase = (packageId: string) => {
+    if (raffle?.status !== 'active') return;
+    navigate(`/purchase/${raffle.id}/${packageId}`);
   };
 
   return (
@@ -95,7 +93,7 @@ const ComprarNumeros = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto mobile-container mobile-section max-w-4xl">
         
         {/* Status Banner */}
         {raffle.status !== 'active' && (
@@ -240,38 +238,44 @@ const ComprarNumeros = () => {
             <p className="text-center text-muted-foreground">Valor de la Unidad: ${raffle.price_per_number}</p>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {packages.map((pkg) => (
+            <div className="mobile-grid">
+              {packages.length > 0 ? packages.map((pkg) => (
                 <Card 
-                  key={pkg.numbers}
+                  key={pkg.id}
                   className={`relative cursor-pointer transition-all duration-300 ${
-                    selectedPackage === pkg.numbers 
+                    selectedPackage === pkg.id 
                       ? 'ring-2 ring-primary shadow-aqua' 
                       : 'hover:shadow-md'
                   } ${raffle.status !== 'active' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  onClick={() => raffle.status === 'active' && setSelectedPackage(pkg.numbers)}
+                  onClick={() => raffle.status === 'active' && setSelectedPackage(pkg.id)}
                 >
-                  {pkg.popular && (
+                  {pkg.is_popular && (
                     <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-primary">
                       ★ Más Vendido ★
                     </Badge>
                   )}
-                  <CardContent className="text-center p-6">
-                    <div className="text-lg font-bold mb-2">x{pkg.numbers} Números</div>
-                    <div className="text-3xl font-black text-primary mb-4">${(pkg.numbers * raffle.price_per_number).toFixed(2)}</div>
+                  <CardContent className="text-center mobile-card">
+                    <div className="text-lg font-bold mb-2">x{pkg.ticket_count} Números</div>
+                    <div className="text-3xl font-black text-primary mb-4">
+                      ${(pkg.ticket_count * pkg.price_per_ticket).toFixed(2)}
+                    </div>
                     <Button 
-                      className="w-full bg-gradient-aqua hover:shadow-aqua"
+                      className="w-full bg-gradient-aqua hover:shadow-aqua touch-target"
                       disabled={raffle.status !== 'active'}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handlePurchase(pkg.numbers, pkg.numbers * raffle.price_per_number);
+                        handlePurchase(pkg.id);
                       }}
                     >
                       {raffle.status === 'active' ? 'COMPRAR' : 'AGOTADO'}
                     </Button>
                   </CardContent>
                 </Card>
-              ))}
+              )) : (
+                <div className="col-span-full text-center py-8">
+                  <p className="text-muted-foreground">No hay paquetes disponibles</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -289,12 +293,7 @@ const ComprarNumeros = () => {
               <Button 
                 className="w-full bg-gradient-aqua hover:shadow-aqua"
                 disabled={raffle.status !== 'active'}
-                onClick={() => {
-                  const whatsappNumber = settings?.whatsapp_number || '0999053073';
-                  const message = `Hola, quiero comprar una cantidad personalizada de números para la actividad ${raffle.title}`;
-                  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-                  window.open(whatsappUrl, '_blank');
-                }}
+                onClick={() => handlePurchase('custom')}
               >
                 {raffle.status === 'active' ? 'COMPRAR CANTIDAD PERSONALIZADA' : 'AGOTADO'}
               </Button>

@@ -36,6 +36,33 @@ export interface Raffle {
   instant_prizes?: InstantPrize[]
   numbers_sold?: number
   sold_percentage?: number
+  max_tickets_per_purchase?: number
+  min_tickets_per_purchase?: number
+  created_at?: string
+  updated_at?: string
+}
+
+export interface RafflePackage {
+  id?: string
+  raffle_id: string
+  ticket_count: number
+  price_per_ticket: number
+  is_popular: boolean
+  display_order: number
+  created_at?: string
+}
+
+export interface PurchaseSettings {
+  id?: string
+  raffle_id: string
+  allow_custom_quantity: boolean
+  email_notifications_enabled: boolean
+  payment_methods: {
+    whatsapp: boolean
+    bank_transfer: boolean
+    paypal: boolean
+  }
+  terms_and_conditions?: string
   created_at?: string
   updated_at?: string
 }
@@ -198,7 +225,7 @@ export const raffleNumbersAPI = {
       .from('raffle_numbers')
       .select('*')
       .eq('raffle_id', raffleId)
-      .order('number')
+      .order('number_value')
     
     if (error) {
       console.error('Error fetching raffle numbers:', error)
@@ -208,21 +235,120 @@ export const raffleNumbersAPI = {
     return data || []
   },
 
-  async purchaseNumber(raffleId: string, number: number, buyerName: string, buyerPhone: string): Promise<boolean> {
+  async purchaseNumbers(raffleId: string, quantity: number, buyerName: string, buyerPhone: string, buyerEmail?: string): Promise<number[]> {
+    // Generar números aleatorios disponibles
+    const { data: existingNumbers } = await supabase
+      .from('raffle_numbers')
+      .select('number_value')
+      .eq('raffle_id', raffleId)
+
+    const { data: raffle } = await supabase
+      .from('raffles')
+      .select('total_numbers')
+      .eq('id', raffleId)
+      .single()
+
+    if (!raffle) throw new Error('Rifa no encontrada')
+
+    const usedNumbers = new Set((existingNumbers || []).map(n => n.number_value))
+    const availableNumbers = []
+    
+    for (let i = 1; i <= raffle.total_numbers; i++) {
+      if (!usedNumbers.has(i)) {
+        availableNumbers.push(i)
+      }
+    }
+
+    if (availableNumbers.length < quantity) {
+      throw new Error('No hay suficientes números disponibles')
+    }
+
+    // Seleccionar números aleatorios
+    const selectedNumbers = []
+    for (let i = 0; i < quantity; i++) {
+      const randomIndex = Math.floor(Math.random() * availableNumbers.length)
+      selectedNumbers.push(availableNumbers.splice(randomIndex, 1)[0])
+    }
+
+    // Insertar los números comprados
+    const purchases = selectedNumbers.map(number => ({
+      raffle_id: raffleId,
+      number_value: number,
+      buyer_name: buyerName,
+      buyer_phone: buyerPhone,
+      buyer_email: buyerEmail,
+      purchase_date: new Date().toISOString(),
+      payment_status: 'pending'
+    }))
+
     const { error } = await supabase
       .from('raffle_numbers')
-      .insert({
-        raffle_id: raffleId,
-        number,
-        buyer_name: buyerName,
-        buyer_phone: buyerPhone,
-        is_sold: true,
-        sold_at: new Date().toISOString(),
-        created_at: new Date().toISOString()
-      })
+      .insert(purchases)
+
+    if (error) {
+      console.error('Error purchasing numbers:', error)
+      throw error
+    }
+
+    return selectedNumbers
+  }
+}
+
+export const rafflePackagesAPI = {
+  async getByRaffle(raffleId: string): Promise<RafflePackage[]> {
+    const { data, error } = await supabase
+      .from('raffle_packages')
+      .select('*')
+      .eq('raffle_id', raffleId)
+      .order('display_order')
     
     if (error) {
-      console.error('Error purchasing number:', error)
+      console.error('Error fetching raffle packages:', error)
+      return []
+    }
+    
+    return data || []
+  },
+
+  async create(package_data: Omit<RafflePackage, 'id' | 'created_at'>): Promise<RafflePackage | null> {
+    const { data, error } = await supabase
+      .from('raffle_packages')
+      .insert(package_data)
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('Error creating package:', error)
+      return null
+    }
+    
+    return data
+  },
+
+  async update(id: string, updates: Partial<RafflePackage>): Promise<RafflePackage | null> {
+    const { data, error } = await supabase
+      .from('raffle_packages')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('Error updating package:', error)
+      return null
+    }
+    
+    return data
+  },
+
+  async delete(id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('raffle_packages')
+      .delete()
+      .eq('id', id)
+    
+    if (error) {
+      console.error('Error deleting package:', error)
       return false
     }
     

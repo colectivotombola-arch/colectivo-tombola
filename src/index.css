@@ -112,3 +112,58 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  /* Custom responsive classes */
+  .mobile-container {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+  
+  .mobile-text {
+    @apply text-sm sm:text-base lg:text-lg;
+  }
+  
+  .mobile-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
+  }
+  
+  .mobile-card {
+    @apply p-4 sm:p-6;
+  }
+  
+  /* Enhanced button gradients */
+  .bg-gradient-aqua {
+    background: var(--gradient-aqua);
+  }
+  
+  .hover\:shadow-aqua:hover {
+    box-shadow: var(--shadow-aqua);
+  }
+  
+  .shadow-aqua {
+    box-shadow: var(--shadow-aqua);
+  }
+  
+  /* Touch-friendly sizes for mobile */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* Responsive text sizing */
+  .responsive-title {
+    @apply text-xl sm:text-2xl lg:text-3xl;
+  }
+  
+  .responsive-subtitle {
+    @apply text-base sm:text-lg lg:text-xl;
+  }
+  
+  /* Mobile-optimized spacing */
+  .mobile-section {
+    @apply py-6 sm:py-8 lg:py-12;
+  }
+  
+  .mobile-gap {
+    @apply gap-4 sm:gap-6 lg:gap-8;
+  }
+}

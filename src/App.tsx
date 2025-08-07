@@ -9,9 +9,12 @@ import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminSettings from "./pages/AdminSettings";
 import AdminRaffles from "./pages/AdminRaffles";
+import AdminInstantPrizes from "./pages/AdminInstantPrizes";
+import AdminPackages from "./pages/AdminPackages";
 import ComprarNumeros from "./pages/ComprarNumeros";
 import ConsultarNumeros from "./pages/ConsultarNumeros";
 import DetallesActividad from "./pages/DetallesActividad";
+import PurchaseFlow from "./pages/PurchaseFlow";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,6 +63,17 @@ const App = () => (
                 <AdminRaffles />
               </ProtectedRoute>
             } />
+            <Route path="/admin/instant-prizes" element={
+              <ProtectedRoute>
+                <AdminInstantPrizes />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/packages" element={
+              <ProtectedRoute>
+                <AdminPackages />
+              </ProtectedRoute>
+            } />
+            <Route path="/purchase/:raffleId/:packageId" element={<PurchaseFlow />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
