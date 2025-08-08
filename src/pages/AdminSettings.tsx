@@ -7,25 +7,21 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { siteSettingsAPI, SiteSettings } from '@/lib/supabase';
+import { AdminLayout } from '@/components/AdminLayout';
 import { 
-  ArrowLeft, 
   Save, 
-  Upload, 
   Video, 
   Instagram, 
   CreditCard, 
-  DollarSign,
   Facebook,
   Twitter,
   Globe,
   Mail
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 const AdminSettings = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
   const [settings, setSettings] = useState<SiteSettings>({
     site_name: 'TOMBOLA PREMIUM',
     primary_color: '#00e5cc',
@@ -129,34 +125,11 @@ const AdminSettings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/admin')}
-                className="flex items-center space-x-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Volver</span>
-              </Button>
-              <h1 className="text-2xl font-bold text-foreground">Panel de Configuración Completa</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-muted-foreground">{user?.email}</span>
-              <Button variant="outline" onClick={signOut}>
-                Salir
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto space-y-8">
+    <AdminLayout 
+      title="Configuración Completa" 
+      subtitle="Gestiona todos los aspectos de tu sitio"
+    >
+      <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
           
           {/* Configuración General del Sitio */}
           <Card>
@@ -167,7 +140,7 @@ const AdminSettings = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="site_name">Nombre del Sitio</Label>
                   <Input
@@ -209,7 +182,7 @@ const AdminSettings = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="primary_color">Color Primario (Aqua)</Label>
                   <div className="flex items-center space-x-2">
@@ -477,8 +450,7 @@ const AdminSettings = () => {
             </Button>
           </div>
         </div>
-      </div>
-    </div>
+    </AdminLayout>
   );
 };
 

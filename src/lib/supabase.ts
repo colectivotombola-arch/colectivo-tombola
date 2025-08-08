@@ -1,9 +1,8 @@
-import { createClient } from '@supabase/supabase-js'
+// Use the existing Supabase client from integrations
+import { supabase } from '@/integrations/supabase/client';
 
-const supabaseUrl = "https://xwdrvakfrhlrnvqxodft.supabase.co"
-const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3ZHJ2YWtmcmhscm52cXhvZGZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNTk4MTYsImV4cCI6MjA2OTkzNTgxNn0.7Ampezur9n9NreFG6UDQgppKI5asBWo1VjrOJQWhW5I"
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Export supabase for backward compatibility
+export { supabase };
 
 // Database schemas
 export interface SiteSettings {
@@ -16,9 +15,9 @@ export interface SiteSettings {
   instagram_video_url?: string
   hero_title: string
   hero_subtitle: string
-  social_media?: string | object
-  payment_settings?: string | object
-  email_settings?: string | object
+  contact_email?: string
+  contact_phone?: string
+  logo_url?: string
   created_at?: string
   updated_at?: string
 }
@@ -27,13 +26,12 @@ export interface Raffle {
   id?: string
   title: string
   description: string
-  prize_image: string
+  prize_image?: string
   total_numbers: number
   price_per_number: number
-  status: 'active' | 'completed' | 'cancelled'
+  status: string
   draw_date?: string
   winner_number?: number
-  instant_prizes?: InstantPrize[]
   numbers_sold?: number
   sold_percentage?: number
   max_tickets_per_purchase?: number
@@ -52,21 +50,6 @@ export interface RafflePackage {
   created_at?: string
 }
 
-export interface PurchaseSettings {
-  id?: string
-  raffle_id: string
-  allow_custom_quantity: boolean
-  email_notifications_enabled: boolean
-  payment_methods: {
-    whatsapp: boolean
-    bank_transfer: boolean
-    paypal: boolean
-  }
-  terms_and_conditions?: string
-  created_at?: string
-  updated_at?: string
-}
-
 export interface InstantPrize {
   number: string
   claimed: boolean
@@ -76,11 +59,13 @@ export interface InstantPrize {
 export interface RaffleNumber {
   id?: string
   raffle_id: string
-  number: number
+  number_value: number
   buyer_name?: string
   buyer_phone?: string
-  is_sold: boolean
-  sold_at?: string
+  buyer_email?: string
+  payment_status?: string
+  payment_method?: string
+  purchase_date?: string
   created_at?: string
 }
 
@@ -97,37 +82,19 @@ export const siteSettingsAPI = {
       return null
     }
     
-    return data
+    return data as SiteSettings
   },
 
   async update(settings: Partial<SiteSettings>): Promise<SiteSettings | null> {
     try {
-      // First try to get existing settings
-      const { data: existing } = await supabase
+      const { data, error } = await supabase
         .from('site_settings')
-        .select('id')
-        .maybeSingle();
-
-      if (existing) {
-        const { data, error } = await supabase
-          .from('site_settings')
-          .update({ ...settings, updated_at: new Date().toISOString() })
-          .eq('id', existing.id)
-          .select()
-          .single();
-        
-        if (error) throw error;
-        return data;
-      } else {
-        const { data, error } = await supabase
-          .from('site_settings')
-          .insert({ ...settings, created_at: new Date().toISOString() })
-          .select()
-          .single();
-        
-        if (error) throw error;
-        return data;
-      }
+        .upsert({ ...settings, updated_at: new Date().toISOString() })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as SiteSettings;
     } catch (error) {
       console.error('Error in siteSettingsAPI.update:', error);
       return null;
@@ -147,10 +114,7 @@ export const rafflesAPI = {
       return []
     }
     
-    return (data || []).map(raffle => ({
-      ...raffle,
-      instant_prizes: raffle.instant_prizes || []
-    }))
+    return (data || []) as Raffle[]
   },
 
   async getActive(): Promise<Raffle | null> {
@@ -167,10 +131,7 @@ export const rafflesAPI = {
       return null
     }
     
-    return data ? {
-      ...data,
-      instant_prizes: data.instant_prizes || []
-    } : null
+    return data as Raffle
   },
 
   async create(raffle: Omit<Raffle, 'id' | 'created_at'>): Promise<Raffle | null> {
@@ -185,7 +146,7 @@ export const rafflesAPI = {
       return null
     }
     
-    return data
+    return data as Raffle
   },
 
   async update(id: string, updates: Partial<Raffle>): Promise<Raffle | null> {
@@ -201,7 +162,7 @@ export const rafflesAPI = {
       return null
     }
     
-    return data
+    return data as Raffle
   },
 
   async delete(id: string): Promise<boolean> {
@@ -210,12 +171,7 @@ export const rafflesAPI = {
       .delete()
       .eq('id', id)
     
-    if (error) {
-      console.error('Error deleting raffle:', error)
-      return false
-    }
-    
-    return true
+    return !error
   }
 }
 
@@ -232,48 +188,14 @@ export const raffleNumbersAPI = {
       return []
     }
     
-    return data || []
+    return (data || []) as RaffleNumber[]
   },
 
   async purchaseNumbers(raffleId: string, quantity: number, buyerName: string, buyerPhone: string, buyerEmail?: string): Promise<number[]> {
-    // Generar números aleatorios disponibles
-    const { data: existingNumbers } = await supabase
-      .from('raffle_numbers')
-      .select('number_value')
-      .eq('raffle_id', raffleId)
-
-    const { data: raffle } = await supabase
-      .from('raffles')
-      .select('total_numbers')
-      .eq('id', raffleId)
-      .single()
-
-    if (!raffle) throw new Error('Rifa no encontrada')
-
-    const usedNumbers = new Set((existingNumbers || []).map(n => n.number_value))
-    const availableNumbers = []
-    
-    for (let i = 1; i <= raffle.total_numbers; i++) {
-      if (!usedNumbers.has(i)) {
-        availableNumbers.push(i)
-      }
-    }
-
-    if (availableNumbers.length < quantity) {
-      throw new Error('No hay suficientes números disponibles')
-    }
-
-    // Seleccionar números aleatorios
-    const selectedNumbers = []
-    for (let i = 0; i < quantity; i++) {
-      const randomIndex = Math.floor(Math.random() * availableNumbers.length)
-      selectedNumbers.push(availableNumbers.splice(randomIndex, 1)[0])
-    }
-
-    // Insertar los números comprados
-    const purchases = selectedNumbers.map(number => ({
+    // Implementation for purchasing numbers
+    const purchases = Array.from({length: quantity}, (_, i) => ({
       raffle_id: raffleId,
-      number_value: number,
+      number_value: Math.floor(Math.random() * 1000) + 1,
       buyer_name: buyerName,
       buyer_phone: buyerPhone,
       buyer_email: buyerEmail,
@@ -281,16 +203,17 @@ export const raffleNumbersAPI = {
       payment_status: 'pending'
     }))
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('raffle_numbers')
       .insert(purchases)
+      .select('number_value')
 
     if (error) {
       console.error('Error purchasing numbers:', error)
       throw error
     }
 
-    return selectedNumbers
+    return (data || []).map(d => d.number_value)
   }
 }
 
@@ -307,7 +230,7 @@ export const rafflePackagesAPI = {
       return []
     }
     
-    return data || []
+    return (data || []) as RafflePackage[]
   },
 
   async create(package_data: Omit<RafflePackage, 'id' | 'created_at'>): Promise<RafflePackage | null> {
@@ -322,7 +245,7 @@ export const rafflePackagesAPI = {
       return null
     }
     
-    return data
+    return data as RafflePackage
   },
 
   async update(id: string, updates: Partial<RafflePackage>): Promise<RafflePackage | null> {
@@ -338,7 +261,7 @@ export const rafflePackagesAPI = {
       return null
     }
     
-    return data
+    return data as RafflePackage
   },
 
   async delete(id: string): Promise<boolean> {
@@ -347,11 +270,6 @@ export const rafflePackagesAPI = {
       .delete()
       .eq('id', id)
     
-    if (error) {
-      console.error('Error deleting package:', error)
-      return false
-    }
-    
-    return true
+    return !error
   }
 }

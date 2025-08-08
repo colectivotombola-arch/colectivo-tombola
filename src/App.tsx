@@ -11,6 +11,7 @@ import AdminSettings from "./pages/AdminSettings";
 import AdminRaffles from "./pages/AdminRaffles";
 import AdminInstantPrizes from "./pages/AdminInstantPrizes";
 import AdminPackages from "./pages/AdminPackages";
+import ConsultarRifas from "./pages/ConsultarRifas";
 import ComprarNumeros from "./pages/ComprarNumeros";
 import ConsultarNumeros from "./pages/ConsultarNumeros";
 import DetallesActividad from "./pages/DetallesActividad";
@@ -71,6 +72,11 @@ const App = () => (
             <Route path="/admin/packages" element={
               <ProtectedRoute>
                 <AdminPackages />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/consultar" element={
+              <ProtectedRoute>
+                <ConsultarRifas />
               </ProtectedRoute>
             } />
             <Route path="/purchase/:raffleId/:packageId" element={<PurchaseFlow />} />
