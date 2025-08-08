@@ -1,34 +1,58 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  const [isSignUp, setIsSignUp] = useState(false);
+  const { signIn, signUp, user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/admin');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    const { error } = await signIn(email, password);
+    try {
+      const { error } = isSignUp 
+        ? await signUp(email, password)
+        : await signIn(email, password);
 
-    if (error) {
+      if (error) {
+        toast({
+          title: isSignUp ? "Error en registro" : "Error de acceso",
+          description: error.message || "Verifica tus credenciales",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: isSignUp ? "¡Registro exitoso!" : "¡Bienvenido!",
+          description: isSignUp 
+            ? "Revisa tu email para confirmar tu cuenta" 
+            : "Has iniciado sesión correctamente",
+        });
+        if (!isSignUp) {
+          navigate('/admin');
+        }
+      }
+    } catch (error) {
       toast({
-        title: "Error de acceso",
-        description: error.message,
+        title: "Error",
+        description: "Ocurrió un error inesperado",
         variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "¡Bienvenido!",
-        description: "Has iniciado sesión correctamente",
       });
     }
 
@@ -40,10 +64,12 @@ const Login = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-primary">
-            Panel Administrativo
+            {isSignUp ? "Crear Cuenta" : "Panel Administrativo"}
           </CardTitle>
           <CardDescription>
-            Accede para gestionar tu sitio de rifas
+            {isSignUp 
+              ? "Crea una cuenta para acceder al panel administrativo" 
+              : "Accede para gestionar tu sitio de rifas"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -74,9 +100,23 @@ const Login = () => {
               className="w-full bg-gradient-aqua hover:shadow-aqua"
               disabled={isLoading}
             >
-              {isLoading ? 'Accediendo...' : 'Iniciar Sesión'}
+              {isLoading 
+                ? (isSignUp ? 'Registrando...' : 'Accediendo...') 
+                : (isSignUp ? 'Crear Cuenta' : 'Iniciar Sesión')}
             </Button>
           </form>
+          
+          <div className="mt-4 text-center">
+            <Button
+              variant="ghost"
+              onClick={() => setIsSignUp(!isSignUp)}
+              className="text-sm text-muted-foreground hover:text-primary"
+            >
+              {isSignUp 
+                ? "¿Ya tienes cuenta? Inicia sesión" 
+                : "¿No tienes cuenta? Regístrate"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

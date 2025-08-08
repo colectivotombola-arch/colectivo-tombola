@@ -70,6 +70,7 @@ const Index = () => {
                 <li><Link to="/comprar" className="hover:text-primary transition-colors">Comprar Números</Link></li>
                 <li><Link to="/consultar" className="hover:text-primary transition-colors">Consultar Números</Link></li>
                 <li><Link to="/detalles" className="hover:text-primary transition-colors">Detalles de Actividad</Link></li>
+                <li><Link to="/admin" className="hover:text-primary transition-colors font-semibold">🔐 Panel Admin</Link></li>
               </ul>
             </div>
             <div>
