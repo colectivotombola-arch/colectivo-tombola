@@ -11,6 +11,7 @@ import AdminSettings from "./pages/AdminSettings";
 import AdminRaffles from "./pages/AdminRaffles";
 import AdminInstantPrizes from "./pages/AdminInstantPrizes";
 import AdminPackages from "./pages/AdminPackages";
+import AdminGallery from "./pages/AdminGallery";
 import ConsultarRifas from "./pages/ConsultarRifas";
 import ComprarNumeros from "./pages/ComprarNumeros";
 import ConsultarNumeros from "./pages/ConsultarNumeros";
@@ -72,6 +73,11 @@ const App = () => (
             <Route path="/admin/packages" element={
               <ProtectedRoute>
                 <AdminPackages />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/gallery" element={
+              <ProtectedRoute>
+                <AdminGallery />
               </ProtectedRoute>
             } />
             <Route path="/admin/consultar" element={

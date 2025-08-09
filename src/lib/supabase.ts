@@ -18,6 +18,10 @@ export interface SiteSettings {
   contact_email?: string
   contact_phone?: string
   logo_url?: string
+  social_media?: any
+  payment_settings?: any
+  email_settings?: any
+  site_tagline?: string
   created_at?: string
   updated_at?: string
 }
@@ -36,6 +40,7 @@ export interface Raffle {
   sold_percentage?: number
   max_tickets_per_purchase?: number
   min_tickets_per_purchase?: number
+  instant_prizes?: any
   created_at?: string
   updated_at?: string
 }
