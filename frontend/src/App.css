@@ -1,0 +1,122 @@
+/* Custom styles for Proyectos Flores */
+
+.app-container {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Smooth transitions for all interactive elements */
+button, .clickable {
+  transition: all 0.3s ease;
+}
+
+/* Image gallery custom styles */
+.image-gallery {
+  position: relative;
+}
+
+.image-gallery img {
+  transition: opacity 0.5s ease-in-out;
+}
+
+/* Progress bar animation */
+.progress-bar {
+  transition: width 0.8s ease-in-out;
+}
+
+/* Package card hover effects */
+.package-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.package-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Modal animations */
+.modal-overlay {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { 
+    opacity: 0; 
+    transform: translate(-50%, -60%);
+  }
+  to { 
+    opacity: 1; 
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* Chat button pulse animation */
+.chat-button {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Custom scrollbar for modal content */
+.modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: #4ade80;
+  border-radius: 3px;
+}
+
+/* Responsive image adjustments */
+@media (max-width: 768px) {
+  .image-gallery img {
+    height: 250px;
+  }
+  
+  .package-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Loading spinner */
+.spinner {
+  border: 4px solid rgba(74, 222, 128, 0.3);
+  border-top: 4px solid #4ade80;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Button hover effects */
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(74, 222, 128, 0.4);
+}
+
+.btn-orange:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+}
