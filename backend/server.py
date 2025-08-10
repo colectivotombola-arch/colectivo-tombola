@@ -7,9 +7,7 @@ import os
 import uuid
 import random
 from datetime import datetime
-import smtplib
-from email.mime.text import MimeText
-from email.mime.multipart import MimeMultipart
+# Email functionality can be added later
 
 # Environment variables
 MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017/proyectos_flores')
