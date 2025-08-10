@@ -74,6 +74,22 @@ export interface RaffleNumber {
   created_at?: string
 }
 
+export interface PurchaseConfirmation {
+  id?: string
+  raffle_id: string
+  buyer_name: string
+  buyer_email: string
+  buyer_phone: string
+  quantity: number
+  total_amount: number
+  payment_method?: string
+  confirmation_number: string
+  status?: string
+  assigned_numbers?: number[]
+  created_at?: string
+  updated_at?: string
+}
+
 // API functions
 export const siteSettingsAPI = {
   async get(): Promise<SiteSettings | null> {
@@ -276,5 +292,83 @@ export const rafflePackagesAPI = {
       .eq('id', id)
     
     return !error
+  }
+}
+
+export const purchaseConfirmationsAPI = {
+  async create(confirmationData: Omit<PurchaseConfirmation, 'id' | 'created_at' | 'updated_at'>): Promise<PurchaseConfirmation | null> {
+    const { data, error } = await supabase
+      .from('purchase_confirmations')
+      .insert(confirmationData)
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('Error creating purchase confirmation:', error)
+      return null
+    }
+    
+    return data as PurchaseConfirmation
+  },
+
+  async getByEmail(email: string): Promise<PurchaseConfirmation[]> {
+    const { data, error } = await supabase
+      .from('purchase_confirmations')
+      .select('*')
+      .eq('buyer_email', email)
+      .order('created_at', { ascending: false })
+    
+    if (error) {
+      console.error('Error fetching purchase confirmations:', error)
+      return []
+    }
+    
+    return (data || []) as PurchaseConfirmation[]
+  },
+
+  async getAll(): Promise<PurchaseConfirmation[]> {
+    const { data, error } = await supabase
+      .from('purchase_confirmations')
+      .select('*')
+      .order('created_at', { ascending: false })
+    
+    if (error) {
+      console.error('Error fetching all purchase confirmations:', error)
+      return []
+    }
+    
+    return (data || []) as PurchaseConfirmation[]
+  },
+
+  async updateStatus(id: string, status: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('purchase_confirmations')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', id)
+    
+    return !error
+  },
+
+  // Función auxiliar para generar números aleatorios únicos
+  generateRandomNumbers(quantity: number, totalNumbers: number, existingNumbers: number[] = []): number[] {
+    const availableNumbers = []
+    for (let i = 1; i <= totalNumbers; i++) {
+      if (!existingNumbers.includes(i)) {
+        availableNumbers.push(i)
+      }
+    }
+    
+    if (availableNumbers.length < quantity) {
+      throw new Error('No hay suficientes números disponibles')
+    }
+    
+    const selectedNumbers = []
+    for (let i = 0; i < quantity; i++) {
+      const randomIndex = Math.floor(Math.random() * availableNumbers.length)
+      selectedNumbers.push(availableNumbers[randomIndex])
+      availableNumbers.splice(randomIndex, 1)
+    }
+    
+    return selectedNumbers.sort((a, b) => a - b)
   }
 }

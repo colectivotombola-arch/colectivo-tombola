@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, CreditCard, Smartphone, Building2, Mail, User, Phone, ShoppingCart } from 'lucide-react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { rafflesAPI, rafflePackagesAPI, siteSettingsAPI, type Raffle, type RafflePackage, type SiteSettings } from '@/lib/supabase';
+import { rafflesAPI, rafflePackagesAPI, raffleNumbersAPI, purchaseConfirmationsAPI, siteSettingsAPI, supabase, type Raffle, type RafflePackage, type SiteSettings } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
 const PurchaseFlow = () => {
@@ -127,35 +127,93 @@ const PurchaseFlow = () => {
       const quantity = getQuantity();
       const total = getTotal();
       
+      // Generar número de confirmación único
+      const confirmationNumber = `RF${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+      
+      // Obtener números vendidos para evitar duplicados
+      const existingNumbers = await raffleNumbersAPI.getByRaffle(raffle.id!);
+      const soldNumbers = existingNumbers.map(n => n.number_value);
+      
+      // Generar números aleatorios únicos
+      const assignedNumbers = purchaseConfirmationsAPI.generateRandomNumbers(
+        quantity, 
+        raffle.total_numbers, 
+        soldNumbers
+      );
+      
       if (paymentMethod === 'whatsapp') {
-        const whatsappNumber = settings?.whatsapp_number || '0999053073';
-        const message = `Hola! Quiero comprar ${quantity} boletos para "${raffle.title}".
+        // Enviar email de confirmación
+        const emailResponse = await supabase.functions.invoke('send-purchase-email', {
+          body: {
+            buyer_name: buyerData.name,
+            buyer_email: buyerData.email,
+            buyer_phone: buyerData.phone,
+            raffle_id: raffle.id,
+            quantity,
+            total_amount: total,
+            confirmation_number: confirmationNumber,
+            assigned_numbers: assignedNumbers
+          }
+        });
         
-📋 Detalles:
+        if (emailResponse.error) {
+          console.error('Error sending email:', emailResponse.error);
+        }
+        
+        // Insertar números en la base de datos
+        const numberInserts = assignedNumbers.map(num => ({
+          raffle_id: raffle.id!,
+          number_value: num,
+          buyer_name: buyerData.name,
+          buyer_phone: buyerData.phone,
+          buyer_email: buyerData.email,
+          payment_status: 'pending',
+          payment_method: paymentMethod,
+          purchase_date: new Date().toISOString()
+        }));
+        
+        await Promise.all(
+          numberInserts.map(insert => 
+            supabase.from('raffle_numbers').insert(insert)
+          )
+        );
+        
+        const whatsappNumber = settings?.whatsapp_number || '0999053073';
+        const message = `¡Hola! Completé mi compra de boletos:
+
+📋 DETALLES DE COMPRA:
+• Rifa: ${raffle.title}
 • Cantidad: ${quantity} boletos
 • Total: $${total.toFixed(2)}
+• Confirmación: ${confirmationNumber}
+
+👤 MIS DATOS:
 • Nombre: ${buyerData.name}
 • Teléfono: ${buyerData.phone}
 • Email: ${buyerData.email}
 
-Por favor procedan con la asignación de números.`;
+🎫 MIS NÚMEROS ASIGNADOS:
+${assignedNumbers.join(', ')}
+
+Ya recibí el email de confirmación. ¿Cómo procedo con el pago?`;
         
         const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
         
         toast({
-          title: "¡Solicitud enviada!",
-          description: "Te hemos redirigido a WhatsApp para completar tu compra",
+          title: "¡Compra registrada exitosamente!",
+          description: `Tus números: ${assignedNumbers.join(', ')}. Revisa tu email para los detalles completos.`,
+          duration: 8000,
         });
         
-        setTimeout(() => navigate('/'), 3000);
+        setTimeout(() => navigate('/'), 5000);
       }
       
     } catch (error) {
       console.error('Error processing purchase:', error);
       toast({
         title: "Error",
-        description: "No se pudo procesar la compra",
+        description: "No se pudo procesar la compra. Intenta nuevamente.",
         variant: "destructive",
       });
     }
@@ -180,23 +238,23 @@ Por favor procedan con la asignación de números.`;
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6 max-w-2xl">
-        {/* Progress Steps */}
-        <div className="flex items-center justify-center mb-8">
-          <div className="flex items-center space-x-4">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+      <div className="container mx-auto mobile-container py-4 sm:py-6 max-w-2xl">
+        {/* Progress Steps - Mobile Responsive */}
+        <div className="flex items-center justify-center mb-6 sm:mb-8">
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold ${
               step >= 1 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
             }`}>
               1
             </div>
-            <div className={`w-8 h-1 ${step > 1 ? 'bg-primary' : 'bg-muted'}`}></div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+            <div className={`w-4 sm:w-8 h-1 ${step > 1 ? 'bg-primary' : 'bg-muted'}`}></div>
+            <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold ${
               step >= 2 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
             }`}>
               2
             </div>
-            <div className={`w-8 h-1 ${step > 2 ? 'bg-primary' : 'bg-muted'}`}></div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+            <div className={`w-4 sm:w-8 h-1 ${step > 2 ? 'bg-primary' : 'bg-muted'}`}></div>
+            <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold ${
               step >= 3 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
             }`}>
               3
@@ -332,17 +390,17 @@ Por favor procedan con la asignación de números.`;
                 </label>
               </div>
 
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setStep(1)}>
-                  Volver
-                </Button>
-                <Button 
-                  onClick={handleNextStep} 
-                  className="flex-1 bg-gradient-aqua hover:shadow-aqua"
-                >
-                  Continuar al pago
-                </Button>
-              </div>
+               <div className="flex flex-col sm:flex-row gap-2">
+                 <Button variant="outline" onClick={() => setStep(1)} className="touch-target">
+                   Volver
+                 </Button>
+                 <Button 
+                   onClick={handleNextStep} 
+                   className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
+                 >
+                   Continuar al pago
+                 </Button>
+               </div>
             </CardContent>
           </Card>
         )}
@@ -432,19 +490,19 @@ Por favor procedan con la asignación de números.`;
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setStep(2)}>
-                  Volver
-                </Button>
-                <Button 
-                  onClick={handlePurchase} 
-                  className="flex-1 bg-gradient-aqua hover:shadow-aqua"
-                  disabled={paymentMethod !== 'whatsapp'}
-                >
-                  <Smartphone className="w-4 h-4 mr-2" />
-                  Finalizar en WhatsApp
-                </Button>
-              </div>
+               <div className="flex flex-col sm:flex-row gap-2">
+                 <Button variant="outline" onClick={() => setStep(2)} className="touch-target">
+                   Volver
+                 </Button>
+                 <Button 
+                   onClick={handlePurchase} 
+                   className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
+                   disabled={paymentMethod !== 'whatsapp'}
+                 >
+                   <Smartphone className="w-4 h-4 mr-2" />
+                   Finalizar en WhatsApp
+                 </Button>
+               </div>
             </CardContent>
           </Card>
         )}

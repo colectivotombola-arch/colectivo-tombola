@@ -12,6 +12,7 @@ import AdminRaffles from "./pages/AdminRaffles";
 import AdminInstantPrizes from "./pages/AdminInstantPrizes";
 import AdminPackages from "./pages/AdminPackages";
 import AdminGallery from "./pages/AdminGallery";
+import AdminConfirmations from "./pages/AdminConfirmations";
 import ConsultarRifas from "./pages/ConsultarRifas";
 import ComprarNumeros from "./pages/ComprarNumeros";
 import ConsultarNumeros from "./pages/ConsultarNumeros";
@@ -78,6 +79,11 @@ const App = () => (
             <Route path="/admin/gallery" element={
               <ProtectedRoute>
                 <AdminGallery />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/confirmaciones" element={
+              <ProtectedRoute>
+                <AdminConfirmations />
               </ProtectedRoute>
             } />
             <Route path="/admin/consultar" element={

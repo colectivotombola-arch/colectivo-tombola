@@ -6,20 +6,18 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { rafflesAPI, type Raffle, type InstantPrize } from '@/lib/supabase';
+import { AdminLayout } from '@/components/AdminLayout';
 import { 
-  ArrowLeft, 
   Save, 
   Plus,
   Trash2,
   Gift,
   DollarSign
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 const AdminInstantPrizes = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
   const [raffles, setRaffles] = useState<Raffle[]>([]);
   const [selectedRaffle, setSelectedRaffle] = useState<Raffle | null>(null);
   const [instantPrizes, setInstantPrizes] = useState<InstantPrize[]>([]);
@@ -135,41 +133,20 @@ const AdminInstantPrizes = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-primary">Cargando premios instantáneos...</div>
-      </div>
+      <AdminLayout title="Premios Instantáneos" subtitle="Cargando premios...">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-primary">Cargando premios instantáneos...</div>
+        </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/admin')}
-                className="flex items-center space-x-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Volver</span>
-              </Button>
-              <h1 className="text-2xl font-bold text-foreground">Gestión de Premios Instantáneos</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-muted-foreground">{user?.email}</span>
-              <Button variant="outline" onClick={signOut}>
-                Salir
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto space-y-8">
+    <AdminLayout 
+      title="Premios Instantáneos" 
+      subtitle="Gestiona los premios que se pueden ganar al instante con números específicos"
+    >
+      <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
           
           {/* Selector de Rifa */}
           <Card>
@@ -180,7 +157,7 @@ const AdminInstantPrizes = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="mobile-grid">
                 {raffles.map((raffle) => (
                   <Card 
                     key={raffle.id}
@@ -191,7 +168,7 @@ const AdminInstantPrizes = () => {
                     }`}
                     onClick={() => handleRaffleChange(raffle)}
                   >
-                    <CardContent className="p-4">
+                    <CardContent className="mobile-card">
                       <h3 className="font-bold text-sm mb-2">{raffle.title}</h3>
                       <p className="text-muted-foreground text-xs mb-2">{raffle.description}</p>
                       <div className="flex justify-between items-center">
@@ -221,22 +198,24 @@ const AdminInstantPrizes = () => {
                   <CardTitle>Herramientas de Generación</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex flex-wrap gap-4">
+                  <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-4">
                     <Button 
                       onClick={() => generateRandomNumbers(5)}
                       variant="outline"
+                      className="touch-target"
                     >
                       Generar 5 números aleatorios
                     </Button>
                     <Button 
                       onClick={() => generateRandomNumbers(10)}
                       variant="outline"
+                      className="touch-target"
                     >
                       Generar 10 números aleatorios
                     </Button>
                     <Button 
                       onClick={addInstantPrize}
-                      className="flex items-center space-x-2"
+                      className="flex items-center space-x-2 touch-target"
                     >
                       <Plus className="w-4 h-4" />
                       <span>Agregar Premio Manual</span>
@@ -277,7 +256,7 @@ const AdminInstantPrizes = () => {
                           key={index}
                           className="flex items-center space-x-4 p-4 border rounded-lg"
                         >
-                          <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
+                          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div>
                               <Label htmlFor={`number-${index}`}>Número</Label>
                               <Input
@@ -338,17 +317,16 @@ const AdminInstantPrizes = () => {
                 <Button 
                   onClick={handleSave}
                   disabled={saving}
-                  className="w-full bg-primary hover:bg-primary/90 text-black font-bold text-lg px-8 py-4"
+                  className="w-full bg-primary hover:bg-primary/90 text-black font-bold text-base sm:text-lg px-4 sm:px-8 py-3 sm:py-4 touch-target"
                 >
-                  <Save className="w-5 h-5 mr-2" />
+                  <Save className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   {saving ? 'Guardando...' : 'Guardar Premios Instantáneos'}
                 </Button>
               </div>
             </>
           )}
-        </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 };
 

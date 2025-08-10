@@ -142,6 +142,62 @@ export type Database = {
         }
         Relationships: []
       }
+      purchase_confirmations: {
+        Row: {
+          assigned_numbers: number[] | null
+          buyer_email: string
+          buyer_name: string
+          buyer_phone: string
+          confirmation_number: string
+          created_at: string | null
+          id: string
+          payment_method: string | null
+          quantity: number
+          raffle_id: string
+          status: string | null
+          total_amount: number
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_numbers?: number[] | null
+          buyer_email: string
+          buyer_name: string
+          buyer_phone: string
+          confirmation_number: string
+          created_at?: string | null
+          id?: string
+          payment_method?: string | null
+          quantity: number
+          raffle_id: string
+          status?: string | null
+          total_amount: number
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_numbers?: number[] | null
+          buyer_email?: string
+          buyer_name?: string
+          buyer_phone?: string
+          confirmation_number?: string
+          created_at?: string | null
+          id?: string
+          payment_method?: string | null
+          quantity?: number
+          raffle_id?: string
+          status?: string | null
+          total_amount?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_confirmations_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "raffles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       purchase_settings: {
         Row: {
           allow_custom_quantity: boolean | null
@@ -420,6 +476,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_confirmation_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["app_role"]
