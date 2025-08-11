@@ -27,12 +27,17 @@ const AdminRaffles = () => {
   const [loading, setLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [editRaffle, setEditRaffle] = useState<Raffle | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const [newRaffle, setNewRaffle] = useState({
     title: '',
     description: '',
     prize_image: '',
     total_numbers: 1000,
-    price_per_number: 25.00,
+    price_per_number: 1.00,
+    min_tickets_per_purchase: 10,
+    max_tickets_per_purchase: 100,
   });
 
   useEffect(() => {
@@ -86,7 +91,9 @@ const AdminRaffles = () => {
           description: '',
           prize_image: '',
           total_numbers: 1000,
-          price_per_number: 25.00,
+          price_per_number: 1.00,
+          min_tickets_per_purchase: 10,
+          max_tickets_per_purchase: 100,
         });
         
         loadRaffles();
@@ -101,6 +108,48 @@ const AdminRaffles = () => {
     } finally {
       setCreating(false);
     }
+  };
+
+  const updateRaffle = async () => {
+    if (!editRaffle || !editRaffle.title || !editRaffle.description) {
+      toast({
+        title: "Error",
+        description: "Por favor completa todos los campos requeridos",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setUpdating(true);
+    try {
+      const result = await rafflesAPI.update(editRaffle.id!, editRaffle);
+      
+      if (result) {
+        toast({
+          title: "¡Rifa actualizada!",
+          description: `Se actualizó la rifa "${result.title}"`,
+        });
+
+        setIsEditDialogOpen(false);
+        setEditRaffle(null);
+        loadRaffles();
+      }
+    } catch (error) {
+      console.error('Error updating raffle:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar la rifa",
+        variant: "destructive"
+      });
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  // Función para abrir el dialog de edición
+  const openEditDialog = (raffle: Raffle) => {
+    setEditRaffle(raffle);
+    setIsEditDialogOpen(true);
   };
 
   const deleteRaffle = async (id: string) => {
@@ -340,13 +389,7 @@ const AdminRaffles = () => {
                         variant="outline" 
                         size="sm" 
                         className="flex-1"
-                        onClick={() => {
-                          // TODO: Implement edit functionality
-                          toast({
-                            title: "Próximamente",
-                            description: "La función de editar estará disponible pronto"
-                          });
-                        }}
+                        onClick={() => openEditDialog(raffle)}
                       >
                         <Edit className="w-4 h-4 mr-1" />
                         Editar
@@ -366,6 +409,137 @@ const AdminRaffles = () => {
           </div>
         )}
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Editar Rifa</DialogTitle>
+            <DialogDescription>
+              Modifica la información de la rifa
+            </DialogDescription>
+          </DialogHeader>
+          
+          {editRaffle && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit_title">Título de la Rifa *</Label>
+                <Input
+                  id="edit_title"
+                  value={editRaffle.title}
+                  onChange={(e) => setEditRaffle(prev => prev ? ({ ...prev, title: e.target.value }) : null)}
+                  placeholder="Ej: Gran Rifa Toyota Fortuner 2024"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="edit_description">Descripción *</Label>
+                <Textarea
+                  id="edit_description"
+                  value={editRaffle.description}
+                  onChange={(e) => setEditRaffle(prev => prev ? ({ ...prev, description: e.target.value }) : null)}
+                  placeholder="Describe los premios y detalles de la rifa..."
+                  rows={4}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="edit_prize_image">URL de la Imagen del Premio</Label>
+                <Input
+                  id="edit_prize_image"
+                  value={editRaffle.prize_image || ''}
+                  onChange={(e) => setEditRaffle(prev => prev ? ({ ...prev, prize_image: e.target.value }) : null)}
+                  placeholder="Ej: https://ejemplo.com/toyota-fortuner.jpg"
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit_total_numbers">Total de Números</Label>
+                  <Input
+                    id="edit_total_numbers"
+                    type="number"
+                    value={editRaffle.total_numbers}
+                    onChange={(e) => setEditRaffle(prev => prev ? ({ ...prev, total_numbers: parseInt(e.target.value) || 1000 }) : null)}
+                    min="1"
+                    max="100000"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit_price_per_number">Precio por Número ($)</Label>
+                  <Input
+                    id="edit_price_per_number"
+                    type="number"
+                    step="0.01"
+                    value={editRaffle.price_per_number}
+                    onChange={(e) => setEditRaffle(prev => prev ? ({ ...prev, price_per_number: parseFloat(e.target.value) || 1.00 }) : null)}
+                    min="0.01"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit_min_tickets">Mínimo de Boletos</Label>
+                  <Input
+                    id="edit_min_tickets"
+                    type="number"
+                    value={editRaffle.min_tickets_per_purchase || 10}
+                    onChange={(e) => setEditRaffle(prev => prev ? ({ ...prev, min_tickets_per_purchase: parseInt(e.target.value) || 10 }) : null)}
+                    min="1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit_max_tickets">Máximo de Boletos</Label>
+                  <Input
+                    id="edit_max_tickets"
+                    type="number"
+                    value={editRaffle.max_tickets_per_purchase || 100}
+                    onChange={(e) => setEditRaffle(prev => prev ? ({ ...prev, max_tickets_per_purchase: parseInt(e.target.value) || 100 }) : null)}
+                    min="1"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="edit_numbers_sold">Números Vendidos (Editable)</Label>
+                <Input
+                  id="edit_numbers_sold"
+                  type="number"
+                  value={editRaffle.numbers_sold || 0}
+                  onChange={(e) => {
+                    const sold = parseInt(e.target.value) || 0;
+                    const percentage = (sold / editRaffle.total_numbers) * 100;
+                    setEditRaffle(prev => prev ? ({ 
+                      ...prev, 
+                      numbers_sold: sold,
+                      sold_percentage: percentage 
+                    }) : null);
+                  }}
+                  min="0"
+                  max={editRaffle.total_numbers}
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Porcentaje actual: {((editRaffle.numbers_sold || 0) / editRaffle.total_numbers * 100).toFixed(1)}%
+                </p>
+              </div>
+              
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button 
+                  onClick={updateRaffle}
+                  className="bg-gradient-aqua hover:shadow-aqua"
+                  disabled={updating || !editRaffle.title || !editRaffle.description}
+                >
+                  {updating ? 'Actualizando...' : 'Actualizar Rifa'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

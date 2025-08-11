@@ -53,9 +53,11 @@ const AdminDashboard = () => {
 
   const quickActions = [
     { title: 'Gestionar Rifas', description: 'Ver y administrar rifas activas', icon: Car, href: '/admin/raffles' },
-    { title: 'Ver Números', description: 'Consultar números vendidos', icon: Eye, href: '/admin/consultar' },
+    { title: 'Ver Números', description: 'Consultar números vendidos', icon: Eye, href: '/admin/sold-numbers' },
+    { title: 'Confirmaciones', description: 'Gestionar compras pendientes', icon: Eye, href: '/admin/confirmations' },
     { title: 'Premios Instant.', description: 'Configurar números bendecidos', icon: Car, href: '/admin/instant-prizes' },
     { title: 'Paquetes', description: 'Gestionar paquetes de boletos', icon: Plus, href: '/admin/packages' },
+    { title: 'Diseño', description: 'Personalizar apariencia', icon: Settings, href: '/admin/design' },
     { title: 'Configuración', description: 'Ajustes del sitio web', icon: Settings, href: '/admin/settings' },
   ];
 

@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      design_settings: {
+        Row: {
+          border_radius: number | null
+          created_at: string | null
+          custom_css: string | null
+          font_family: string | null
+          font_size_base: number | null
+          font_size_heading: number | null
+          id: string
+          theme_mode: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          border_radius?: number | null
+          created_at?: string | null
+          custom_css?: string | null
+          font_family?: string | null
+          font_size_base?: number | null
+          font_size_heading?: number | null
+          id?: string
+          theme_mode?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          border_radius?: number | null
+          created_at?: string | null
+          custom_css?: string | null
+          font_family?: string | null
+          font_size_base?: number | null
+          font_size_heading?: number | null
+          id?: string
+          theme_mode?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       dynamic_settings: {
         Row: {
           category: string | null

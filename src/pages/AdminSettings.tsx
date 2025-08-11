@@ -121,9 +121,17 @@ const AdminSettings = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Validar campo obligatorio de WhatsApp
+      let whatsappNumber = settings.whatsapp_number || '';
+      if (whatsappNumber && !whatsappNumber.startsWith('+')) {
+        whatsappNumber = '+593' + whatsappNumber.replace(/^0/, '');
+        setSettings(prev => ({ ...prev, whatsapp_number: whatsappNumber }));
+      }
+
       // Combinar todas las configuraciones
       const allSettings = {
         ...settings,
+        whatsapp_number: whatsappNumber,
         payment_settings: JSON.stringify(paymentSettings),
         social_media: JSON.stringify(socialMedia),
         email_settings: JSON.stringify(emailSettings)
@@ -135,6 +143,9 @@ const AdminSettings = () => {
           title: "¡Éxito!",
           description: "Todas las configuraciones se guardaron correctamente",
         });
+        
+        // Recargar configuraciones para confirmar el guardado
+        await loadSettings();
       } else {
         throw new Error('Failed to save settings');
       }
@@ -142,7 +153,7 @@ const AdminSettings = () => {
       console.error('Error saving settings:', error);
       toast({
         title: "Error",
-        description: "No se pudieron guardar las configuraciones",
+        description: "No se pudieron guardar las configuraciones. Verifica que tengas permisos de administrador.",
         variant: "destructive",
       });
     } finally {

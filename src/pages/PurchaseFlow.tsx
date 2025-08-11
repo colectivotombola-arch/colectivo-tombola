@@ -86,15 +86,24 @@ const PurchaseFlow = () => {
 
   const handleNextStep = () => {
     if (step === 1) {
-      // Validar cantidad
+      // Validar cantidad mínima de 10 boletos
       const quantity = getQuantity();
-      const maxTickets = raffle.max_tickets_per_purchase || 10;
-      const minTickets = raffle.min_tickets_per_purchase || 1;
+      const minTickets = 10; // Mínimo fijo de 10 boletos
+      const maxTickets = raffle.max_tickets_per_purchase || 100;
       
-      if (quantity < minTickets || quantity > maxTickets) {
+      if (quantity < minTickets) {
         toast({
-          title: "Cantidad inválida",
-          description: `Debes seleccionar entre ${minTickets} y ${maxTickets} boletos`,
+          title: "Cantidad insuficiente",
+          description: `El mínimo de boletos es ${minTickets}`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (quantity > maxTickets) {
+        toast({
+          title: "Cantidad excesiva",
+          description: `El máximo de boletos es ${maxTickets}`,
           variant: "destructive",
         });
         return;
