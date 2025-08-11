@@ -71,6 +71,40 @@ const AdminSettings = () => {
       const data = await siteSettingsAPI.get();
       if (data) {
         setSettings(data);
+        
+        // Cargar configuraciones adicionales desde JSON
+        if (data.social_media) {
+          try {
+            const social = typeof data.social_media === 'string' 
+              ? JSON.parse(data.social_media) 
+              : data.social_media;
+            setSocialMedia(social);
+          } catch (e) {
+            console.log('No social media settings found');
+          }
+        }
+        
+        if (data.payment_settings) {
+          try {
+            const payment = typeof data.payment_settings === 'string' 
+              ? JSON.parse(data.payment_settings) 
+              : data.payment_settings;
+            setPaymentSettings(payment);
+          } catch (e) {
+            console.log('No payment settings found');
+          }
+        }
+        
+        if (data.email_settings) {
+          try {
+            const email = typeof data.email_settings === 'string' 
+              ? JSON.parse(data.email_settings) 
+              : data.email_settings;
+            setEmailSettings(email);
+          } catch (e) {
+            console.log('No email settings found');
+          }
+        }
       }
     } catch (error) {
       console.error('Error loading settings:', error);
@@ -151,13 +185,16 @@ const AdminSettings = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="whatsapp_number">WhatsApp de Contacto</Label>
+                  <Label htmlFor="whatsapp_number">WhatsApp de Contacto (incluir código de país)</Label>
                   <Input
                     id="whatsapp_number"
                     value={settings.whatsapp_number || ''}
                     onChange={(e) => setSettings(prev => ({ ...prev, whatsapp_number: e.target.value }))}
-                    placeholder="+573001234567"
+                    placeholder="+593999053073"
                   />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Incluye el código de país (ej: +593 para Ecuador)
+                  </p>
                 </div>
               </div>
               

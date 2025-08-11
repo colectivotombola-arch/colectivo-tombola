@@ -142,7 +142,30 @@ const PurchaseFlow = () => {
       );
       
       if (paymentMethod === 'whatsapp') {
-        // Enviar email de confirmación
+        // Crear registro de confirmación sin números asignados aún
+        const { data: confirmationData, error: confirmationError } = await supabase
+          .from('purchase_confirmations')
+          .insert({
+            raffle_id: raffle.id!,
+            buyer_name: buyerData.name,
+            buyer_email: buyerData.email,
+            buyer_phone: buyerData.phone,
+            quantity,
+            total_amount: total,
+            payment_method: paymentMethod,
+            confirmation_number: confirmationNumber,
+            status: 'payment_pending',
+            assigned_numbers: [] // Sin números asignados hasta confirmar pago
+          })
+          .select()
+          .single();
+        
+        if (confirmationError) {
+          console.error('Error creating confirmation:', confirmationError);
+          throw new Error('No se pudo crear la confirmación de compra');
+        }
+        
+        // Enviar email de confirmación de compra pendiente
         const emailResponse = await supabase.functions.invoke('send-purchase-email', {
           body: {
             buyer_name: buyerData.name,
@@ -152,7 +175,8 @@ const PurchaseFlow = () => {
             quantity,
             total_amount: total,
             confirmation_number: confirmationNumber,
-            assigned_numbers: assignedNumbers
+            assigned_numbers: [], // Sin números hasta confirmar pago
+            payment_pending: true
           }
         });
         
@@ -160,31 +184,18 @@ const PurchaseFlow = () => {
           console.error('Error sending email:', emailResponse.error);
         }
         
-        // Insertar números en la base de datos
-        const numberInserts = assignedNumbers.map(num => ({
-          raffle_id: raffle.id!,
-          number_value: num,
-          buyer_name: buyerData.name,
-          buyer_phone: buyerData.phone,
-          buyer_email: buyerData.email,
-          payment_status: 'pending',
-          payment_method: paymentMethod,
-          purchase_date: new Date().toISOString()
-        }));
+        // Asegurar que el número de WhatsApp tenga código de país
+        let whatsappNumber = settings?.whatsapp_number || '+593999053073';
+        if (!whatsappNumber.startsWith('+')) {
+          whatsappNumber = '+593' + whatsappNumber;
+        }
         
-        await Promise.all(
-          numberInserts.map(insert => 
-            supabase.from('raffle_numbers').insert(insert)
-          )
-        );
-        
-        const whatsappNumber = settings?.whatsapp_number || '0999053073';
-        const message = `¡Hola! Completé mi compra de boletos:
+        const message = `¡Hola! Quiero comprar boletos para la rifa:
 
-📋 DETALLES DE COMPRA:
+📋 DETALLES DE MI COMPRA:
 • Rifa: ${raffle.title}
 • Cantidad: ${quantity} boletos
-• Total: $${total.toFixed(2)}
+• Total a pagar: $${total.toFixed(2)}
 • Confirmación: ${confirmationNumber}
 
 👤 MIS DATOS:
@@ -192,17 +203,16 @@ const PurchaseFlow = () => {
 • Teléfono: ${buyerData.phone}
 • Email: ${buyerData.email}
 
-🎫 MIS NÚMEROS ASIGNADOS:
-${assignedNumbers.join(', ')}
+⚠️ IMPORTANTE: Una vez confirmado el pago, recibiré mis números asignados por email.
 
-Ya recibí el email de confirmación. ¿Cómo procedo con el pago?`;
+¿Cómo procedo con el pago?`;
         
         const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
         
         toast({
           title: "¡Compra registrada exitosamente!",
-          description: `Tus números: ${assignedNumbers.join(', ')}. Revisa tu email para los detalles completos.`,
+          description: `Confirmación: ${confirmationNumber}. Una vez confirmes el pago recibirás tus números por email.`,
           duration: 8000,
         });
         

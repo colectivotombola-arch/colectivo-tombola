@@ -29,10 +29,10 @@ serve(async (req) => {
     
     if (!userData.user) throw new Error("User not authenticated");
 
-    // Update site settings
+    // Update site settings with all fields
     const { data, error } = await supabaseClient
       .from("site_settings")
-      .update({
+      .upsert({
         site_name: requestData.site_name,
         site_tagline: requestData.site_tagline,
         primary_color: requestData.primary_color,
@@ -40,9 +40,15 @@ serve(async (req) => {
         contact_email: requestData.contact_email,
         contact_phone: requestData.contact_phone,
         logo_url: requestData.logo_url,
+        whatsapp_number: requestData.whatsapp_number,
+        instagram_video_url: requestData.instagram_video_url,
+        hero_title: requestData.hero_title,
+        hero_subtitle: requestData.hero_subtitle,
+        social_media: requestData.social_media,
+        payment_settings: requestData.payment_settings,
+        email_settings: requestData.email_settings,
         updated_at: new Date().toISOString()
       })
-      .eq("id", requestData.id)
       .select()
       .single();
 

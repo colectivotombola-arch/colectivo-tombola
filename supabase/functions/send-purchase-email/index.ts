@@ -15,6 +15,7 @@ interface PurchaseEmailRequest {
   total_amount: number;
   confirmation_number: string;
   assigned_numbers: number[];
+  payment_pending?: boolean;
 }
 
 serve(async (req) => {
