@@ -16,6 +16,11 @@ export const AdminLayout = ({ children, title, subtitle, showBackButton = true }
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/?adminSuccess=true');
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -51,7 +56,7 @@ export const AdminLayout = ({ children, title, subtitle, showBackButton = true }
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={signOut} 
+                onClick={handleSignOut} 
                 className="flex items-center space-x-1 text-xs sm:text-sm"
               >
                 <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />

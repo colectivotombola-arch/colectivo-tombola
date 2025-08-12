@@ -125,7 +125,6 @@ const AdminSettings = () => {
       let whatsappNumber = settings.whatsapp_number || '';
       if (whatsappNumber && !whatsappNumber.startsWith('+')) {
         whatsappNumber = '+593' + whatsappNumber.replace(/^0/, '');
-        setSettings(prev => ({ ...prev, whatsapp_number: whatsappNumber }));
       }
 
       // Combinar todas las configuraciones
@@ -136,6 +135,9 @@ const AdminSettings = () => {
         social_media: JSON.stringify(socialMedia),
         email_settings: JSON.stringify(emailSettings)
       };
+
+      // Update local state
+      setSettings(prev => ({ ...prev, whatsapp_number: whatsappNumber }));
 
       const result = await siteSettingsAPI.update(allSettings);
       if (result) {

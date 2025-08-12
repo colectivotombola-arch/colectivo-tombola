@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import type { SiteSettings } from "@/lib/supabase";
+import logoImage from "@/assets/logo-colectivo-tombola.png";
 
 interface HeaderProps {
   settings?: SiteSettings | null;
@@ -13,8 +14,13 @@ const Header = ({ settings }: HeaderProps) => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3">
-            <div>
-              <h1 className="text-xl font-bold text-white">
+            <img 
+              src={logoImage} 
+              alt="Colectivo Tombola" 
+              className="h-8 w-auto sm:h-10 lg:h-12 object-contain"
+            />
+            <div className="hidden sm:block">
+              <h1 className="text-lg sm:text-xl font-bold text-white">
                 <span className="text-primary">{settings?.site_name?.split(' ')[0] || 'COLECTIVO'}</span>
                 <span className="text-white ml-2">{settings?.site_name?.split(' ')[1] || 'TOMBOLA'}</span>
               </h1>
@@ -48,12 +54,6 @@ const Header = ({ settings }: HeaderProps) => {
               className="text-white hover:text-primary transition-colors font-medium"
             >
               DETALLES
-            </Link>
-            <Link 
-              to="/admin" 
-              className="text-gray-400 hover:text-primary transition-colors text-sm"
-            >
-              ADMIN
             </Link>
           </nav>
         </div>
