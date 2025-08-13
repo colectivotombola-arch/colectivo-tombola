@@ -1,12 +1,64 @@
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
 import type { SiteSettings } from "@/lib/supabase";
+
+interface PrizeDisplay {
+  id: string;
+  title: string;
+  subtitle?: string;
+  image_url?: string;
+  position: number;
+}
 
 interface HeroSectionProps {
   settings?: SiteSettings | null;
 }
 
 const HeroSection = ({ settings }: HeroSectionProps) => {
+  const [prizeDisplays, setPrizeDisplays] = useState<PrizeDisplay[]>([]);
+
+  useEffect(() => {
+    loadPrizeDisplays();
+  }, []);
+
+  const loadPrizeDisplays = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('prize_displays')
+        .select('*')
+        .eq('is_active', true)
+        .order('position')
+        .limit(5);
+      
+      if (error) throw error;
+      setPrizeDisplays(data || []);
+    } catch (error) {
+      console.error('Error loading prize displays:', error);
+    }
+  };
+
+  // Fallback to static content if no prize displays are configured
+  const defaultPrizes = [
+    {
+      id: 'default-1',
+      title: 'TOYOTA FORTUNER 4X4',
+      subtitle: '',
+      image_url: '/src/assets/toyota-fortuner.jpg',
+      position: 1
+    },
+    {
+      id: 'default-2', 
+      title: 'CHEVROLET ONIX TURBO',
+      subtitle: '0km',
+      image_url: '/src/assets/chevrolet-onix.jpg',
+      position: 2
+    }
+  ];
+
+  const displaysToShow = prizeDisplays.length > 0 ? prizeDisplays : defaultPrizes;
+
   return (
     <section className="relative bg-gradient-to-b from-gray-100 to-white py-20">
       <div className="container mx-auto px-4 text-center">
@@ -14,11 +66,6 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
         <h1 className="text-5xl md:text-7xl font-bold text-black mb-4">
           <span className="block">JUEGA</span>
         </h1>
-        
-        {/* Subtítulo de Actividad */}
-        <h2 className="text-2xl md:text-4xl font-bold text-black mb-8">
-          {settings?.hero_title || 'TOYOTA FORTUNER 4X4 + CHEVROLET ONIX TURBO RS 0km'}
-        </h2>
         
         <h3 className="text-xl md:text-2xl font-semibold text-black mb-12">
           ACTIVIDAD ACTUAL
@@ -37,68 +84,70 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
             <div className="absolute top-4 right-4 z-10">
               <div className="bg-primary text-black px-6 py-3 rounded-2xl text-center">
                 <div className="text-sm font-medium">POR SÓLO</div>
-                <div className="text-3xl font-black">$1.50</div>
+                <div className="text-3xl font-black">${settings?.price_per_number || '1.50'}</div>
                 <div className="text-sm font-medium">CADA NÚMERO</div>
               </div>
             </div>
 
-            {/* Imagen de los autos */}
+            {/* Imagen de los premios dinámicos */}
             <div className="relative aspect-video bg-gradient-to-br from-gray-900 to-black p-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-full">
-                {/* Toyota Fortuner */}
-                <div className="relative">
-                  <div className="absolute top-0 left-0 z-20">
-                    <div className="bg-primary text-black px-3 py-1 rounded text-sm font-bold">
-                      PRIMERA SUERTE
+              <div className={`grid gap-8 h-full ${
+                displaysToShow.length === 1 ? 'grid-cols-1' :
+                displaysToShow.length === 2 ? 'grid-cols-1 md:grid-cols-2' :
+                displaysToShow.length === 3 ? 'grid-cols-1 md:grid-cols-3' :
+                displaysToShow.length === 4 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' :
+                'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
+              }`}>
+                {displaysToShow.map((display, index) => {
+                  const suerteTitles = ['PRIMERA SUERTE', 'SEGUNDA SUERTE', 'TERCERA SUERTE', 'CUARTA SUERTE', 'QUINTA SUERTE'];
+                  return (
+                    <div key={display.id} className="relative">
+                      <div className="absolute top-0 left-0 z-20">
+                        <div className="bg-primary text-black px-3 py-1 rounded text-sm font-bold">
+                          {suerteTitles[index] || `SUERTE ${index + 1}`}
+                        </div>
+                      </div>
+                      <img 
+                        src={display.image_url || '/placeholder.svg'} 
+                        alt={display.title}
+                        className="w-full h-full object-contain rounded-lg"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/placeholder.svg';
+                        }}
+                      />
+                      <div className="absolute bottom-4 left-4 text-white">
+                        <h4 className="text-xl lg:text-2xl font-bold text-primary">{display.title}</h4>
+                        {display.subtitle && <p className="text-sm lg:text-lg">{display.subtitle}</p>}
+                      </div>
                     </div>
-                  </div>
-                  <img 
-                    src="/src/assets/toyota-fortuner.jpg" 
-                    alt="Toyota Fortuner 4x4"
-                    className="w-full h-full object-contain rounded-lg"
-                  />
-                  <div className="absolute bottom-4 left-4 text-white">
-                    <h4 className="text-2xl font-bold text-primary">TOYOTA FORTUNER 4X4</h4>
-                  </div>
-                </div>
-
-                {/* Chevrolet Onix */}
-                <div className="relative">
-                  <div className="absolute top-0 left-0 z-20">
-                    <div className="bg-primary text-black px-3 py-1 rounded text-sm font-bold">
-                      SEGUNDA SUERTE
-                    </div>
-                  </div>
-                  <img 
-                    src="/src/assets/chevrolet-onix.jpg" 
-                    alt="Chevrolet Onix Turbo RS"
-                    className="w-full h-full object-contain rounded-lg"
-                  />
-                  <div className="absolute bottom-4 left-4 text-white">
-                    <h4 className="text-2xl font-bold text-primary">CHEVROLET ONIX TURBO</h4>
-                    <p className="text-lg">0km</p>
-                  </div>
-                </div>
+                  );
+                })}
               </div>
 
               {/* Efectos visuales */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
             </div>
 
-            {/* Texto central */}
+            {/* Texto central dinámico */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="text-center">
                 <h3 className="text-4xl md:text-6xl font-black text-white mb-2">
                   GÁNATE
                 </h3>
-                <div className="text-3xl md:text-5xl font-black text-primary">
-                  TOYOTA FORTUNER 4X4
-                </div>
-                <div className="text-2xl md:text-4xl font-black text-white">+</div>
-                <div className="text-3xl md:text-5xl font-black text-primary">
-                  CHEVROLET ONIX TURBO
-                </div>
-                <div className="text-2xl md:text-3xl font-bold text-white">0km</div>
+                {displaysToShow.map((display, index) => (
+                  <div key={display.id}>
+                    <div className="text-2xl md:text-4xl lg:text-5xl font-black text-primary">
+                      {display.title}
+                    </div>
+                    {display.subtitle && (
+                      <div className="text-xl md:text-2xl lg:text-3xl font-bold text-white">{display.subtitle}</div>
+                    )}
+                    {index < displaysToShow.length - 1 && (
+                      <div className="text-2xl md:text-4xl font-black text-white">+</div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -132,11 +181,11 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
             <div className="text-gray-600">Números Disponibles</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-primary mb-2">$1.50</div>
+            <div className="text-3xl font-bold text-primary mb-2">${settings?.price_per_number || '1.50'}</div>
             <div className="text-gray-600">Cada Número</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-primary mb-2">2</div>
+            <div className="text-3xl font-bold text-primary mb-2">{displaysToShow.length}</div>
             <div className="text-gray-600">Premios Principales</div>
           </div>
         </div>

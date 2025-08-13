@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import GallerySection from "@/components/GallerySection";
+import ProgressSection from "@/components/ProgressSection";
 import { Link, useNavigate } from 'react-router-dom';
 import { siteSettingsAPI, type SiteSettings } from '@/lib/supabase';
 import { useDesignSettings } from '@/hooks/useDesignSettings';
@@ -41,6 +42,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header settings={settings} />
       <HeroSection settings={settings} />
+      <ProgressSection settings={settings} />
       <GallerySection settings={settings} />
       
       {/* Contact Section */}
@@ -131,7 +133,7 @@ const Index = () => {
             <ResponsiveText>&copy; 2024 {settings?.site_name || 'Colectivo Tombola'}. Todos los derechos reservados.</ResponsiveText>
             <Link 
               to="/admin" 
-              className="fixed bottom-4 right-4 z-50 bg-black/80 backdrop-blur-sm p-3 rounded-full border border-gray-600 text-gray-400 hover:text-primary hover:border-primary transition-all duration-300 touch-target shadow-lg"
+              className="fixed bottom-4 right-4 z-50 bg-black/50 backdrop-blur-sm p-2 rounded-full border border-gray-700 text-gray-500 hover:text-gray-400 hover:border-gray-600 transition-all duration-300 shadow-md text-xs"
               title="Panel de Administración"
             >
               🔐

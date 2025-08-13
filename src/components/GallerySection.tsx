@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from '@/lib/supabase';
 import { SiteSettings } from '@/lib/supabase';
 
 interface GallerySectionProps {
@@ -7,16 +9,43 @@ interface GallerySectionProps {
 }
 
 const GallerySection = ({ settings }: GallerySectionProps) => {
-  // Imágenes de ejemplo como en Proyecto Flores
-  const galleryImages = [
+  const [prizes, setPrizes] = useState([]);
+  const [photos, setPhotos] = useState([]);
+  const [media, setMedia] = useState([]);
+
+  useEffect(() => {
+    loadGalleryContent();
+  }, []);
+
+  const loadGalleryContent = async () => {
+    try {
+      // Load prizes, photos, and media
+      const [prizesResult, photosResult, mediaResult] = await Promise.all([
+        supabase.from('prizes').select('*').eq('is_active', true).order('position'),
+        supabase.from('photo_gallery').select('*').eq('is_active', true).order('position'),
+        supabase.from('media_gallery').select('*').eq('is_active', true).order('position')
+      ]);
+
+      setPrizes(prizesResult.data || []);
+      setPhotos(photosResult.data || []);
+      setMedia(mediaResult.data || []);
+    } catch (error) {
+      console.error('Error loading gallery content:', error);
+    }
+  };
+
+  // Combine all images for the gallery display
+  const allImages = [
+    ...prizes.map(p => p.image_url).filter(Boolean),
+    ...photos.map(p => p.image_url).filter(Boolean)
+  ];
+
+  // Fallback to default images if no content is configured
+  const galleryImages = allImages.length > 0 ? allImages : [
     "/src/assets/toyota-fortuner.jpg",
     "/src/assets/chevrolet-onix.jpg",
     "/src/assets/toyota-fortuner.jpg", 
-    "/src/assets/chevrolet-onix.jpg",
-    "/src/assets/toyota-fortuner.jpg",
-    "/src/assets/chevrolet-onix.jpg",
-    "/src/assets/toyota-fortuner.jpg",
-    "/src/assets/chevrolet-onix.jpg",
+    "/src/assets/chevrolet-onix.jpg"
   ];
 
   return (
@@ -59,21 +88,31 @@ const GallerySection = ({ settings }: GallerySectionProps) => {
           </Card>
         </div>
 
-        {/* Video de Instagram si está configurado */}
-        {settings?.instagram_video_url && (
+        {/* Videos y medios configurados */}
+        {media.length > 0 && (
           <div className="mt-16 text-center">
             <h3 className="text-2xl font-bold text-black mb-8">
-              Video de Instagram
+              Videos y Contenido
             </h3>
-            <div className="max-w-md mx-auto">
-              <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                <iframe
-                  src={`${settings.instagram_video_url}/embed`}
-                  className="w-full h-full"
-                  frameBorder="0"
-                  allowFullScreen
-                />
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {media.map((item, index) => (
+                <div key={index} className="bg-gray-100 rounded-lg overflow-hidden">
+                  {item.media_type === 'video' ? (
+                    <div className="aspect-square bg-black flex items-center justify-center">
+                      <div className="text-white text-center">
+                        <p className="font-bold">{item.title}</p>
+                        <p className="text-sm">Video: {item.media_url}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <img 
+                      src={item.media_url} 
+                      alt={item.title}
+                      className="w-full aspect-square object-cover"
+                    />
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}

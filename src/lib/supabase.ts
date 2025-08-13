@@ -22,6 +22,7 @@ export interface SiteSettings {
   payment_settings?: any
   email_settings?: any
   site_tagline?: string
+  price_per_number?: string
   created_at?: string
   updated_at?: string
 }

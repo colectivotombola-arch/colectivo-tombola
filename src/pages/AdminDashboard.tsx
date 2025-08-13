@@ -10,7 +10,9 @@ import {
   ImageIcon, 
   LogOut,
   Plus,
-  Eye
+  Eye,
+  Trophy,
+  Video
 } from 'lucide-react';
 
 
@@ -57,6 +59,10 @@ const AdminDashboard = () => {
     { title: 'Confirmaciones', description: 'Gestionar compras pendientes', icon: Eye, href: '/admin/confirmations' },
     { title: 'Premios Instant.', description: 'Configurar números bendecidos', icon: Car, href: '/admin/instant-prizes' },
     { title: 'Paquetes', description: 'Gestionar paquetes de boletos', icon: Plus, href: '/admin/packages' },
+    { title: 'Pantallas Premios', description: 'Configurar suertes dinámicas', icon: Trophy, href: '/admin/prize-displays' },
+    { title: 'Galería Videos', description: 'TikTok e Instagram', icon: Video, href: '/admin/media-gallery' },
+    { title: 'Galería Fotos', description: 'Fotos generales del sitio', icon: ImageIcon, href: '/admin/photo-gallery' },
+    { title: 'Galería Premios', description: 'Imágenes de premios', icon: ImageIcon, href: '/admin/gallery' },
     { title: 'Diseño', description: 'Personalizar apariencia', icon: Settings, href: '/admin/design' },
     { title: 'Configuración', description: 'Ajustes del sitio web', icon: Settings, href: '/admin/settings' },
   ];
@@ -123,7 +129,7 @@ const AdminDashboard = () => {
             <CardTitle className="text-xl">Acciones Rápidas</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {quickActions.map((action, index) => (
                 <Card 
                   key={index} 

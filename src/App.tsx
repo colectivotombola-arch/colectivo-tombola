@@ -16,6 +16,9 @@ import AdminGallery from "./pages/AdminGallery";
 import AdminConfirmations from "./pages/AdminConfirmations";
 import AdminSoldNumbers from "./pages/AdminSoldNumbers";
 import AdminDesign from "./pages/AdminDesign";
+import AdminMediaGallery from "./pages/AdminMediaGallery";
+import AdminPhotoGallery from "./pages/AdminPhotoGallery";
+import AdminPrizeDisplays from "./pages/AdminPrizeDisplays";
 import ConsultarRifas from "./pages/ConsultarRifas";
 import ComprarNumeros from "./pages/ComprarNumeros";
 import ConsultarNumeros from "./pages/ConsultarNumeros";
@@ -82,6 +85,21 @@ const App = () => (
             <Route path="/admin/design" element={
               <ProtectedRoute requiresAdmin={true}>
                 <AdminDesign />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/media-gallery" element={
+              <ProtectedRoute requiresAdmin={true}>
+                <AdminMediaGallery />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/photo-gallery" element={
+              <ProtectedRoute requiresAdmin={true}>
+                <AdminPhotoGallery />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/prize-displays" element={
+              <ProtectedRoute requiresAdmin={true}>
+                <AdminPrizeDisplays />
               </ProtectedRoute>
             } />
             <Route path="/admin/consultar" element={

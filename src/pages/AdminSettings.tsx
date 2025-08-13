@@ -209,6 +209,18 @@ const AdminSettings = () => {
                     Incluye el código de país (ej: +593 para Ecuador)
                   </p>
                 </div>
+                <div>
+                  <Label htmlFor="price_per_number">Precio por Número ($)</Label>
+                  <Input
+                    id="price_per_number"
+                    value={settings.price_per_number || ''}
+                    onChange={(e) => setSettings(prev => ({ ...prev, price_per_number: e.target.value }))}
+                    placeholder="1.50"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Este precio se mostrará en la página principal
+                  </p>
+                </div>
               </div>
               
               <div>
