@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { supabase } from '@/lib/supabase';
-import { SiteSettings } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 interface GallerySectionProps {
-  settings?: SiteSettings | null;
+  settings?: { price_per_number?: string } | null;
 }
 
 const GallerySection = ({ settings }: GallerySectionProps) => {
@@ -19,16 +17,29 @@ const GallerySection = ({ settings }: GallerySectionProps) => {
 
   const loadGalleryContent = async () => {
     try {
-      // Load prizes, photos, and media
-      const [prizesResult, photosResult, mediaResult] = await Promise.all([
-        supabase.from('prizes').select('*').eq('is_active', true).order('position'),
-        supabase.from('photo_gallery').select('*').eq('is_active', true).order('position'),
-        supabase.from('media_gallery').select('*').eq('is_active', true).order('position')
-      ]);
+      // Load prizes
+      const { data: prizesData } = await supabase
+        .from('prizes')
+        .select('*')
+        .order('position');
+      
+      // Load photo gallery
+      const { data: photosData } = await supabase
+        .from('photo_gallery')
+        .select('*')
+        .eq('is_active', true)
+        .order('position');
+      
+      // Load media gallery
+      const { data: mediaData } = await supabase
+        .from('media_gallery')
+        .select('*')
+        .eq('is_active', true)
+        .order('position');
 
-      setPrizes(prizesResult.data || []);
-      setPhotos(photosResult.data || []);
-      setMedia(mediaResult.data || []);
+      setPrizes(prizesData || []);
+      setPhotos(photosData || []);
+      setMedia(mediaData || []);
     } catch (error) {
       console.error('Error loading gallery content:', error);
     }
@@ -36,8 +47,8 @@ const GallerySection = ({ settings }: GallerySectionProps) => {
 
   // Combine all images for the gallery display
   const allImages = [
-    ...prizes.map(p => p.image_url).filter(Boolean),
-    ...photos.map(p => p.image_url).filter(Boolean)
+    ...(prizes as any[]).map((p: any) => p.image_url).filter(Boolean),
+    ...(photos as any[]).map((p: any) => p.image_url).filter(Boolean)
   ];
 
   // Fallback to default images if no content is configured
@@ -76,7 +87,9 @@ const GallerySection = ({ settings }: GallerySectionProps) => {
           </Card>
           
           <Card className="text-center p-8 bg-card border-primary/20">
-            <div className="text-4xl font-bold text-primary mb-2">$1.50</div>
+            <div className="text-4xl font-bold text-primary mb-2">
+              ${settings?.price_per_number || "1.50"}
+            </div>
             <div className="text-xl font-semibold text-foreground mb-1">Por número</div>
             <div className="text-muted-foreground">Precio accesible</div>
           </Card>
@@ -95,7 +108,7 @@ const GallerySection = ({ settings }: GallerySectionProps) => {
               Videos y Contenido
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {media.map((item, index) => (
+              {(media as any[]).map((item: any, index: number) => (
                 <div key={index} className="bg-gray-100 rounded-lg overflow-hidden">
                   {item.media_type === 'video' ? (
                     <div className="aspect-square bg-black flex items-center justify-center">
