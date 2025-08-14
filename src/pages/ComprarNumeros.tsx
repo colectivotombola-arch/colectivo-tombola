@@ -13,7 +13,7 @@ const ComprarNumeros = () => {
   const navigate = useNavigate();
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [raffle, setRaffle] = useState<Raffle | null>(null);
-  const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [settings, setSettings] = useState<Partial<SiteSettings> | null>(null);
   const [loading, setLoading] = useState(true);
   const [packages, setPackages] = useState<any[]>([]);
 
@@ -25,7 +25,7 @@ const ComprarNumeros = () => {
     try {
       const [raffleData, settingsData] = await Promise.all([
         rafflesAPI.getActive(),
-        siteSettingsAPI.get()
+        siteSettingsAPI.getPublic()
       ]);
       
       setRaffle(raffleData);

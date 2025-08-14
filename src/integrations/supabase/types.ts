@@ -639,10 +639,6 @@ export type Database = {
           primary_color: string
           secondary_color: string
           logo_url: string
-          whatsapp_number: string
-          instagram_video_url: string
-          price_per_number: string
-          social_media: Json
           created_at: string
           updated_at: string
         }[]

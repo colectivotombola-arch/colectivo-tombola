@@ -9,7 +9,7 @@ import { useDesignSettings } from '@/hooks/useDesignSettings';
 import { MobileContainer, MobileSection, ResponsiveText } from '@/components/MobileOptimized';
 
 const Index = () => {
-  const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [settings, setSettings] = useState<Partial<SiteSettings> | null>(null);
   const navigate = useNavigate();
   const { loading: designLoading } = useDesignSettings();
 
@@ -29,7 +29,7 @@ const Index = () => {
 
   const loadSettings = async () => {
     try {
-      const data = await siteSettingsAPI.get();
+      const data = await siteSettingsAPI.getPublic();
       setSettings(data);
     } catch (error) {
       console.error('Error loading settings:', error);

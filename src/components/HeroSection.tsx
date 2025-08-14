@@ -13,7 +13,7 @@ interface PrizeDisplay {
 }
 
 interface HeroSectionProps {
-  settings?: SiteSettings | null;
+  settings?: Partial<SiteSettings> | null;
 }
 
 const HeroSection = ({ settings }: HeroSectionProps) => {

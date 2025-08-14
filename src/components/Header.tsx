@@ -4,7 +4,7 @@ import type { SiteSettings } from "@/lib/supabase";
 import logoImage from "@/assets/logo-colectivo-tombola.png";
 
 interface HeaderProps {
-  settings?: SiteSettings | null;
+  settings?: Partial<SiteSettings> | null;
 }
 
 const Header = ({ settings }: HeaderProps) => {

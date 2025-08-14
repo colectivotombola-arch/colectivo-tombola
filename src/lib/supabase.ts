@@ -93,6 +93,20 @@ export interface PurchaseConfirmation {
 
 // API functions
 export const siteSettingsAPI = {
+  // Public access - only safe display settings
+  async getPublic(): Promise<Partial<SiteSettings> | null> {
+    const { data, error } = await supabase
+      .rpc('get_public_site_settings')
+    
+    if (error) {
+      console.error('Error fetching public site settings:', error)
+      return null
+    }
+    
+    return data as Partial<SiteSettings>
+  },
+
+  // Admin access - all settings (requires authentication)
   async get(): Promise<SiteSettings | null> {
     const { data, error } = await supabase
       .from('site_settings')

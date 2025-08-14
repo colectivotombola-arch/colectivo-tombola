@@ -19,7 +19,7 @@ const PurchaseFlow = () => {
   const [raffle, setRaffle] = useState<Raffle | null>(null);
   const [selectedPackage, setSelectedPackage] = useState<RafflePackage | null>(null);
   const [customQuantity, setCustomQuantity] = useState('');
-  const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [settings, setSettings] = useState<Partial<SiteSettings> | null>(null);
   const [loading, setLoading] = useState(true);
   
   // Datos del cliente
@@ -41,7 +41,7 @@ const PurchaseFlow = () => {
     try {
       const [raffleData, settingsData] = await Promise.all([
         rafflesAPI.getActive(),
-        siteSettingsAPI.get()
+        siteSettingsAPI.getPublic()
       ]);
       
       setRaffle(raffleData);

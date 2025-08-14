@@ -6,7 +6,7 @@ import { Trophy, Eye } from "lucide-react";
 import { SiteSettings } from '@/lib/supabase';
 
 interface ProgressSectionProps {
-  settings?: SiteSettings | null;
+  settings?: Partial<SiteSettings> | null;
 }
 
 const ProgressSection = ({ settings }: ProgressSectionProps) => {
