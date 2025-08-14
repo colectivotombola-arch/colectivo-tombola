@@ -218,6 +218,7 @@ export type Database = {
           description: string
           id: string
           image_url: string | null
+          is_active: boolean
           name: string
           position: number
           raffle_id: string | null
@@ -229,6 +230,7 @@ export type Database = {
           description: string
           id?: string
           image_url?: string | null
+          is_active?: boolean
           name: string
           position?: number
           raffle_id?: string | null
@@ -240,6 +242,7 @@ export type Database = {
           description?: string
           id?: string
           image_url?: string | null
+          is_active?: boolean
           name?: string
           position?: number
           raffle_id?: string | null
@@ -540,6 +543,7 @@ export type Database = {
           instagram_video_url: string | null
           logo_url: string | null
           payment_settings: Json | null
+          price_per_number: string | null
           primary_color: string
           secondary_color: string
           site_name: string
@@ -559,6 +563,7 @@ export type Database = {
           instagram_video_url?: string | null
           logo_url?: string | null
           payment_settings?: Json | null
+          price_per_number?: string | null
           primary_color?: string
           secondary_color?: string
           site_name?: string
@@ -578,6 +583,7 @@ export type Database = {
           instagram_video_url?: string | null
           logo_url?: string | null
           payment_settings?: Json | null
+          price_per_number?: string | null
           primary_color?: string
           secondary_color?: string
           site_name?: string
@@ -621,6 +627,25 @@ export type Database = {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["app_role"]
+      }
+      get_public_site_settings: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          site_name: string
+          site_tagline: string
+          hero_title: string
+          hero_subtitle: string
+          primary_color: string
+          secondary_color: string
+          logo_url: string
+          whatsapp_number: string
+          instagram_video_url: string
+          price_per_number: string
+          social_media: Json
+          created_at: string
+          updated_at: string
+        }[]
       }
       has_role: {
         Args: {

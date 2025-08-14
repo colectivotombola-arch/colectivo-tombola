@@ -21,6 +21,7 @@ const GallerySection = ({ settings }: GallerySectionProps) => {
       const { data: prizesData } = await supabase
         .from('prizes')
         .select('*')
+        .eq('is_active', true)
         .order('position');
       
       // Load photo gallery
@@ -103,31 +104,31 @@ const GallerySection = ({ settings }: GallerySectionProps) => {
 
         {/* Videos y medios configurados */}
         {media.length > 0 && (
-          <div className="mt-16 text-center">
-            <h3 className="text-2xl font-bold text-black mb-8">
-              Videos y Contenido
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {(media as any[]).map((item: any, index: number) => (
-                <div key={index} className="bg-gray-100 rounded-lg overflow-hidden">
-                  {item.media_type === 'video' ? (
-                    <div className="aspect-square bg-black flex items-center justify-center">
-                      <div className="text-white text-center">
-                        <p className="font-bold">{item.title}</p>
-                        <p className="text-sm">Video: {item.media_url}</p>
+            <div className="mt-8 sm:mt-12 lg:mt-16 text-center">
+              <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-6 sm:mb-8">
+                Videos y Contenido
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {(media as any[]).map((item: any, index: number) => (
+                <div key={index} className="bg-card/80 rounded-lg overflow-hidden border border-border">
+                    {item.media_type === 'video' ? (
+                      <div className="aspect-square bg-background flex items-center justify-center">
+                        <div className="text-foreground text-center p-4">
+                          <p className="font-bold text-primary">{item.title}</p>
+                          <p className="text-sm text-muted-foreground">Video: {item.media_url}</p>
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <img 
+                    ) : (
+                      <img
                       src={item.media_url} 
                       alt={item.title}
-                      className="w-full aspect-square object-cover"
-                    />
-                  )}
-                </div>
-              ))}
+                        className="w-full aspect-square object-cover"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
         )}
       </div>
     </section>
