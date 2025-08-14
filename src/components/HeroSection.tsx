@@ -60,16 +60,8 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
   const displaysToShow = prizeDisplays.length > 0 ? prizeDisplays : defaultPrizes;
 
   return (
-    <section className="relative bg-gradient-to-b from-gray-100 to-white py-20">
+    <section className="relative bg-gradient-to-b from-background to-card py-8 sm:py-12 lg:py-20">
       <div className="container mx-auto px-4 text-center">
-        {/* Título Principal */}
-        <h1 className="text-5xl md:text-7xl font-bold text-black mb-4">
-          <span className="block">JUEGA</span>
-        </h1>
-        
-        <h3 className="text-xl md:text-2xl font-semibold text-black mb-12">
-          ACTIVIDAD ACTUAL
-        </h3>
 
         {/* Imagen Principal Hero */}
         <div className="relative max-w-6xl mx-auto mb-12">

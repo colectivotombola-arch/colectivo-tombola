@@ -39,7 +39,7 @@ const Index = () => {
   const socialMedia = settings?.social_media ? (typeof settings.social_media === 'string' ? JSON.parse(settings.social_media) : settings.social_media) : {};
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-card to-background">
       <Header settings={settings} />
       <HeroSection settings={settings} />
       <ProgressSection settings={settings} />
@@ -69,8 +69,11 @@ const Index = () => {
       </MobileSection>
 
       {/* Footer */}
-      <footer className="bg-black text-white mobile-section">
-        <MobileContainer>
+      <footer className="bg-black text-white mobile-section relative overflow-hidden">
+        {/* Background Logo */}
+        <div className="absolute inset-0 opacity-5 bg-no-repeat bg-center bg-contain" 
+             style={{backgroundImage: "url('/src/assets/logo-colectivo-tombola.png')"}}></div>
+        <MobileContainer className="relative z-10">
           <div className="mobile-grid">
             <div>
               <ResponsiveText variant="subtitle" className="mb-4 text-primary">
@@ -133,8 +136,8 @@ const Index = () => {
             <ResponsiveText>&copy; 2024 {settings?.site_name || 'Colectivo Tombola'}. Todos los derechos reservados.</ResponsiveText>
             <Link 
               to="/admin" 
-              className="fixed bottom-4 right-4 z-50 bg-black/50 backdrop-blur-sm p-2 rounded-full border border-gray-700 text-gray-500 hover:text-gray-400 hover:border-gray-600 transition-all duration-300 shadow-md text-xs"
-              title="Panel de Administración"
+              className="fixed bottom-4 right-4 z-50 bg-black/30 backdrop-blur-sm p-1.5 rounded-full border border-gray-800 text-gray-600 hover:text-gray-500 hover:border-gray-700 transition-all duration-300 shadow-md text-xs opacity-70"
+              title="Admin"
             >
               🔐
             </Link>

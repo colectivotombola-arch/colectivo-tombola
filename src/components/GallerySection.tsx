@@ -60,13 +60,13 @@ const GallerySection = ({ settings }: GallerySectionProps) => {
   ];
 
   return (
-    <section className="py-16 bg-white">
+    <section className="py-8 sm:py-12 lg:py-16 bg-card/50">
       <div className="container mx-auto px-4">
-        <h2 className="text-4xl font-bold text-center text-black mb-12">
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center text-foreground mb-8 sm:mb-12">
           Galería de Premios
         </h2>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {galleryImages.map((image, index) => (
             <div key={index} className="aspect-square overflow-hidden rounded-lg">
               <img 
@@ -79,7 +79,7 @@ const GallerySection = ({ settings }: GallerySectionProps) => {
         </div>
 
         {/* Stats Section */}
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="mt-8 sm:mt-12 lg:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           <Card className="text-center p-8 bg-card border-primary/20">
             <div className="text-4xl font-bold text-primary mb-2">2</div>
             <div className="text-xl font-semibold text-foreground mb-1">Vehículos</div>
