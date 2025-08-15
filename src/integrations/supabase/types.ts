@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
@@ -549,6 +549,7 @@ export type Database = {
           site_name: string
           site_tagline: string | null
           social_media: Json | null
+          terms_and_conditions: string | null
           updated_at: string
           whatsapp_number: string | null
         }
@@ -569,6 +570,7 @@ export type Database = {
           site_name?: string
           site_tagline?: string | null
           social_media?: Json | null
+          terms_and_conditions?: string | null
           updated_at?: string
           whatsapp_number?: string | null
         }
@@ -589,6 +591,7 @@ export type Database = {
           site_name?: string
           site_tagline?: string | null
           social_media?: Json | null
+          terms_and_conditions?: string | null
           updated_at?: string
           whatsapp_number?: string | null
         }
@@ -631,22 +634,24 @@ export type Database = {
       get_public_site_settings: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          site_name: string
-          site_tagline: string
-          hero_title: string
+          created_at: string
           hero_subtitle: string
+          hero_title: string
+          id: string
+          logo_url: string
+          price_per_number: string
           primary_color: string
           secondary_color: string
-          logo_url: string
-          created_at: string
+          site_name: string
+          site_tagline: string
+          terms_and_conditions: string
           updated_at: string
         }[]
       }
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
         }
         Returns: boolean
       }
