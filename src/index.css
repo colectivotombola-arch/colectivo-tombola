@@ -151,11 +151,11 @@ All colors MUST be HSL.
   
   /* Responsive text sizing */
   .responsive-title {
-    @apply text-xl sm:text-2xl lg:text-3xl;
+    @apply text-xl sm:text-2xl lg:text-3xl xl:text-4xl;
   }
   
   .responsive-subtitle {
-    @apply text-base sm:text-lg lg:text-xl;
+    @apply text-base sm:text-lg lg:text-xl xl:text-2xl;
   }
   
   /* Mobile-optimized spacing */
@@ -165,5 +165,33 @@ All colors MUST be HSL.
   
   .mobile-gap {
     @apply gap-4 sm:gap-6 lg:gap-8;
+  }
+
+  /* Fix white spaces and improve mobile responsiveness */
+  .hero-background {
+    @apply bg-gradient-to-br from-background via-card to-background;
+  }
+  
+  .progress-background {
+    @apply bg-gradient-to-r from-card via-muted/20 to-card;
+  }
+  
+  /* Better mobile typography */
+  .mobile-heading {
+    @apply text-lg sm:text-xl lg:text-2xl xl:text-3xl;
+  }
+  
+  .mobile-body {
+    @apply text-xs sm:text-sm lg:text-base;
+  }
+  
+  /* Responsive card improvements */
+  .mobile-card-responsive {
+    @apply p-3 sm:p-4 lg:p-6;
+  }
+  
+  /* Touch targets for mobile */
+  .mobile-button {
+    @apply min-h-[48px] px-4 py-3 text-sm sm:text-base lg:min-h-[52px] lg:px-6 lg:py-4;
   }
 }

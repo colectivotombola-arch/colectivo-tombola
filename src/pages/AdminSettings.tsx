@@ -35,11 +35,14 @@ const AdminSettings = () => {
   // Estados adicionales para funcionalidades completas
   const [paymentSettings, setPaymentSettings] = useState({
     paypal_email: '',
+    payphone_number: '',
     bank_account: '',
     bank_name: '',
     account_holder: '',
     routing_number: '',
     stripe_public_key: '',
+    wompi_public_key: '',
+    kushki_public_key: '',
     mercadopago_access_token: ''
   });
 
@@ -281,6 +284,21 @@ const AdminSettings = () => {
                   </div>
                 </div>
               </div>
+
+              <div>
+                <Label htmlFor="terms_and_conditions">Términos y Condiciones</Label>
+                <Textarea
+                  id="terms_and_conditions"
+                  value={settings.terms_and_conditions || ''}
+                  onChange={(e) => setSettings(prev => ({ ...prev, terms_and_conditions: e.target.value }))}
+                  placeholder="Escribe aquí los términos y condiciones de tu sitio..."
+                  rows={6}
+                  className="min-h-[150px]"
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Estos términos aparecerán en el proceso de compra
+                </p>
+              </div>
             </CardContent>
           </Card>
 
@@ -304,6 +322,15 @@ const AdminSettings = () => {
                   />
                 </div>
                 <div>
+                  <Label htmlFor="payphone_number">Número PayPhone</Label>
+                  <Input
+                    id="payphone_number"
+                    value={paymentSettings.payphone_number || ''}
+                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, payphone_number: e.target.value }))}
+                    placeholder="+593999123456"
+                  />
+                </div>
+                <div>
                   <Label htmlFor="stripe_public_key">Clave Pública de Stripe</Label>
                   <Input
                     id="stripe_public_key"
@@ -312,16 +339,36 @@ const AdminSettings = () => {
                     placeholder="pk_live_..."
                   />
                 </div>
+                <div>
+                  <Label htmlFor="wompi_public_key">Clave Pública Wompi</Label>
+                  <Input
+                    id="wompi_public_key"
+                    value={paymentSettings.wompi_public_key || ''}
+                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, wompi_public_key: e.target.value }))}
+                    placeholder="pub_test_..."
+                  />
+                </div>
               </div>
 
-              <div>
-                <Label htmlFor="mercadopago_access_token">Token de MercadoPago</Label>
-                <Input
-                  id="mercadopago_access_token"
-                  value={paymentSettings.mercadopago_access_token}
-                  onChange={(e) => setPaymentSettings(prev => ({ ...prev, mercadopago_access_token: e.target.value }))}
-                  placeholder="APP_USR-..."
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="mercadopago_access_token">Token de MercadoPago</Label>
+                  <Input
+                    id="mercadopago_access_token"
+                    value={paymentSettings.mercadopago_access_token}
+                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, mercadopago_access_token: e.target.value }))}
+                    placeholder="APP_USR-..."
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="kushki_public_key">Clave Pública Kushki</Label>
+                  <Input
+                    id="kushki_public_key"
+                    value={paymentSettings.kushki_public_key || ''}
+                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, kushki_public_key: e.target.value }))}
+                    placeholder="10000001..."
+                  />
+                </div>
               </div>
 
               <div className="border-t pt-4">

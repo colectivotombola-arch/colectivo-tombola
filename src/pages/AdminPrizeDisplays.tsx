@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { AdminLayout } from '@/components/AdminLayout';
+import { ImageUpload } from '@/components/ImageUpload';
 import { Save, Trash2, Plus, Trophy } from 'lucide-react';
 
 interface PrizeDisplay {
@@ -198,16 +199,12 @@ const AdminPrizeDisplays = () => {
                   </div>
                   
                   <div>
-                    <Label htmlFor={`image_url-${index}`}>URL de la Imagen del Premio</Label>
-                    <Input
-                      id={`image_url-${index}`}
+                    <ImageUpload
+                      label="Imagen del Premio"
                       value={display.image_url || ''}
-                      onChange={(e) => updatePrizeDisplay(index, 'image_url', e.target.value)}
-                      placeholder="https://ejemplo.com/premio.jpg"
+                      onChange={(url) => updatePrizeDisplay(index, 'image_url', url)}
+                      bucket="prize-images"
                     />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Puedes subir fotos desde tu celular. Formatos: JPG, PNG, WebP
-                    </p>
                   </div>
                   
                   {display.image_url && (

@@ -82,8 +82,8 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
             </div>
 
             {/* Imagen de los premios dinámicos */}
-            <div className="relative aspect-video bg-gradient-to-br from-gray-900 to-black p-8">
-              <div className={`grid gap-8 h-full ${
+            <div className="relative aspect-video bg-gradient-to-br from-background to-card p-4 sm:p-6 lg:p-8">
+              <div className={`grid gap-4 sm:gap-6 lg:gap-8 h-full ${
                 displaysToShow.length === 1 ? 'grid-cols-1' :
                 displaysToShow.length === 2 ? 'grid-cols-1 md:grid-cols-2' :
                 displaysToShow.length === 3 ? 'grid-cols-1 md:grid-cols-3' :
@@ -94,23 +94,23 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
                   const suerteTitles = ['PRIMERA SUERTE', 'SEGUNDA SUERTE', 'TERCERA SUERTE', 'CUARTA SUERTE', 'QUINTA SUERTE'];
                   return (
                     <div key={display.id} className="relative">
-                      <div className="absolute top-0 left-0 z-20">
-                        <div className="bg-primary text-black px-3 py-1 rounded text-sm font-bold">
+                      <div className="absolute top-2 left-2 z-20">
+                        <div className="bg-primary text-primary-foreground px-2 py-1 sm:px-3 sm:py-1 rounded text-xs sm:text-sm font-bold">
                           {suerteTitles[index] || `SUERTE ${index + 1}`}
                         </div>
                       </div>
                       <img 
                         src={display.image_url || '/placeholder.svg'} 
                         alt={display.title}
-                        className="w-full h-full object-contain rounded-lg"
+                        className="w-full h-full object-contain rounded-lg bg-muted/10"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.src = '/placeholder.svg';
                         }}
                       />
-                      <div className="absolute bottom-4 left-4 text-white">
-                        <h4 className="text-xl lg:text-2xl font-bold text-primary">{display.title}</h4>
-                        {display.subtitle && <p className="text-sm lg:text-lg">{display.subtitle}</p>}
+                      <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 text-foreground bg-background/80 backdrop-blur-sm rounded p-2">
+                        <h4 className="text-sm sm:text-lg lg:text-xl font-bold text-primary">{display.title}</h4>
+                        {display.subtitle && <p className="text-xs sm:text-sm lg:text-base">{display.subtitle}</p>}
                       </div>
                     </div>
                   );

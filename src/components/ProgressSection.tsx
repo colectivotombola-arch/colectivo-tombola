@@ -18,7 +18,7 @@ const ProgressSection = ({ settings }: ProgressSectionProps) => {
   };
 
   return (
-    <section className="py-8 bg-white">
+    <section className="py-8 progress-background">
       <div className="container mx-auto px-4">
         <div className="max-w-md mx-auto">
           <Card className="p-6 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">

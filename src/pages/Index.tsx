@@ -72,7 +72,7 @@ const Index = () => {
       <footer className="bg-black text-white mobile-section relative overflow-hidden">
         {/* Background Logo */}
         <div className="absolute inset-0 opacity-5 bg-no-repeat bg-center bg-contain" 
-             style={{backgroundImage: "url('/src/assets/logo-colectivo-tombola.png')"}}></div>
+             style={{backgroundImage: "url('/src/assets/logo-colectivo-tombola-new.png')"}}></div>
         <MobileContainer className="relative z-10">
           <div className="mobile-grid">
             <div>
@@ -89,6 +89,7 @@ const Index = () => {
                 <li><Link to="/comprar" className="hover:text-primary transition-colors mobile-text touch-target">Comprar Números</Link></li>
                 <li><Link to="/consultar" className="hover:text-primary transition-colors mobile-text touch-target">Consultar Números</Link></li>
                 <li><Link to="/detalles" className="hover:text-primary transition-colors mobile-text touch-target">Detalles de Actividad</Link></li>
+                <li><Link to="/terminos" className="hover:text-primary transition-colors mobile-text touch-target">Términos y Condiciones</Link></li>
               </ul>
             </div>
             <div>

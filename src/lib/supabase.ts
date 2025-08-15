@@ -23,6 +23,7 @@ export interface SiteSettings {
   email_settings?: any
   site_tagline?: string
   price_per_number?: string
+  terms_and_conditions?: string
   created_at?: string
   updated_at?: string
 }

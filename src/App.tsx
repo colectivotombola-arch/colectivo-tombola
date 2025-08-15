@@ -24,6 +24,7 @@ import ComprarNumeros from "./pages/ComprarNumeros";
 import ConsultarNumeros from "./pages/ConsultarNumeros";
 import DetallesActividad from "./pages/DetallesActividad";
 import PurchaseFlow from "./pages/PurchaseFlow";
+import TermsAndConditions from "./pages/TermsAndConditions";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/comprar" element={<ComprarNumeros />} />
             <Route path="/consultar" element={<ConsultarNumeros />} />
             <Route path="/detalles" element={<DetallesActividad />} />
+            <Route path="/terminos" element={<TermsAndConditions />} />
             <Route path="/admin" element={
               <ProtectedRoute requiresAdmin={true}>
                 <AdminDashboard />
