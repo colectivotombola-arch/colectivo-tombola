@@ -67,9 +67,9 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
         <div className="relative max-w-6xl mx-auto mb-12">
           <div className="relative bg-black rounded-2xl overflow-hidden shadow-2xl">
             {/* Etiquetas de Premios */}
-            <div className="absolute top-4 left-4 z-10">
-              <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg">
-                <span className="text-black font-bold text-lg">Actividad #33</span>
+            <div className="absolute top-2 left-4 z-10">
+              <div className="bg-primary/90 backdrop-blur-sm px-4 py-2 rounded-lg">
+                <span className="text-primary-foreground font-bold text-lg">Actividad #33</span>
               </div>
             </div>
             
@@ -82,7 +82,7 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
             </div>
 
             {/* Imagen de los premios dinámicos */}
-            <div className="relative aspect-video bg-gradient-to-br from-background to-card p-4 sm:p-6 lg:p-8">
+            <div className="relative aspect-video bg-gradient-to-br from-background to-card p-4 sm:p-6 lg:p-8" style={{backgroundImage: 'url(/src/assets/logo-background-2.png)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundBlendMode: 'overlay'}}>
               <div className={`grid gap-4 sm:gap-6 lg:gap-8 h-full ${
                 displaysToShow.length === 1 ? 'grid-cols-1' :
                 displaysToShow.length === 2 ? 'grid-cols-1 md:grid-cols-2' :
@@ -107,11 +107,11 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
                           const target = e.target as HTMLImageElement;
                           target.src = '/placeholder.svg';
                         }}
-                      />
-                      <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 text-foreground bg-background/80 backdrop-blur-sm rounded p-2">
-                        <h4 className="text-sm sm:text-lg lg:text-xl font-bold text-primary">{display.title}</h4>
-                        {display.subtitle && <p className="text-xs sm:text-sm lg:text-base">{display.subtitle}</p>}
-                      </div>
+                        />
+                        <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 text-foreground bg-background/90 backdrop-blur-sm rounded p-2">
+                          <h4 className="text-sm sm:text-lg lg:text-xl font-bold text-primary">{display.title}</h4>
+                          {display.subtitle && <p className="text-xs sm:text-sm lg:text-base text-foreground">{display.subtitle}</p>}
+                        </div>
                     </div>
                   );
                 })}

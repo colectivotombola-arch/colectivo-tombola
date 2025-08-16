@@ -540,6 +540,8 @@ export type Database = {
           hero_subtitle: string
           hero_title: string
           id: string
+          instagram_display_name: string | null
+          instagram_handle: string | null
           instagram_video_url: string | null
           logo_url: string | null
           payment_settings: Json | null
@@ -561,6 +563,8 @@ export type Database = {
           hero_subtitle?: string
           hero_title?: string
           id?: string
+          instagram_display_name?: string | null
+          instagram_handle?: string | null
           instagram_video_url?: string | null
           logo_url?: string | null
           payment_settings?: Json | null
@@ -582,6 +586,8 @@ export type Database = {
           hero_subtitle?: string
           hero_title?: string
           id?: string
+          instagram_display_name?: string | null
+          instagram_handle?: string | null
           instagram_video_url?: string | null
           logo_url?: string | null
           payment_settings?: Json | null

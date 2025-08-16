@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import type { SiteSettings } from "@/lib/supabase";
-import logoImage from "@/assets/logo-colectivo-tombola.png";
+import logoImage from "@/assets/logo-colectivo-tombola-new.png";
 
 interface HeaderProps {
   settings?: Partial<SiteSettings> | null;
@@ -9,7 +9,7 @@ interface HeaderProps {
 
 const Header = ({ settings }: HeaderProps) => {
   return (
-    <header className="bg-black/95 backdrop-blur-sm sticky top-0 z-50 border-b border-primary/20">
+    <header className="bg-background/95 backdrop-blur-sm sticky top-0 z-50 border-b border-primary/20">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { siteSettingsAPI } from '@/lib/supabase';
 
 interface DesignSettings {
   primary_color?: string;
@@ -19,14 +20,26 @@ export const useDesignSettings = () => {
 
   const loadDesignSettings = async () => {
     try {
-      const { data } = await supabase
-        .from('design_settings')
-        .select('*')
-        .single();
-      
-      if (data) {
-        setSettings(data);
-        applyDesignSettings(data);
+      // Load from site_settings first (primary source)
+      const siteSettings = await siteSettingsAPI.get();
+      if (siteSettings?.primary_color || siteSettings?.secondary_color) {
+        const designData = {
+          primary_color: siteSettings.primary_color,
+          secondary_color: siteSettings.secondary_color
+        };
+        setSettings(designData);
+        applyDesignSettings(designData);
+      } else {
+        // Fallback to design_settings table
+        const { data } = await supabase
+          .from('design_settings')
+          .select('*')
+          .single();
+        
+        if (data) {
+          setSettings(data);
+          applyDesignSettings(data);
+        }
       }
     } catch (error) {
       console.error('Error loading design settings:', error);
@@ -44,12 +57,20 @@ export const useDesignSettings = () => {
       root.style.setProperty('--primary', hsl);
       root.style.setProperty('--aqua-glow', hsl);
       root.style.setProperty('--accent', hsl);
+      root.style.setProperty('--ring', hsl);
     }
     
     if (designSettings.secondary_color) {
       const hsl = hexToHsl(designSettings.secondary_color);
       root.style.setProperty('--secondary', hsl);
     }
+    
+    // Force update for all elements
+    document.body.style.setProperty('--primary', root.style.getPropertyValue('--primary'));
+    document.body.style.setProperty('--accent', root.style.getPropertyValue('--accent'));
+    
+    // Trigger a re-render by updating a data attribute
+    document.documentElement.setAttribute('data-theme-updated', Date.now().toString());
     
     if (designSettings.font_family) {
       root.style.setProperty('--font-family', designSettings.font_family);
@@ -97,5 +118,18 @@ export const useDesignSettings = () => {
     return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
   };
 
-  return { settings, loading, applyDesignSettings };
+  // Function to refresh settings from site_settings
+  const refreshFromSiteSettings = async () => {
+    const siteSettings = await siteSettingsAPI.get();
+    if (siteSettings?.primary_color || siteSettings?.secondary_color) {
+      const designData = {
+        primary_color: siteSettings.primary_color,
+        secondary_color: siteSettings.secondary_color
+      };
+      setSettings(designData);
+      applyDesignSettings(designData);
+    }
+  };
+
+  return { settings, loading, applyDesignSettings, refreshFromSiteSettings };
 };

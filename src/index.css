@@ -8,13 +8,13 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 7%;
+    --background: 0 0% 5%;
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 10%;
+    --card: 0 0% 8%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 10%;
+    --popover: 0 0% 8%;
     --popover-foreground: 0 0% 98%;
 
     --primary: 174 100% 50%;
@@ -41,8 +41,8 @@ All colors MUST be HSL.
     /* Custom design tokens */
     --aqua-glow: 174 100% 50%;
     --aqua-bright: 174 100% 60%;
-    --dark-bg: 0 0% 7%;
-    --dark-card: 0 0% 10%;
+    --dark-bg: 0 0% 5%;
+    --dark-card: 0 0% 8%;
     --gradient-aqua: linear-gradient(135deg, hsl(174 100% 50%), hsl(174 100% 60%));
     --shadow-aqua: 0 0 30px hsl(174 100% 50% / 0.3);
     --transition-glow: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -65,13 +65,13 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 0 0% 7%;
+    --background: 0 0% 5%;
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 10%;
+    --card: 0 0% 8%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 10%;
+    --popover: 0 0% 8%;
     --popover-foreground: 0 0% 98%;
 
     --primary: 174 100% 50%;

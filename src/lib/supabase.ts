@@ -13,6 +13,8 @@ export interface SiteSettings {
   secondary_color: string
   whatsapp_number?: string
   instagram_video_url?: string
+  instagram_handle?: string
+  instagram_display_name?: string
   hero_title: string
   hero_subtitle: string
   contact_email?: string

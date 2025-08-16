@@ -18,10 +18,10 @@ const ProgressSection = ({ settings }: ProgressSectionProps) => {
   };
 
   return (
-    <section className="py-8 progress-background">
+    <section className="py-8 progress-background" style={{backgroundImage: 'url(/src/assets/logo-background-1.png)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundBlendMode: 'overlay'}}>
       <div className="container mx-auto px-4">
         <div className="max-w-md mx-auto">
-          <Card className="p-6 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+          <Card className="p-6 bg-gradient-to-br from-background/90 to-card/90 border-primary/20 backdrop-blur-sm">
             <div className="text-center mb-4">
               <div className="flex items-center justify-center mb-2">
                 <Trophy className="w-6 h-6 text-primary mr-2" />

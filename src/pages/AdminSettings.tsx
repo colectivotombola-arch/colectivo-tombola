@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { siteSettingsAPI, SiteSettings } from '@/lib/supabase';
 import { AdminLayout } from '@/components/AdminLayout';
+import { useDesignSettings } from '@/hooks/useDesignSettings';
 import { 
   Save, 
   Video, 
@@ -22,6 +23,7 @@ import {
 const AdminSettings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { refreshFromSiteSettings } = useDesignSettings();
   const [settings, setSettings] = useState<SiteSettings>({
     site_name: 'TOMBOLA PREMIUM',
     primary_color: '#00e5cc',
@@ -151,6 +153,9 @@ const AdminSettings = () => {
         
         // Recargar configuraciones para confirmar el guardado
         await loadSettings();
+        
+        // Refresh design settings to apply changes immediately
+        await refreshFromSiteSettings();
       } else {
         throw new Error('Failed to save settings');
       }
@@ -437,18 +442,45 @@ const AdminSettings = () => {
                     />
                   </div>
                 </div>
-                <div>
-                  <Label htmlFor="instagram_url">Instagram URL</Label>
-                  <div className="flex items-center space-x-2">
-                    <Instagram className="w-4 h-4 text-pink-600" />
-                    <Input
-                      id="instagram_url"
-                      value={socialMedia.instagram_url}
-                      onChange={(e) => setSocialMedia(prev => ({ ...prev, instagram_url: e.target.value }))}
-                      placeholder="https://instagram.com/tuempresa"
-                    />
-                  </div>
+              <div>
+                <Label htmlFor="instagram_url">Instagram URL</Label>
+                <div className="flex items-center space-x-2">
+                  <Instagram className="w-4 h-4 text-pink-600" />
+                  <Input
+                    id="instagram_url"
+                    value={socialMedia.instagram_url}
+                    onChange={(e) => setSocialMedia(prev => ({ ...prev, instagram_url: e.target.value }))}
+                    placeholder="https://instagram.com/tuempresa"
+                  />
                 </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="instagram_handle">Handle de Instagram</Label>
+                  <Input
+                    id="instagram_handle"
+                    value={settings.instagram_handle || ''}
+                    onChange={(e) => setSettings(prev => ({ ...prev, instagram_handle: e.target.value }))}
+                    placeholder="@tuempresa"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Se mostrará en la página como "Síguenos en Instagram @tuempresa"
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="instagram_display_name">Nombre para mostrar</Label>
+                  <Input
+                    id="instagram_display_name"
+                    value={settings.instagram_display_name || ''}
+                    onChange={(e) => setSettings(prev => ({ ...prev, instagram_display_name: e.target.value }))}
+                    placeholder="Tu Empresa"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Nombre que aparecerá junto al handle
+                  </p>
+                </div>
+              </div>
                 <div>
                   <Label htmlFor="tiktok_url">TikTok URL</Label>
                   <div className="flex items-center space-x-2">
