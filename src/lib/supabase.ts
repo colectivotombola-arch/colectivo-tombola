@@ -26,6 +26,9 @@ export interface SiteSettings {
   site_tagline?: string
   price_per_number?: string
   terms_and_conditions?: string
+  activity_title?: string
+  purchase_rules?: string
+  raffle_rules?: string
   created_at?: string
   updated_at?: string
 }

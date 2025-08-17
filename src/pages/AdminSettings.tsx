@@ -229,6 +229,18 @@ const AdminSettings = () => {
                     Este precio se mostrará en la página principal
                   </p>
                 </div>
+                <div>
+                  <Label htmlFor="activity_title">Título de Actividad (ej: ACTIVIDAD #1)</Label>
+                  <Input
+                    id="activity_title"
+                    value={settings.activity_title || ''}
+                    onChange={(e) => setSettings(prev => ({ ...prev, activity_title: e.target.value }))}
+                    placeholder="ACTIVIDAD #1"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Este título aparece en la esquina superior de la página principal
+                  </p>
+                </div>
               </div>
               
               <div>
@@ -290,20 +302,35 @@ const AdminSettings = () => {
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="terms_and_conditions">Términos y Condiciones</Label>
-                <Textarea
-                  id="terms_and_conditions"
-                  value={settings.terms_and_conditions || ''}
-                  onChange={(e) => setSettings(prev => ({ ...prev, terms_and_conditions: e.target.value }))}
-                  placeholder="Escribe aquí los términos y condiciones de tu sitio..."
-                  rows={6}
-                  className="min-h-[150px]"
-                />
-                <p className="text-sm text-muted-foreground mt-1">
-                  Estos términos aparecerán en el proceso de compra
-                </p>
-              </div>
+                <div>
+                  <Label htmlFor="purchase_rules">Reglas de Compra</Label>
+                  <Textarea
+                    id="purchase_rules"
+                    value={settings.purchase_rules || ''}
+                    onChange={(e) => setSettings(prev => ({ ...prev, purchase_rules: e.target.value }))}
+                    placeholder="Escribe aquí las reglas para realizar compras..."
+                    rows={4}
+                    className="min-h-[100px]"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Estas reglas aparecerán en el proceso de compra
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="raffle_rules">Reglas de las Rifas</Label>
+                  <Textarea
+                    id="raffle_rules"
+                    value={settings.raffle_rules || ''}
+                    onChange={(e) => setSettings(prev => ({ ...prev, raffle_rules: e.target.value }))}
+                    placeholder="Escribe aquí las reglas generales de las rifas..."
+                    rows={4}
+                    className="min-h-[100px]"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Estas reglas aparecerán en la página de detalles
+                  </p>
+                </div>
             </CardContent>
           </Card>
 
@@ -442,19 +469,44 @@ const AdminSettings = () => {
                     />
                   </div>
                 </div>
-              <div>
-                <Label htmlFor="instagram_url">Instagram URL</Label>
-                <div className="flex items-center space-x-2">
-                  <Instagram className="w-4 h-4 text-pink-600" />
-                  <Input
-                    id="instagram_url"
-                    value={socialMedia.instagram_url}
-                    onChange={(e) => setSocialMedia(prev => ({ ...prev, instagram_url: e.target.value }))}
-                    placeholder="https://instagram.com/tuempresa"
-                  />
+                <div>
+                  <Label htmlFor="instagram_url">Instagram URL</Label>
+                  <div className="flex items-center space-x-2">
+                    <Instagram className="w-4 h-4 text-pink-600" />
+                    <Input
+                      id="instagram_url"
+                      value={socialMedia.instagram_url}
+                      onChange={(e) => setSocialMedia(prev => ({ ...prev, instagram_url: e.target.value }))}
+                      placeholder="https://instagram.com/tuempresa"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="tiktok_url">TikTok URL</Label>
+                  <div className="flex items-center space-x-2">
+                    <Video className="w-4 h-4 text-black" />
+                    <Input
+                      id="tiktok_url"
+                      value={socialMedia.tiktok_url}
+                      onChange={(e) => setSocialMedia(prev => ({ ...prev, tiktok_url: e.target.value }))}
+                      placeholder="https://tiktok.com/@tuempresa"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="twitter_url">Twitter/X URL</Label>
+                  <div className="flex items-center space-x-2">
+                    <Twitter className="w-4 h-4 text-blue-400" />
+                    <Input
+                      id="twitter_url"
+                      value={socialMedia.twitter_url}
+                      onChange={(e) => setSocialMedia(prev => ({ ...prev, twitter_url: e.target.value }))}
+                      placeholder="https://twitter.com/tuempresa"
+                    />
+                  </div>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="instagram_handle">Handle de Instagram</Label>
@@ -479,31 +531,6 @@ const AdminSettings = () => {
                   <p className="text-sm text-muted-foreground mt-1">
                     Nombre que aparecerá junto al handle
                   </p>
-                </div>
-              </div>
-                <div>
-                  <Label htmlFor="tiktok_url">TikTok URL</Label>
-                  <div className="flex items-center space-x-2">
-                    <Video className="w-4 h-4 text-black" />
-                    <Input
-                      id="tiktok_url"
-                      value={socialMedia.tiktok_url}
-                      onChange={(e) => setSocialMedia(prev => ({ ...prev, tiktok_url: e.target.value }))}
-                      placeholder="https://tiktok.com/@tuempresa"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="twitter_url">Twitter/X URL</Label>
-                  <div className="flex items-center space-x-2">
-                    <Twitter className="w-4 h-4 text-blue-400" />
-                    <Input
-                      id="twitter_url"
-                      value={socialMedia.twitter_url}
-                      onChange={(e) => setSocialMedia(prev => ({ ...prev, twitter_url: e.target.value }))}
-                      placeholder="https://twitter.com/tuempresa"
-                    />
-                  </div>
                 </div>
               </div>
 

@@ -2,8 +2,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
-import { Trophy, Eye } from "lucide-react";
 import { SiteSettings } from '@/lib/supabase';
+import { Instagram, Twitter, Facebook, Trophy, Eye } from 'lucide-react';
+import progressBackground from '@/assets/progress-background.png';
 
 interface ProgressSectionProps {
   settings?: Partial<SiteSettings> | null;
@@ -18,8 +19,18 @@ const ProgressSection = ({ settings }: ProgressSectionProps) => {
   };
 
   return (
-    <section className="py-8 progress-background" style={{backgroundImage: 'url(/src/assets/logo-background-1.png)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundBlendMode: 'overlay'}}>
-      <div className="container mx-auto px-4">
+    <section className="py-8 relative">
+      {/* Background Image */}
+      <div className="absolute inset-0">
+        <img
+          src={progressBackground}
+          alt="Progress background"
+          className="w-full h-full object-cover opacity-20"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-transparent to-background/90"></div>
+      </div>
+      
+      <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-md mx-auto">
           <Card className="p-6 bg-gradient-to-br from-background/90 to-card/90 border-primary/20 backdrop-blur-sm">
             <div className="text-center mb-4">
@@ -56,6 +67,45 @@ const ProgressSection = ({ settings }: ProgressSectionProps) => {
                 </Button>
               </Link>
             </div>
+            
+            {/* Social Media Links - Now Editable */}
+            {settings?.social_media && (
+              <div className="mt-4 pt-4 border-t border-primary/20">
+                <p className="text-sm text-muted-foreground mb-2">Síguenos en:</p>
+                <div className="flex justify-center gap-4">
+                  {settings.social_media.instagram && (
+                    <a 
+                      href={settings.social_media.instagram} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:text-primary/80 transition-colors"
+                    >
+                      <Instagram className="w-5 h-5" />
+                    </a>
+                  )}
+                  {settings.social_media.twitter && (
+                    <a 
+                      href={settings.social_media.twitter} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:text-primary/80 transition-colors"
+                    >
+                      <Twitter className="w-5 h-5" />
+                    </a>
+                  )}
+                  {settings.social_media.facebook && (
+                    <a 
+                      href={settings.social_media.facebook} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:text-primary/80 transition-colors"
+                    >
+                      <Facebook className="w-5 h-5" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
           </Card>
         </div>
       </div>

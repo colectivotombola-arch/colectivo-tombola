@@ -502,25 +502,23 @@ const AdminRaffles = () => {
               </div>
 
               <div>
-                <Label htmlFor="edit_numbers_sold">Números Vendidos (Editable)</Label>
-                <Input
-                  id="edit_numbers_sold"
-                  type="number"
-                  value={editRaffle.numbers_sold || 0}
+                <Label htmlFor="edit_instant_prizes">Premios Instantáneos (JSON)</Label>
+                <Textarea
+                  id="edit_instant_prizes"
+                  value={JSON.stringify(editRaffle.instant_prizes || [], null, 2)}
                   onChange={(e) => {
-                    const sold = parseInt(e.target.value) || 0;
-                    const percentage = (sold / editRaffle.total_numbers) * 100;
-                    setEditRaffle(prev => prev ? ({ 
-                      ...prev, 
-                      numbers_sold: sold,
-                      sold_percentage: percentage 
-                    }) : null);
+                    try {
+                      const prizes = JSON.parse(e.target.value);
+                      setEditRaffle(prev => prev ? ({ ...prev, instant_prizes: prizes }) : null);
+                    } catch (error) {
+                      // Invalid JSON, ignore
+                    }
                   }}
-                  min="0"
-                  max={editRaffle.total_numbers}
+                  placeholder='[{"number": "123", "claimed": false, "prize_amount": 50}]'
+                  rows={6}
                 />
                 <p className="text-sm text-muted-foreground mt-1">
-                  Porcentaje actual: {((editRaffle.numbers_sold || 0) / editRaffle.total_numbers * 100).toFixed(1)}%
+                  Formato: [&#123;"number": "123", "claimed": false, "prize_amount": 50&#125;]
                 </p>
               </div>
               

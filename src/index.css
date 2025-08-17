@@ -8,7 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 5%;
+    --background: 0 0% 8%;
     --foreground: 0 0% 98%;
 
     --card: 0 0% 8%;
@@ -65,7 +65,7 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 0 0% 5%;
+    --background: 0 0% 8%;
     --foreground: 0 0% 98%;
 
     --card: 0 0% 8%;
@@ -185,13 +185,16 @@ All colors MUST be HSL.
     @apply text-xs sm:text-sm lg:text-base;
   }
   
-  /* Responsive card improvements */
-  .mobile-card-responsive {
-    @apply p-3 sm:p-4 lg:p-6;
-  }
-  
-  /* Touch targets for mobile */
-  .mobile-button {
-    @apply min-h-[48px] px-4 py-3 text-sm sm:text-base lg:min-h-[52px] lg:px-6 lg:py-4;
-  }
+/* Hide Lovable edit button */
+.lovable-edit-button,
+[data-lovable-edit="true"],
+button[aria-label*="lovable"],
+button[title*="lovable"],
+.edit-with-lovable {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
+  z-index: -1 !important;
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import heroBackground from '@/assets/hero-background.png';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import type { SiteSettings } from "@/lib/supabase";
@@ -61,7 +62,24 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
 
   return (
     <section className="relative bg-gradient-to-b from-background to-card py-8 sm:py-12 lg:py-20">
-      <div className="container mx-auto px-4 text-center">
+      {/* Background Image */}
+      <div className="absolute inset-0">
+        <img
+          src={heroBackground}
+          alt="Hero background"
+          className="w-full h-full object-cover opacity-30"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-transparent to-background/80"></div>
+      </div>
+      
+      <div className="container mx-auto px-4 text-center relative z-10">{/* Actividad Badge - Now Editable */}
+        <div className="absolute top-4 right-1/2 transform translate-x-1/2 z-20">
+          <div className="bg-primary/90 backdrop-blur-sm px-6 py-3 rounded-xl">
+            <span className="text-primary-foreground font-bold text-lg">
+              {settings?.activity_title || 'ACTIVIDAD #1'}
+            </span>
+          </div>
+        </div>
 
         {/* Imagen Principal Hero */}
         <div className="relative max-w-6xl mx-auto mb-12">
@@ -82,7 +100,7 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
             </div>
 
             {/* Imagen de los premios dinámicos */}
-            <div className="relative aspect-video bg-gradient-to-br from-background to-card p-4 sm:p-6 lg:p-8" style={{backgroundImage: 'url(/src/assets/logo-background-2.png)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundBlendMode: 'overlay'}}>
+            <div className="relative aspect-video bg-gradient-to-br from-background/20 to-card/20 p-4 sm:p-6 lg:p-8" style={{backgroundImage: `url(${heroBackground})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundBlendMode: 'overlay'}}>
               <div className={`grid gap-4 sm:gap-6 lg:gap-8 h-full ${
                 displaysToShow.length === 1 ? 'grid-cols-1' :
                 displaysToShow.length === 2 ? 'grid-cols-1 md:grid-cols-2' :

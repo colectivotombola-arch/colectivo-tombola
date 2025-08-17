@@ -467,6 +467,7 @@ export type Database = {
       }
       raffles: {
         Row: {
+          allow_multiple_purchases: boolean | null
           created_at: string
           created_by: string | null
           description: string
@@ -479,6 +480,7 @@ export type Database = {
           numbers_sold: number | null
           price_per_number: number
           prize_image: string | null
+          purchase_limit: number | null
           sold_percentage: number | null
           start_date: string | null
           status: string
@@ -488,6 +490,7 @@ export type Database = {
           winner_number: number | null
         }
         Insert: {
+          allow_multiple_purchases?: boolean | null
           created_at?: string
           created_by?: string | null
           description: string
@@ -500,6 +503,7 @@ export type Database = {
           numbers_sold?: number | null
           price_per_number?: number
           prize_image?: string | null
+          purchase_limit?: number | null
           sold_percentage?: number | null
           start_date?: string | null
           status?: string
@@ -509,6 +513,7 @@ export type Database = {
           winner_number?: number | null
         }
         Update: {
+          allow_multiple_purchases?: boolean | null
           created_at?: string
           created_by?: string | null
           description?: string
@@ -521,6 +526,7 @@ export type Database = {
           numbers_sold?: number | null
           price_per_number?: number
           prize_image?: string | null
+          purchase_limit?: number | null
           sold_percentage?: number | null
           start_date?: string | null
           status?: string
@@ -533,6 +539,7 @@ export type Database = {
       }
       site_settings: {
         Row: {
+          activity_title: string | null
           contact_email: string | null
           contact_phone: string | null
           created_at: string
@@ -547,6 +554,8 @@ export type Database = {
           payment_settings: Json | null
           price_per_number: string | null
           primary_color: string
+          purchase_rules: string | null
+          raffle_rules: string | null
           secondary_color: string
           site_name: string
           site_tagline: string | null
@@ -556,6 +565,7 @@ export type Database = {
           whatsapp_number: string | null
         }
         Insert: {
+          activity_title?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
@@ -570,6 +580,8 @@ export type Database = {
           payment_settings?: Json | null
           price_per_number?: string | null
           primary_color?: string
+          purchase_rules?: string | null
+          raffle_rules?: string | null
           secondary_color?: string
           site_name?: string
           site_tagline?: string | null
@@ -579,6 +591,7 @@ export type Database = {
           whatsapp_number?: string | null
         }
         Update: {
+          activity_title?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
@@ -593,6 +606,8 @@ export type Database = {
           payment_settings?: Json | null
           price_per_number?: string | null
           primary_color?: string
+          purchase_rules?: string | null
+          raffle_rules?: string | null
           secondary_color?: string
           site_name?: string
           site_tagline?: string | null

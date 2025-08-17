@@ -86,10 +86,10 @@ const PurchaseFlow = () => {
 
   const handleNextStep = () => {
     if (step === 1) {
-      // Validar cantidad mínima de 10 boletos
+      // Validar cantidad mínima de 1 boleto (eliminar límite fijo de 10)
       const quantity = getQuantity();
-      const minTickets = 10; // Mínimo fijo de 10 boletos
-      const maxTickets = raffle.max_tickets_per_purchase || 100;
+      const minTickets = raffle.min_tickets_per_purchase || 1;
+      const maxTickets = raffle.max_tickets_per_purchase || 1000;
       
       if (quantity < minTickets) {
         toast({
@@ -299,12 +299,12 @@ const PurchaseFlow = () => {
                     type="number"
                     value={customQuantity}
                     onChange={(e) => setCustomQuantity(e.target.value)}
-                    min={raffle.min_tickets_per_purchase || 1}
-                    max={raffle.max_tickets_per_purchase || 10}
-                    placeholder={`Mínimo ${raffle.min_tickets_per_purchase || 1}, máximo ${raffle.max_tickets_per_purchase || 10}`}
+                  min="1"
+                  max={raffle.max_tickets_per_purchase || 1000}
+                  placeholder={`Mínimo ${raffle.min_tickets_per_purchase || 1}, máximo ${raffle.max_tickets_per_purchase || 1000}`}
                   />
                   <p className="text-sm text-muted-foreground mt-1">
-                    Límite: {raffle.min_tickets_per_purchase || 1} - {raffle.max_tickets_per_purchase || 10} boletos
+                    Límite: {raffle.min_tickets_per_purchase || 1} - {raffle.max_tickets_per_purchase || 1000} boletos
                   </p>
                 </div>
               ) : (
