@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import heroBackground from '@/assets/hero-background.png';
+import heroBackground from '@/assets/logo-background-1.png';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import type { SiteSettings } from "@/lib/supabase";
@@ -72,8 +72,9 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
         <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-transparent to-background/80"></div>
       </div>
       
-      <div className="container mx-auto px-4 text-center relative z-10">{/* Actividad Badge - Now Editable */}
-        <div className="absolute top-4 right-1/2 transform translate-x-1/2 z-20">
+      <div className="container mx-auto px-4 text-center relative z-10">
+        {/* Actividad Badge - Now Editable - Moved higher up and centered */}
+        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-20">
           <div className="bg-primary/90 backdrop-blur-sm px-6 py-3 rounded-xl">
             <span className="text-primary-foreground font-bold text-lg">
               {settings?.activity_title || 'ACTIVIDAD #1'}
@@ -84,12 +85,6 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
         {/* Imagen Principal Hero */}
         <div className="relative max-w-6xl mx-auto mb-12">
           <div className="relative bg-black rounded-2xl overflow-hidden shadow-2xl">
-            {/* Etiquetas de Premios */}
-            <div className="absolute top-2 left-4 z-10">
-              <div className="bg-primary/90 backdrop-blur-sm px-4 py-2 rounded-lg">
-                <span className="text-primary-foreground font-bold text-lg">Actividad #33</span>
-              </div>
-            </div>
             
             <div className="absolute top-4 right-4 z-10">
               <div className="bg-primary text-black px-6 py-3 rounded-2xl text-center">

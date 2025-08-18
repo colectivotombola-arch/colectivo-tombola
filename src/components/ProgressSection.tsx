@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 import { SiteSettings } from '@/lib/supabase';
 import { Instagram, Twitter, Facebook, Trophy, Eye } from 'lucide-react';
-import progressBackground from '@/assets/progress-background.png';
+import progressBackground from '@/assets/logo-background-2.png';
 
 interface ProgressSectionProps {
   settings?: Partial<SiteSettings> | null;
