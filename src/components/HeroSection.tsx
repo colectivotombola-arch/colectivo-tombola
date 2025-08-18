@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import heroBackground from '@/assets/logo-background-1.png';
 import { Link } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
-import type { SiteSettings } from "@/lib/supabase";
+import { supabase, rafflesAPI, type SiteSettings, type Raffle } from '@/lib/supabase';
 
 interface PrizeDisplay {
   id: string;
@@ -19,9 +18,11 @@ interface HeroSectionProps {
 
 const HeroSection = ({ settings }: HeroSectionProps) => {
   const [prizeDisplays, setPrizeDisplays] = useState<PrizeDisplay[]>([]);
+  const [activeRaffle, setActiveRaffle] = useState<Raffle | null>(null);
 
   useEffect(() => {
     loadPrizeDisplays();
+    loadActiveRaffle();
   }, []);
 
   const loadPrizeDisplays = async () => {
@@ -37,6 +38,15 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
       setPrizeDisplays(data || []);
     } catch (error) {
       console.error('Error loading prize displays:', error);
+    }
+  };
+
+  const loadActiveRaffle = async () => {
+    try {
+      const raffle = await rafflesAPI.getActive();
+      setActiveRaffle(raffle);
+    } catch (error) {
+      console.error('Error loading active raffle:', error);
     }
   };
 
@@ -89,7 +99,7 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
             <div className="absolute top-4 right-4 z-10">
               <div className="bg-primary text-black px-6 py-3 rounded-2xl text-center">
                 <div className="text-sm font-medium">POR SÓLO</div>
-                <div className="text-3xl font-black">${settings?.price_per_number || '1.50'}</div>
+                <div className="text-3xl font-black">${activeRaffle?.price_per_number ?? settings?.price_per_number ?? '1.50'}</div>
                 <div className="text-sm font-medium">CADA NÚMERO</div>
               </div>
             </div>
@@ -186,7 +196,7 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
             <div className="text-gray-600">Números Disponibles</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-primary mb-2">${settings?.price_per_number || '1.50'}</div>
+            <div className="text-3xl font-bold text-primary mb-2">${activeRaffle?.price_per_number ?? settings?.price_per_number ?? '1.50'}</div>
             <div className="text-gray-600">Cada Número</div>
           </div>
           <div className="text-center">

@@ -20,8 +20,8 @@ export const useDesignSettings = () => {
 
   const loadDesignSettings = async () => {
     try {
-      // Load from site_settings first (primary source)
-      const siteSettings = await siteSettingsAPI.get();
+      // Load from site_settings PUBLIC view (works without admin auth)
+      const siteSettings = await siteSettingsAPI.getPublic();
       if (siteSettings?.primary_color || siteSettings?.secondary_color) {
         const designData = {
           primary_color: siteSettings.primary_color,
@@ -120,7 +120,7 @@ export const useDesignSettings = () => {
 
   // Function to refresh settings from site_settings
   const refreshFromSiteSettings = async () => {
-    const siteSettings = await siteSettingsAPI.get();
+    const siteSettings = await siteSettingsAPI.getPublic();
     if (siteSettings?.primary_color || siteSettings?.secondary_color) {
       const designData = {
         primary_color: siteSettings.primary_color,

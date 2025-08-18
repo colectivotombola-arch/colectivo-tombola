@@ -6,6 +6,7 @@ import GallerySection from '@/components/GallerySection';
 import InstagramSection from '@/components/InstagramSection';
 import { siteSettingsAPI, SiteSettings } from '@/lib/supabase';
 import { useDesignSettings } from '@/hooks/useDesignSettings';
+import footerLogo from '@/assets/logo-colectivo-tombola-new.png';
 
 const Index = () => {
   const [settings, setSettings] = useState<Partial<SiteSettings> | null>(null);
@@ -63,8 +64,8 @@ const Index = () => {
       {/* Footer */}
       <footer className="bg-background text-foreground py-8 relative overflow-hidden">
         {/* Background Logo - More visible */}
-        <div className="absolute inset-0 opacity-15 bg-no-repeat bg-center bg-contain" 
-             style={{backgroundImage: "url('/src/assets/logo-colectivo-tombola-new.png')"}}></div>
+        <div className="absolute inset-0 opacity-20 bg-no-repeat bg-center bg-contain" 
+             style={{backgroundImage: `url(${footerLogo})`}}></div>
         <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/80 to-background/95"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

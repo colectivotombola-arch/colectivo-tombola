@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { SiteSettings } from '@/lib/supabase';
 import { Instagram, Twitter, Facebook, Trophy, Eye } from 'lucide-react';
 import progressBackground from '@/assets/logo-background-2.png';
+import progressLogo from '@/assets/logo-colectivo-tombola.png';
 
 interface ProgressSectionProps {
   settings?: Partial<SiteSettings> | null;
@@ -35,7 +36,7 @@ const ProgressSection = ({ settings }: ProgressSectionProps) => {
           <Card className="p-6 bg-gradient-to-br from-background/95 to-card/95 border-primary/20 backdrop-blur-sm relative overflow-hidden">
             {/* Logo del Colectivo Tómbola dentro del card */}
             <div className="absolute inset-0 opacity-10 bg-no-repeat bg-center bg-contain pointer-events-none" 
-                 style={{backgroundImage: `url(${progressBackground})`}}></div>
+                 style={{backgroundImage: `url(${progressLogo})`}}></div>
             <div className="relative z-10">
               <div className="text-center mb-4">
               <div className="flex items-center justify-center mb-2">
