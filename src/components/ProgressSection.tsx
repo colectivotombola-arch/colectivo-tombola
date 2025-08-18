@@ -32,8 +32,12 @@ const ProgressSection = ({ settings }: ProgressSectionProps) => {
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-md mx-auto">
-          <Card className="p-6 bg-gradient-to-br from-background/90 to-card/90 border-primary/20 backdrop-blur-sm">
-            <div className="text-center mb-4">
+          <Card className="p-6 bg-gradient-to-br from-background/95 to-card/95 border-primary/20 backdrop-blur-sm relative overflow-hidden">
+            {/* Logo del Colectivo Tómbola dentro del card */}
+            <div className="absolute inset-0 opacity-10 bg-no-repeat bg-center bg-contain pointer-events-none" 
+                 style={{backgroundImage: `url(${progressBackground})`}}></div>
+            <div className="relative z-10">
+              <div className="text-center mb-4">
               <div className="flex items-center justify-center mb-2">
                 <Trophy className="w-6 h-6 text-primary mr-2" />
                 <h3 className="text-xl font-bold text-foreground">Progreso de Ventas</h3>
@@ -106,6 +110,7 @@ const ProgressSection = ({ settings }: ProgressSectionProps) => {
                 </div>
               </div>
             )}
+            </div>
           </Card>
         </div>
       </div>
