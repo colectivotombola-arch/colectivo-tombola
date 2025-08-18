@@ -185,16 +185,17 @@ All colors MUST be HSL.
     @apply text-xs sm:text-sm lg:text-base;
   }
   
-/* Hide Lovable edit button */
-.lovable-edit-button,
-[data-lovable-edit="true"],
-button[aria-label*="lovable"],
-button[title*="lovable"],
-.edit-with-lovable {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  position: absolute !important;
-  left: -9999px !important;
-  z-index: -1 !important;
+  /* Hide Lovable edit button */
+  .lovable-edit-button,
+  [data-lovable-edit="true"],
+  button[aria-label*="lovable"],
+  button[title*="lovable"],
+  .edit-with-lovable {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    position: absolute !important;
+    left: -9999px !important;
+    z-index: -1 !important;
+  }
 }
