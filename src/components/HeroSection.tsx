@@ -107,7 +107,7 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
                   const suerteTitles = ['PRIMERA SUERTE', 'SEGUNDA SUERTE', 'TERCERA SUERTE', 'CUARTA SUERTE', 'QUINTA SUERTE'];
                   return (
                     <div key={display.id} className="relative">
-                      <div className="absolute top-2 left-2 z-20">
+                      <div className="absolute top-4 left-2 z-20">
                         <div className="bg-primary text-primary-foreground px-2 py-1 sm:px-3 sm:py-1 rounded text-xs sm:text-sm font-bold">
                           {suerteTitles[index] || `SUERTE ${index + 1}`}
                         </div>
