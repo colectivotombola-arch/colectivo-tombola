@@ -244,6 +244,19 @@ const AdminSettings = () => {
               </div>
               
               <div>
+                <Label htmlFor="logo_url">Logo del sitio (URL)</Label>
+                <Input
+                  id="logo_url"
+                  value={settings.logo_url || ''}
+                  onChange={(e) => setSettings(prev => ({ ...prev, logo_url: e.target.value }))}
+                  placeholder="https://tu-dominio.com/mi-logo.png"
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Se usará en el footer y en el recuadro de progreso.
+                </p>
+              </div>
+              
+              <div>
                 <Label htmlFor="hero_title">Título Principal de la Actividad</Label>
                 <Input
                   id="hero_title"

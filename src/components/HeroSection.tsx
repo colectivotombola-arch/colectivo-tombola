@@ -99,7 +99,7 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
             <div className="absolute top-4 right-4 z-10">
               <div className="bg-primary text-black px-6 py-3 rounded-2xl text-center">
                 <div className="text-sm font-medium">POR SÓLO</div>
-                <div className="text-3xl font-black">${activeRaffle?.price_per_number ?? settings?.price_per_number ?? '1.50'}</div>
+                <div className="text-3xl font-black">${settings?.price_per_number ?? activeRaffle?.price_per_number ?? '1.50'}</div>
                 <div className="text-sm font-medium">CADA NÚMERO</div>
               </div>
             </div>
@@ -117,7 +117,7 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
                   const suerteTitles = ['PRIMERA SUERTE', 'SEGUNDA SUERTE', 'TERCERA SUERTE', 'CUARTA SUERTE', 'QUINTA SUERTE'];
                   return (
                     <div key={display.id} className="relative">
-                      <div className="absolute top-4 left-2 z-20">
+                      <div className="absolute top-10 md:top-14 left-2 z-20">
                         <div className="bg-primary text-primary-foreground px-2 py-1 sm:px-3 sm:py-1 rounded text-xs sm:text-sm font-bold">
                           {suerteTitles[index] || `SUERTE ${index + 1}`}
                         </div>
@@ -196,7 +196,7 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
             <div className="text-gray-600">Números Disponibles</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-primary mb-2">${activeRaffle?.price_per_number ?? settings?.price_per_number ?? '1.50'}</div>
+            <div className="text-3xl font-bold text-primary mb-2">${settings?.price_per_number ?? activeRaffle?.price_per_number ?? '1.50'}</div>
             <div className="text-gray-600">Cada Número</div>
           </div>
           <div className="text-center">

@@ -86,10 +86,11 @@ const PurchaseFlow = () => {
 
   const handleNextStep = () => {
     if (step === 1) {
-      // Validar cantidad mínima de 1 boleto (eliminar límite fijo de 10)
+      // Validar cantidad mínima y permitir paquetes mayores al límite configurado
       const quantity = getQuantity();
       const minTickets = raffle.min_tickets_per_purchase || 1;
       const maxTickets = raffle.max_tickets_per_purchase || 1000;
+      const effectiveMax = Math.max(maxTickets, quantity);
       
       if (quantity < minTickets) {
         toast({
@@ -100,10 +101,10 @@ const PurchaseFlow = () => {
         return;
       }
       
-      if (quantity > maxTickets) {
+      if (quantity > effectiveMax) {
         toast({
           title: "Cantidad excesiva",
-          description: `El máximo de boletos es ${maxTickets}`,
+          description: `El máximo de boletos es ${effectiveMax}`,
           variant: "destructive",
         });
         return;

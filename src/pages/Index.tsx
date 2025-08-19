@@ -65,7 +65,7 @@ const Index = () => {
       <footer className="bg-background text-foreground py-8 relative overflow-hidden">
         {/* Background Logo - More visible */}
         <div className="absolute inset-0 opacity-20 bg-no-repeat bg-center bg-contain" 
-             style={{backgroundImage: `url(${footerLogo})`}}></div>
+             style={{backgroundImage: `url(${settings?.logo_url || footerLogo})`}}></div>
         <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/80 to-background/95"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
