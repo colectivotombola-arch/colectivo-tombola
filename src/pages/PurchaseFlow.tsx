@@ -45,7 +45,24 @@ const PurchaseFlow = () => {
       ]);
       
       setRaffle(raffleData);
-      setSettings(settingsData);
+      
+      // Parse payment_settings from JSON string if needed
+      if (settingsData) {
+        let processedSettings = { ...settingsData };
+        
+        if (settingsData.payment_settings) {
+          try {
+            processedSettings.payment_settings = typeof settingsData.payment_settings === 'string' 
+              ? JSON.parse(settingsData.payment_settings) 
+              : settingsData.payment_settings;
+          } catch (e) {
+            console.log('Error parsing payment_settings:', e);
+            processedSettings.payment_settings = {};
+          }
+        }
+        
+        setSettings(processedSettings);
+      }
       
       if (raffleData && packageId && packageId !== 'custom') {
         const packages = await rafflePackagesAPI.getByRaffle(raffleData.id!);
@@ -477,33 +494,43 @@ const PurchaseFlow = () => {
                   </div>
                 </div>
 
+                {/* Transferencia Bancaria - Habilitada condicionalmente */}
                 <div 
-                  className={`p-4 border-2 rounded-lg cursor-pointer transition-all opacity-50 ${
-                    paymentMethod === 'bank_transfer' ? 'border-primary bg-primary/5' : 'border-border'
-                  }`}
+                  className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    !settings?.payment_settings?.bank_transfer_enabled ? 'opacity-50' : ''
+                  } ${paymentMethod === 'bank_transfer' ? 'border-primary bg-primary/5' : 'border-border'}`}
+                  onClick={() => settings?.payment_settings?.bank_transfer_enabled && setPaymentMethod('bank_transfer')}
                 >
                   <div className="flex items-center gap-3">
                     <Building2 className="w-5 h-5 text-blue-600" />
                     <div>
                       <div className="font-medium">Transferencia Bancaria</div>
                       <div className="text-sm text-muted-foreground">
-                        Próximamente disponible
+                        {settings?.payment_settings?.bank_transfer_enabled 
+                          ? 'Pago directo a cuenta bancaria'
+                          : 'Próximamente disponible'
+                        }
                       </div>
                     </div>
                   </div>
                 </div>
 
+                {/* PayPal - Habilitado condicionalmente */}
                 <div 
-                  className={`p-4 border-2 rounded-lg cursor-pointer transition-all opacity-50 ${
-                    paymentMethod === 'paypal' ? 'border-primary bg-primary/5' : 'border-border'
-                  }`}
+                  className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    !settings?.payment_settings?.paypal_enabled ? 'opacity-50' : ''
+                  } ${paymentMethod === 'paypal' ? 'border-primary bg-primary/5' : 'border-border'}`}
+                  onClick={() => settings?.payment_settings?.paypal_enabled && setPaymentMethod('paypal')}
                 >
                   <div className="flex items-center gap-3">
                     <CreditCard className="w-5 h-5 text-blue-500" />
                     <div>
                       <div className="font-medium">PayPal</div>
                       <div className="text-sm text-muted-foreground">
-                        Próximamente disponible
+                        {settings?.payment_settings?.paypal_enabled 
+                          ? 'Pago seguro con tarjeta o PayPal'
+                          : 'Próximamente disponible'
+                        }
                       </div>
                     </div>
                   </div>
@@ -514,14 +541,33 @@ const PurchaseFlow = () => {
                  <Button variant="outline" onClick={() => setStep(2)} className="touch-target">
                    Volver
                  </Button>
-                 <Button 
-                   onClick={handlePurchase} 
-                   className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
-                   disabled={paymentMethod !== 'whatsapp'}
-                 >
-                   <Smartphone className="w-4 h-4 mr-2" />
-                   Finalizar en WhatsApp
-                 </Button>
+                 {paymentMethod === 'whatsapp' && (
+                   <Button 
+                     onClick={handlePurchase} 
+                     className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
+                   >
+                     <Smartphone className="w-4 h-4 mr-2" />
+                     Finalizar en WhatsApp
+                   </Button>
+                 )}
+                 {paymentMethod === 'paypal' && settings?.payment_settings?.paypal_enabled && (
+                   <Button 
+                     onClick={() => navigate(`/purchase-paypal/${raffle.id}/${getQuantity()}`)} 
+                     className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
+                   >
+                     <CreditCard className="w-4 h-4 mr-2" />
+                     Pagar con PayPal
+                   </Button>
+                 )}
+                 {paymentMethod === 'bank_transfer' && settings?.payment_settings?.bank_transfer_enabled && (
+                   <Button 
+                     onClick={handlePurchase} 
+                     className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
+                   >
+                     <Building2 className="w-4 h-4 mr-2" />
+                     Transferencia Bancaria
+                   </Button>
+                 )}
                </div>
             </CardContent>
           </Card>

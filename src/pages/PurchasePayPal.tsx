@@ -28,7 +28,21 @@ const PurchasePayPal = () => {
       ]);
       
       setRaffle(raffleData);
-      setSettings(settingsData);
+      
+      // Parse payment_settings from JSON if needed
+      if (settingsData) {
+        let processedSettings = { ...settingsData };
+        if (settingsData.payment_settings) {
+          try {
+            processedSettings.payment_settings = typeof settingsData.payment_settings === 'string' 
+              ? JSON.parse(settingsData.payment_settings) 
+              : settingsData.payment_settings;
+          } catch (e) {
+            console.log('Error parsing payment_settings:', e);
+          }
+        }
+        setSettings(processedSettings);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
       toast({
@@ -74,13 +88,13 @@ const PurchasePayPal = () => {
   const total = ticketQuantity * raffle.price_per_number;
   
   // Get PayPal client ID from settings
-  const paymentSettings = settings?.payment_settings ? 
-    (typeof settings.payment_settings === 'string' ? 
-      JSON.parse(settings.payment_settings) : 
-      settings.payment_settings) : {};
+  const paymentSettings = settings?.payment_settings || {};
   
-  const paypalClientId = paymentSettings?.paypal?.client_id || 
+  const paypalClientId = paymentSettings?.paypal_client_id || 
     'AcThy7S3bmb6CLJVF9IhV0xsbEkrXmYm-rilgJHnf3t4XVE_3zQrtHSW_tudJvXPlZEE912X9tlsR624';
+  
+  const paypalCurrency = paymentSettings?.paypal_currency || 'USD';
+  const paypalMinAmount = paymentSettings?.paypal_min_amount || total;
 
   return (
     <div className="min-h-screen bg-background">
@@ -134,8 +148,8 @@ const PurchasePayPal = () => {
           onSuccess={handlePayPalSuccess}
           onError={handlePayPalError}
           onCancel={() => navigate('/comprar')}
-          minAmount={total}
-          currency="USD"
+          minAmount={paypalMinAmount}
+          currency={paypalCurrency}
           clientId={paypalClientId}
         />
 

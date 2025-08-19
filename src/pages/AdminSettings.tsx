@@ -36,15 +36,25 @@ const AdminSettings = () => {
   
   // Estados adicionales para funcionalidades completas
   const [paymentSettings, setPaymentSettings] = useState({
+    paypal_enabled: true,
+    paypal_client_id: 'AcThy7S3bmb6CLJVF9IhV0xsbEkrXmYm-rilgJHnf3t4XVE_3zQrtHSW_tudJvXPlZEE912X9tlsR624',
+    paypal_currency: 'USD',
+    paypal_min_amount: 1.00,
     paypal_email: '',
+    payphone_enabled: false,
     payphone_number: '',
+    bank_transfer_enabled: true,
     bank_account: '',
     bank_name: '',
     account_holder: '',
     routing_number: '',
+    stripe_enabled: false,
     stripe_public_key: '',
+    wompi_enabled: false,
     wompi_public_key: '',
+    kushki_enabled: false,
     kushki_public_key: '',
+    mercadopago_enabled: false,
     mercadopago_access_token: ''
   });
 
@@ -243,18 +253,65 @@ const AdminSettings = () => {
                 </div>
               </div>
               
-              <div>
-                <Label htmlFor="logo_url">Logo del sitio (URL)</Label>
-                <Input
-                  id="logo_url"
-                  value={settings.logo_url || ''}
-                  onChange={(e) => setSettings(prev => ({ ...prev, logo_url: e.target.value }))}
-                  placeholder="https://tu-dominio.com/mi-logo.png"
-                />
-                <p className="text-sm text-muted-foreground mt-1">
-                  Se usará en el footer y en el recuadro de progreso.
-                </p>
-              </div>
+                <div>
+                  <Label htmlFor="logo_url">Logo del sitio (URL de imagen)</Label>
+                  <Input
+                    id="logo_url"
+                    value={settings.logo_url || ''}
+                    onChange={(e) => setSettings(prev => ({ ...prev, logo_url: e.target.value }))}
+                    placeholder="https://tu-dominio.com/mi-logo.png o ruta local"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Se usará en el footer y en el recuadro de progreso. Puedes usar una URL externa o dejar vacío para usar el logo por defecto.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="contact_email">Email de Contacto</Label>
+                    <Input
+                      id="contact_email"
+                      type="email"
+                      value={settings.contact_email || ''}
+                      onChange={(e) => setSettings(prev => ({ ...prev, contact_email: e.target.value }))}
+                      placeholder="contacto@tuempresa.com"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="contact_phone">Teléfono de Contacto</Label>
+                    <Input
+                      id="contact_phone"
+                      value={settings.contact_phone || ''}
+                      onChange={(e) => setSettings(prev => ({ ...prev, contact_phone: e.target.value }))}
+                      placeholder="+593999123456"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="site_tagline">Eslogan del Sitio</Label>
+                  <Input
+                    id="site_tagline"
+                    value={settings.site_tagline || ''}
+                    onChange={(e) => setSettings(prev => ({ ...prev, site_tagline: e.target.value }))}
+                    placeholder="Tu eslogan aquí..."
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="terms_and_conditions">Términos y Condiciones</Label>
+                  <Textarea
+                    id="terms_and_conditions"
+                    value={settings.terms_and_conditions || ''}
+                    onChange={(e) => setSettings(prev => ({ ...prev, terms_and_conditions: e.target.value }))}
+                    placeholder="Términos y condiciones completos..."
+                    rows={6}
+                    className="min-h-[150px]"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Estos términos aparecerán en la página correspondiente
+                  </p>
+                </div>
               
               <div>
                 <Label htmlFor="hero_title">Título Principal de la Actividad</Label>
@@ -356,62 +413,170 @@ const AdminSettings = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="paypal_email">Email de PayPal</Label>
-                  <Input
-                    id="paypal_email"
-                    value={paymentSettings.paypal_email}
-                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, paypal_email: e.target.value }))}
-                    placeholder="pagos@tuempresa.com"
-                  />
+              {/* PayPal Configuration */}
+              <div className="border rounded-lg p-4 bg-blue-50 dark:bg-blue-950/20">
+                <h4 className="font-semibold mb-4 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4" />
+                  Configuración PayPal
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="paypal_enabled"
+                      checked={paymentSettings.paypal_enabled}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, paypal_enabled: e.target.checked }))}
+                    />
+                    <Label htmlFor="paypal_enabled">Habilitar PayPal</Label>
+                  </div>
+                  <div>
+                    <Label htmlFor="paypal_currency">Moneda</Label>
+                    <select
+                      id="paypal_currency"
+                      value={paymentSettings.paypal_currency}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, paypal_currency: e.target.value }))}
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background"
+                    >
+                      <option value="USD">USD</option>
+                      <option value="EUR">EUR</option>
+                      <option value="COP">COP</option>
+                      <option value="PEN">PEN</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="paypal_client_id">Client ID de PayPal</Label>
+                    <Input
+                      id="paypal_client_id"
+                      value={paymentSettings.paypal_client_id}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, paypal_client_id: e.target.value }))}
+                      placeholder="Client ID de PayPal"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="paypal_min_amount">Monto mínimo ($)</Label>
+                    <Input
+                      id="paypal_min_amount"
+                      type="number"
+                      step="0.01"
+                      value={paymentSettings.paypal_min_amount}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, paypal_min_amount: parseFloat(e.target.value) }))}
+                      placeholder="1.00"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="paypal_email">Email de PayPal</Label>
+                    <Input
+                      id="paypal_email"
+                      value={paymentSettings.paypal_email}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, paypal_email: e.target.value }))}
+                      placeholder="pagos@tuempresa.com"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="payphone_number">Número PayPhone</Label>
+              </div>
+
+              {/* Other Payment Methods */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <input
+                      type="checkbox"
+                      id="bank_transfer_enabled"
+                      checked={paymentSettings.bank_transfer_enabled}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, bank_transfer_enabled: e.target.checked }))}
+                    />
+                    <Label htmlFor="bank_transfer_enabled">Habilitar Transferencia Bancaria</Label>
+                  </div>
+                </div>
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <input
+                      type="checkbox"
+                      id="payphone_enabled"
+                      checked={paymentSettings.payphone_enabled}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, payphone_enabled: e.target.checked }))}
+                    />
+                    <Label htmlFor="payphone_enabled">Habilitar PayPhone</Label>
+                  </div>
                   <Input
-                    id="payphone_number"
                     value={paymentSettings.payphone_number || ''}
                     onChange={(e) => setPaymentSettings(prev => ({ ...prev, payphone_number: e.target.value }))}
                     placeholder="+593999123456"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="stripe_public_key">Clave Pública de Stripe</Label>
-                  <Input
-                    id="stripe_public_key"
-                    value={paymentSettings.stripe_public_key}
-                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, stripe_public_key: e.target.value }))}
-                    placeholder="pk_live_..."
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="wompi_public_key">Clave Pública Wompi</Label>
-                  <Input
-                    id="wompi_public_key"
-                    value={paymentSettings.wompi_public_key || ''}
-                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, wompi_public_key: e.target.value }))}
-                    placeholder="pub_test_..."
+                    disabled={!paymentSettings.payphone_enabled}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="mercadopago_access_token">Token de MercadoPago</Label>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <input
+                      type="checkbox"
+                      id="stripe_enabled"
+                      checked={paymentSettings.stripe_enabled}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, stripe_enabled: e.target.checked }))}
+                    />
+                    <Label htmlFor="stripe_enabled">Habilitar Stripe</Label>
+                  </div>
                   <Input
-                    id="mercadopago_access_token"
-                    value={paymentSettings.mercadopago_access_token}
-                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, mercadopago_access_token: e.target.value }))}
-                    placeholder="APP_USR-..."
+                    value={paymentSettings.stripe_public_key}
+                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, stripe_public_key: e.target.value }))}
+                    placeholder="pk_live_..."
+                    disabled={!paymentSettings.stripe_enabled}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="kushki_public_key">Clave Pública Kushki</Label>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <input
+                      type="checkbox"
+                      id="wompi_enabled"
+                      checked={paymentSettings.wompi_enabled}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, wompi_enabled: e.target.checked }))}
+                    />
+                    <Label htmlFor="wompi_enabled">Habilitar Wompi</Label>
+                  </div>
                   <Input
-                    id="kushki_public_key"
+                    value={paymentSettings.wompi_public_key || ''}
+                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, wompi_public_key: e.target.value }))}
+                    placeholder="pub_test_..."
+                    disabled={!paymentSettings.wompi_enabled}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <input
+                      type="checkbox"
+                      id="mercadopago_enabled"
+                      checked={paymentSettings.mercadopago_enabled}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, mercadopago_enabled: e.target.checked }))}
+                    />
+                    <Label htmlFor="mercadopago_enabled">Habilitar MercadoPago</Label>
+                  </div>
+                  <Input
+                    value={paymentSettings.mercadopago_access_token}
+                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, mercadopago_access_token: e.target.value }))}
+                    placeholder="APP_USR-..."
+                    disabled={!paymentSettings.mercadopago_enabled}
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <input
+                      type="checkbox"
+                      id="kushki_enabled"
+                      checked={paymentSettings.kushki_enabled}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, kushki_enabled: e.target.checked }))}
+                    />
+                    <Label htmlFor="kushki_enabled">Habilitar Kushki</Label>
+                  </div>
+                  <Input
                     value={paymentSettings.kushki_public_key || ''}
                     onChange={(e) => setPaymentSettings(prev => ({ ...prev, kushki_public_key: e.target.value }))}
                     placeholder="10000001..."
+                    disabled={!paymentSettings.kushki_enabled}
                   />
                 </div>
               </div>
