@@ -475,6 +475,7 @@ export type Database = {
           end_date: string | null
           id: string
           instant_prizes: Json | null
+          is_sold_out: boolean | null
           max_tickets_per_purchase: number | null
           min_tickets_per_purchase: number | null
           numbers_sold: number | null
@@ -498,6 +499,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           instant_prizes?: Json | null
+          is_sold_out?: boolean | null
           max_tickets_per_purchase?: number | null
           min_tickets_per_purchase?: number | null
           numbers_sold?: number | null
@@ -521,6 +523,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           instant_prizes?: Json | null
+          is_sold_out?: boolean | null
           max_tickets_per_purchase?: number | null
           min_tickets_per_purchase?: number | null
           numbers_sold?: number | null

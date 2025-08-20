@@ -48,6 +48,12 @@ export interface Raffle {
   max_tickets_per_purchase?: number
   min_tickets_per_purchase?: number
   instant_prizes?: any
+  is_sold_out?: boolean
+  allow_multiple_purchases?: boolean
+  purchase_limit?: number
+  start_date?: string
+  end_date?: string
+  created_by?: string
   created_at?: string
   updated_at?: string
 }

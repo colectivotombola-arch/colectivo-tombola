@@ -169,11 +169,11 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
         </div>
 
         {/* Botones de Acción */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center max-w-md mx-auto">
+        <div className="flex flex-col sm:flex-row mobile-gap justify-center items-center max-w-md mx-auto">
           <Link to="/comprar" className="w-full">
             <Button 
               size="lg" 
-              className="w-full bg-primary hover:bg-primary/90 text-black font-bold text-lg px-8 py-4"
+              className="w-full bg-primary hover:bg-primary/90 text-black font-bold mobile-text px-4 py-3 sm:px-8 sm:py-4"
             >
               COMPRAR NÚMEROS
             </Button>
@@ -182,7 +182,7 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
             <Button 
               variant="outline" 
               size="lg" 
-              className="w-full border-primary text-primary hover:bg-primary hover:text-black font-bold text-lg px-8 py-4"
+              className="w-full border-primary text-primary hover:bg-primary hover:text-black font-bold mobile-text px-4 py-3 sm:px-8 sm:py-4"
             >
               VER DETALLES
             </Button>
@@ -190,18 +190,18 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
         </div>
 
         {/* Información adicional */}
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+        <div className="mt-8 sm:mt-12 mobile-grid max-w-4xl mx-auto">
           <div className="text-center">
-            <div className="text-3xl font-bold text-primary mb-2">1000</div>
-            <div className="text-gray-600">Números Disponibles</div>
+            <div className="responsive-subtitle font-bold text-primary mb-2">1000</div>
+            <div className="text-gray-600 mobile-text">Números Disponibles</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-primary mb-2">${settings?.price_per_number ?? activeRaffle?.price_per_number ?? '1.50'}</div>
-            <div className="text-gray-600">Cada Número</div>
+            <div className="responsive-subtitle font-bold text-primary mb-2">${settings?.price_per_number ?? activeRaffle?.price_per_number ?? '1.50'}</div>
+            <div className="text-gray-600 mobile-text">Cada Número</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-primary mb-2">{displaysToShow.length}</div>
-            <div className="text-gray-600">Premios Principales</div>
+            <div className="responsive-subtitle font-bold text-primary mb-2">{displaysToShow.length}</div>
+            <div className="text-gray-600 mobile-text">Premios Principales</div>
           </div>
         </div>
       </div>
