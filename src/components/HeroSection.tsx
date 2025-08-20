@@ -71,7 +71,7 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
   const displaysToShow = prizeDisplays.length > 0 ? prizeDisplays : defaultPrizes;
 
   return (
-    <section className="relative bg-gradient-to-b from-background to-card py-8 sm:py-12 lg:py-20">
+    <section className="relative hero-background mobile-section">
       {/* Background Image */}
       <div className="absolute inset-0">
         <img
@@ -82,43 +82,43 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
         <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-transparent to-background/80"></div>
       </div>
       
-      <div className="container mx-auto px-4 text-center relative z-10">
+      <div className="mobile-container text-center relative z-10">
         {/* Actividad Badge - Now Editable - Moved higher up and centered */}
-        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-20">
-          <div className="bg-primary/90 backdrop-blur-sm px-6 py-3 rounded-xl">
-            <span className="text-primary-foreground font-bold text-lg">
+        <div className="absolute top-1 sm:top-2 left-1/2 transform -translate-x-1/2 z-20">
+          <div className="bg-primary/90 backdrop-blur-sm px-3 py-1.5 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl">
+            <span className="text-primary-foreground font-bold mobile-text sm:text-lg">
               {settings?.activity_title || 'ACTIVIDAD #1'}
             </span>
           </div>
         </div>
 
         {/* Imagen Principal Hero */}
-        <div className="relative max-w-6xl mx-auto mb-12">
+        <div className="relative max-w-6xl mx-auto mb-6 sm:mb-12">
           <div className="relative bg-black rounded-2xl overflow-hidden shadow-2xl">
             
-            <div className="absolute top-4 right-4 z-10">
-              <div className="bg-primary text-black px-6 py-3 rounded-2xl text-center">
-                <div className="text-sm font-medium">POR SÓLO</div>
-                <div className="text-3xl font-black">${settings?.price_per_number ?? activeRaffle?.price_per_number ?? '1.50'}</div>
-                <div className="text-sm font-medium">CADA NÚMERO</div>
+            <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10">
+              <div className="bg-primary text-black px-3 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl text-center">
+                <div className="mobile-body font-medium">POR SÓLO</div>
+                <div className="text-xl sm:text-3xl font-black">${settings?.price_per_number ?? activeRaffle?.price_per_number ?? '1.50'}</div>
+                <div className="mobile-body font-medium">CADA NÚMERO</div>
               </div>
             </div>
 
             {/* Imagen de los premios dinámicos */}
-            <div className="relative aspect-video bg-gradient-to-br from-background/20 to-card/20 p-4 sm:p-6 lg:p-8" style={{backgroundImage: `url(${heroBackground})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundBlendMode: 'overlay'}}>
-              <div className={`grid gap-4 sm:gap-6 lg:gap-8 h-full ${
+            <div className="relative aspect-video bg-gradient-to-br from-background/20 to-card/20 p-2 sm:p-4 lg:p-8" style={{backgroundImage: `url(${heroBackground})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundBlendMode: 'overlay'}}>
+              <div className={`mobile-grid h-full ${
                 displaysToShow.length === 1 ? 'grid-cols-1' :
-                displaysToShow.length === 2 ? 'grid-cols-1 md:grid-cols-2' :
-                displaysToShow.length === 3 ? 'grid-cols-1 md:grid-cols-3' :
-                displaysToShow.length === 4 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' :
-                'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
+                displaysToShow.length === 2 ? 'grid-cols-1 sm:grid-cols-2' :
+                displaysToShow.length === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' :
+                displaysToShow.length === 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' :
+                'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
               }`}>
                 {displaysToShow.map((display, index) => {
                   const suerteTitles = ['PRIMERA SUERTE', 'SEGUNDA SUERTE', 'TERCERA SUERTE', 'CUARTA SUERTE', 'QUINTA SUERTE'];
                   return (
                     <div key={display.id} className="relative">
-                      <div className="absolute top-10 md:top-14 left-2 z-20">
-                        <div className="bg-primary text-primary-foreground px-2 py-1 sm:px-3 sm:py-1 rounded text-xs sm:text-sm font-bold">
+                      <div className="absolute top-4 sm:top-10 md:top-14 left-1 sm:left-2 z-20">
+                        <div className="bg-primary text-primary-foreground px-1.5 py-0.5 sm:px-2 sm:py-1 rounded mobile-body font-bold">
                           {suerteTitles[index] || `SUERTE ${index + 1}`}
                         </div>
                       </div>
@@ -131,9 +131,9 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
                           target.src = '/placeholder.svg';
                         }}
                         />
-                        <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 text-foreground bg-background/90 backdrop-blur-sm rounded p-2">
-                          <h4 className="text-sm sm:text-lg lg:text-xl font-bold text-primary">{display.title}</h4>
-                          {display.subtitle && <p className="text-xs sm:text-sm lg:text-base text-foreground">{display.subtitle}</p>}
+                        <div className="absolute bottom-1 left-1 sm:bottom-2 sm:left-2 text-foreground bg-background/90 backdrop-blur-sm rounded p-1 sm:p-2">
+                          <h4 className="mobile-body sm:text-lg lg:text-xl font-bold text-primary">{display.title}</h4>
+                          {display.subtitle && <p className="mobile-body text-foreground">{display.subtitle}</p>}
                         </div>
                     </div>
                   );

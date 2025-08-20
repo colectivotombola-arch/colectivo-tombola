@@ -71,7 +71,7 @@ const DetallesActividad = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-card border-b border-border">
-        <div className="container mx-auto px-4 py-4">
+        <div className="mobile-container py-4">
           <div className="flex items-center space-x-4">
             <Link to="/">
               <Button variant="ghost" size="icon">
@@ -79,14 +79,14 @@ const DetallesActividad = () => {
               </Button>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Detalles de la Actividad</h1>
-              <p className="text-muted-foreground">Actividad #{activityData.number}</p>
+              <h1 className="responsive-title text-foreground">Detalles de la Actividad</h1>
+              <p className="text-muted-foreground mobile-text">Actividad #{activityData.number}</p>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="mobile-container mobile-section max-w-6xl">
         
         {/* Main Info */}
         <Card className="mb-8 overflow-hidden">
@@ -107,13 +107,13 @@ const DetallesActividad = () => {
             </div>
             
             <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/20">
-              <CardTitle className="text-3xl text-center">
+              <CardTitle className="responsive-title text-center">
                 ACTIVIDAD #{activityData.number}
               </CardTitle>
-              <p className="text-xl text-center font-bold text-primary">
+              <p className="responsive-subtitle text-center font-bold text-primary">
                 {activityData.title}
               </p>
-              <p className="text-center text-muted-foreground mt-2">
+              <p className="text-center text-muted-foreground mt-2 mobile-text">
                 {activityData.description}
               </p>
             </CardHeader>
@@ -121,10 +121,10 @@ const DetallesActividad = () => {
         </Card>
 
         {/* Progress and Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="mobile-grid mb-8">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
+              <CardTitle className="flex items-center gap-2 mobile-heading">
                 <Users className="w-5 h-5 text-primary" />
                 Progreso de Ventas
               </CardTitle>
