@@ -19,7 +19,7 @@ import {
   Globe,
   Mail
 } from 'lucide-react';
-import ImageUpload from '@/components/ImageUpload';
+import { ImageUpload } from '@/components/ImageUpload';
 
 const AdminSettings = () => {
   const { user } = useAuth();

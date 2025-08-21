@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { AdminLayout } from '@/components/AdminLayout';
 import { Save, Trash2, Plus, Video, Image } from 'lucide-react';
-import ImageUpload from '@/components/ImageUpload';
+import { ImageUpload } from '@/components/ImageUpload';
 
 interface MediaItem {
   id?: string;
