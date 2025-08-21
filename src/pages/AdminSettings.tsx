@@ -19,6 +19,7 @@ import {
   Globe,
   Mail
 } from 'lucide-react';
+import ImageUpload from '@/components/ImageUpload';
 
 const AdminSettings = () => {
   const { user } = useAuth();
@@ -254,15 +255,14 @@ const AdminSettings = () => {
               </div>
               
                 <div>
-                  <Label htmlFor="logo_url">Logo del sitio (URL de imagen)</Label>
-                  <Input
-                    id="logo_url"
+                  <Label>Logo del sitio</Label>
+                  <ImageUpload
                     value={settings.logo_url || ''}
-                    onChange={(e) => setSettings(prev => ({ ...prev, logo_url: e.target.value }))}
-                    placeholder="https://tu-dominio.com/mi-logo.png o ruta local"
+                    onChange={(url) => setSettings(prev => ({ ...prev, logo_url: url }))}
+                    bucket="prize-images"
                   />
                   <p className="text-sm text-muted-foreground mt-1">
-                    Se usará en el footer y en el recuadro de progreso. Puedes usar una URL externa o dejar vacío para usar el logo por defecto.
+                    Se usará en el encabezado y el pie de página.
                   </p>
                 </div>
 

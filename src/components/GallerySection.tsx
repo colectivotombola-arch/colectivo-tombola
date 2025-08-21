@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { supabase } from '@/integrations/supabase/client';
+import { rafflesAPI } from '@/lib/supabase';
 
 interface GallerySectionProps {
   settings?: { price_per_number?: string } | null;
@@ -10,9 +11,11 @@ const GallerySection = ({ settings }: GallerySectionProps) => {
   const [prizes, setPrizes] = useState([]);
   const [photos, setPhotos] = useState([]);
   const [media, setMedia] = useState([]);
+  const [rafflePrice, setRafflePrice] = useState<number | string | null>(null);
 
   useEffect(() => {
     loadGalleryContent();
+    loadActiveRafflePrice();
   }, []);
 
   const loadGalleryContent = async () => {
@@ -46,6 +49,14 @@ const GallerySection = ({ settings }: GallerySectionProps) => {
     }
   };
 
+  const loadActiveRafflePrice = async () => {
+    try {
+      const active = await rafflesAPI.getActive();
+      setRafflePrice(active?.price_per_number ?? null);
+    } catch (e) {
+      console.error('Error loading raffle price:', e);
+    }
+  };
   // Combine all images for the gallery display
   const allImages = [
     ...(prizes as any[]).map((p: any) => p.image_url).filter(Boolean),
@@ -89,7 +100,7 @@ const GallerySection = ({ settings }: GallerySectionProps) => {
           
           <Card className="text-center p-8 bg-card border-primary/20">
             <div className="text-4xl font-bold text-primary mb-2">
-              ${settings?.price_per_number || "1.50"}
+              ${rafflePrice ?? (settings?.price_per_number || "1.50")}
             </div>
             <div className="text-xl font-semibold text-foreground mb-1">Por número</div>
             <div className="text-muted-foreground">Precio accesible</div>

@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { AdminLayout } from '@/components/AdminLayout';
 import { Save, Trash2, Plus, Video, Image } from 'lucide-react';
+import ImageUpload from '@/components/ImageUpload';
 
 interface MediaItem {
   id?: string;
@@ -78,10 +79,7 @@ const AdminMediaGallery = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Delete all existing media
       await supabase.from('media_gallery').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      
-      // Insert new media
       if (media.length > 0) {
         const { error } = await supabase
           .from('media_gallery')
@@ -89,25 +87,32 @@ const AdminMediaGallery = () => {
             ...item,
             position: index + 1
           })));
-        
         if (error) throw error;
       }
-
-      toast({
-        title: "¡Éxito!",
-        description: "Galería de medios guardada correctamente",
-      });
-      
+      toast({ title: "¡Éxito!", description: "Galería de medios guardada correctamente" });
       await loadMedia();
     } catch (error) {
       console.error('Error saving media:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo guardar la galería de medios",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "No se pudo guardar la galería de medios", variant: "destructive" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const uploadVideo = async (index: number, file: File) => {
+    try {
+      const path = `media/${Date.now()}-${file.name}`;
+      const { data, error } = await supabase.storage.from('prize-images').upload(path, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+      if (error) throw error;
+      const { data: pub } = supabase.storage.from('prize-images').getPublicUrl(path);
+      updateMedia(index, 'media_url', pub.publicUrl);
+      toast({ title: 'Video subido', description: 'Se cargó correctamente' });
+    } catch (e) {
+      console.error('Upload error', e);
+      toast({ title: 'Error', description: 'No se pudo subir el video', variant: 'destructive' });
     }
   };
 
@@ -188,16 +193,24 @@ const AdminMediaGallery = () => {
                     </div>
                     
                     <div>
-                      <Label htmlFor={`media_url-${index}`}>URL del {item.media_type === 'video' ? 'Video' : 'Imagen'}</Label>
-                      <Input
-                        id={`media_url-${index}`}
-                        value={item.media_url}
-                        onChange={(e) => updateMedia(index, 'media_url', e.target.value)}
-                        placeholder={item.media_type === 'video' ? 
-                          "https://www.tiktok.com/@user/video/123 o https://www.instagram.com/p/ABC/" :
-                          "https://ejemplo.com/imagen.jpg"
-                        }
-                      />
+                      <Label>{item.media_type === 'video' ? 'Subir Video' : 'Subir Imagen'}</Label>
+                      {item.media_type === 'image' ? (
+                        <ImageUpload
+                          value={item.media_url}
+                          onChange={(url) => updateMedia(index, 'media_url', url)}
+                          bucket="prize-images"
+                        />
+                      ) : (
+                        <input
+                          type="file"
+                          accept="video/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) uploadVideo(index, file);
+                          }}
+                          className="w-full px-3 py-2 border border-border rounded-md bg-background"
+                        />
+                      )}
                     </div>
                   </div>
                   

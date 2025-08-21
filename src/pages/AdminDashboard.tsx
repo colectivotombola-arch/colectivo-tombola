@@ -54,11 +54,9 @@ const AdminDashboard = () => {
   ];
 
   const quickActions = [
-    { title: 'Gestionar Rifas', description: 'Ver y administrar rifas activas', icon: Car, href: '/admin/raffles' },
-    { title: 'Ver Números', description: 'Consultar números vendidos', icon: Eye, href: '/admin/sold-numbers' },
+    { title: 'Gestionar Rifas', description: 'Ver y administrar rifas activas, paquetes y premios instantáneos', icon: Car, href: '/admin/raffles' },
+    { title: 'Ver Números', description: 'Consultar números vendidos y exportar', icon: Eye, href: '/admin/sold-numbers' },
     { title: 'Confirmaciones', description: 'Gestionar compras pendientes', icon: Eye, href: '/admin/confirmations' },
-    { title: 'Premios Instant.', description: 'Configurar números bendecidos', icon: Car, href: '/admin/instant-prizes' },
-    { title: 'Paquetes', description: 'Gestionar paquetes de boletos', icon: Plus, href: '/admin/packages' },
     { title: 'Pantallas Premios', description: 'Configurar suertes dinámicas', icon: Trophy, href: '/admin/prize-displays' },
     { title: 'Galería Videos', description: 'TikTok e Instagram', icon: Video, href: '/admin/media-gallery' },
     { title: 'Galería Fotos', description: 'Fotos generales del sitio', icon: ImageIcon, href: '/admin/photo-gallery' },

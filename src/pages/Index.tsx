@@ -4,16 +4,18 @@ import HeroSection from '@/components/HeroSection';
 import ProgressSection from '@/components/ProgressSection';
 import GallerySection from '@/components/GallerySection';
 import InstagramSection from '@/components/InstagramSection';
-import { siteSettingsAPI, SiteSettings } from '@/lib/supabase';
+import { siteSettingsAPI, SiteSettings, rafflesAPI, Raffle } from '@/lib/supabase';
 import { useDesignSettings } from '@/hooks/useDesignSettings';
 import footerLogo from '@/assets/logo-colectivo-tombola-new.png';
 
 const Index = () => {
   const [settings, setSettings] = useState<Partial<SiteSettings> | null>(null);
   const { refreshFromSiteSettings } = useDesignSettings();
+  const [activeRaffle, setActiveRaffle] = useState<Raffle | null>(null);
 
   useEffect(() => {
     loadSettings();
+    loadActiveRaffle();
     refreshFromSiteSettings(); // Apply design settings
   }, []);
 
@@ -30,12 +32,40 @@ const Index = () => {
 
   const socialMedia = settings?.social_media ? (typeof settings.social_media === 'string' ? JSON.parse(settings.social_media) : settings.social_media) : {};
 
+  const loadActiveRaffle = async () => {
+    try {
+      const raffle = await rafflesAPI.getActive();
+      setActiveRaffle(raffle);
+    } catch (e) {
+      console.error('Error loading active raffle', e);
+    }
+  };
+
    return (
     <div className="min-h-screen bg-gradient-to-br from-background via-card to-background">
       <Header settings={settings} />
       <HeroSection settings={settings} />
       <ProgressSection settings={settings} />
       <InstagramSection settings={settings} />
+      {/* Instant Prizes Section */}
+      {activeRaffle?.instant_prizes && (Array.isArray(activeRaffle.instant_prizes) ? activeRaffle.instant_prizes.length > 0 : false) && (
+        <section className="mobile-section bg-card/50">
+          <div className="mobile-container">
+            <h3 className="responsive-subtitle mb-4">Premios Instantáneos</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
+              {(activeRaffle.instant_prizes as any[])
+                .sort((a, b) => parseInt(a.number) - parseInt(b.number))
+                .map((p: any) => (
+                  <div key={p.number} className={`p-3 rounded-lg border text-center ${p.claimed ? 'opacity-60' : 'bg-primary/10 border-primary'}`}>
+                    <div className="font-mono font-bold">#{p.number}</div>
+                    <div className="text-sm text-muted-foreground">${p.prize_amount || 0}</div>
+                    {p.claimed && <div className="text-xs mt-1">Entregado</div>}
+                  </div>
+                ))}
+            </div>
+          </div>
+        </section>
+      )}
       <GallerySection settings={settings} />
       
       {/* Contact Section */}

@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { AdminLayout } from '@/components/AdminLayout';
 import { Save, Trash2, Plus, ImageIcon } from 'lucide-react';
+import ImageUpload from '@/components/ImageUpload';
 
 interface PhotoItem {
   id?: string;
@@ -179,15 +180,14 @@ const AdminPhotoGallery = () => {
                     </div>
                     
                     <div>
-                      <Label htmlFor={`image_url-${index}`}>URL de la Imagen</Label>
-                      <Input
-                        id={`image_url-${index}`}
+                      <Label>Imagen</Label>
+                      <ImageUpload
                         value={photo.image_url}
-                        onChange={(e) => updatePhoto(index, 'image_url', e.target.value)}
-                        placeholder="https://ejemplo.com/foto.jpg"
+                        onChange={(url) => updatePhoto(index, 'image_url', url)}
+                        bucket="prize-images"
                       />
                       <p className="text-xs text-muted-foreground mt-1">
-                        Formatos soportados: JPG, PNG, WebP. Fotos de celular son perfectas.
+                        Sube la imagen desde tu dispositivo. Formatos: JPG, PNG, WebP.
                       </p>
                     </div>
                   </div>

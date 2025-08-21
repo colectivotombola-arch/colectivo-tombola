@@ -54,13 +54,7 @@ const AdminSoldNumbers = () => {
     try {
       const { data, error } = await supabase
         .from('raffle_numbers')
-        .select(`
-          *,
-          raffles:raffle_id (
-            id,
-            title
-          )
-        `)
+        .select('*')
         .order('purchase_date', { ascending: false });
 
       if (error) throw error;
@@ -209,7 +203,7 @@ const AdminSoldNumbers = () => {
                     <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-center">
                       <div>
                         <p className="font-bold text-lg text-primary">#{number.number_value}</p>
-                        <p className="text-xs text-muted-foreground">{number.raffles?.title}</p>
+                        <p className="text-xs text-muted-foreground">Rifa: {number.raffles?.title || number.raffles?.id || '—'}</p>
                       </div>
                       
                       <div>
