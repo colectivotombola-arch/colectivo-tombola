@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import heroBackground from '@/assets/logo-background-1.png';
+import toyotaFortuner from "@/assets/toyota-fortuner.jpg";
+import chevroletOnix from "@/assets/chevrolet-onix.jpg";
 import { Link } from 'react-router-dom';
 import { supabase, rafflesAPI, type SiteSettings, type Raffle } from '@/lib/supabase';
 
@@ -56,14 +58,14 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
       id: 'default-1',
       title: 'TOYOTA FORTUNER 4X4',
       subtitle: '',
-      image_url: '/src/assets/toyota-fortuner.jpg',
+      image_url: toyotaFortuner,
       position: 1
     },
     {
       id: 'default-2', 
       title: 'CHEVROLET ONIX TURBO',
       subtitle: '0km',
-      image_url: '/src/assets/chevrolet-onix.jpg',
+      image_url: chevroletOnix,
       position: 2
     }
   ];

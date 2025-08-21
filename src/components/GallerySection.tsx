@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { supabase } from '@/integrations/supabase/client';
 import { rafflesAPI } from '@/lib/supabase';
+import toyotaFortuner from "@/assets/toyota-fortuner.jpg";
+import chevroletOnix from "@/assets/chevrolet-onix.jpg";
 
 interface GallerySectionProps {
   settings?: { price_per_number?: string } | null;
@@ -65,10 +67,10 @@ const GallerySection = ({ settings }: GallerySectionProps) => {
 
   // Fallback to default images if no content is configured
   const galleryImages = allImages.length > 0 ? allImages : [
-    "/src/assets/toyota-fortuner.jpg",
-    "/src/assets/chevrolet-onix.jpg",
-    "/src/assets/toyota-fortuner.jpg", 
-    "/src/assets/chevrolet-onix.jpg"
+    toyotaFortuner,
+    chevroletOnix,
+    toyotaFortuner, 
+    chevroletOnix
   ];
 
   return (
