@@ -54,7 +54,13 @@ const AdminSoldNumbers = () => {
     try {
       const { data, error } = await supabase
         .from('raffle_numbers')
-        .select('*')
+        .select(`
+          *,
+          raffles:raffle_id (
+            id,
+            title
+          )
+        `)
         .order('purchase_date', { ascending: false });
 
       if (error) throw error;

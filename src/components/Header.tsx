@@ -54,13 +54,13 @@ const Header = ({ settings }: HeaderProps) => {
             </Link>
             <Link 
               to="/consultar" 
-              className="text-white hover:text-primary transition-colors font-medium mobile-body hidden sm:block"
+              className="text-white hover:text-primary transition-colors font-medium mobile-body"
             >
               CONSULTAR
             </Link>
             <Link 
               to="/detalles" 
-              className="text-white hover:text-primary transition-colors font-medium mobile-body hidden sm:block"
+              className="text-white hover:text-primary transition-colors font-medium mobile-body"
             >
               DETALLES
             </Link>

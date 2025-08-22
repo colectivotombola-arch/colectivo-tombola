@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { supabase } from '@/integrations/supabase/client';
 import { rafflesAPI } from '@/lib/supabase';
-import toyotaFortuner from "@/assets/toyota-fortuner.jpg";
-import chevroletOnix from "@/assets/chevrolet-onix.jpg";
+import toyotaFortuner from "/public/lovable-uploads/a070bca1-29cb-463b-bee8-960692557b67.png";
+import chevroletOnix from "/public/lovable-uploads/40dd58e7-1558-43d2-84a8-c2a6176de594.png";
 
 interface GallerySectionProps {
   settings?: { price_per_number?: string } | null;

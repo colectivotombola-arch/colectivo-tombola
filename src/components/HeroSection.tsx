@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import heroBackground from '@/assets/logo-background-1.png';
-import toyotaFortuner from "@/assets/toyota-fortuner.jpg";
-import chevroletOnix from "@/assets/chevrolet-onix.jpg";
+import toyotaFortuner from "/public/lovable-uploads/a070bca1-29cb-463b-bee8-960692557b67.png";
+import chevroletOnix from "/public/lovable-uploads/40dd58e7-1558-43d2-84a8-c2a6176de594.png";
 import { Link } from 'react-router-dom';
 import { supabase, rafflesAPI, type SiteSettings, type Raffle } from '@/lib/supabase';
 
