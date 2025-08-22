@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 import { SiteSettings } from '@/lib/supabase';
 import { Instagram, Twitter, Facebook, Trophy, Eye } from 'lucide-react';
-import progressBackground from '@/assets/logo-background-2.png';
+const PROGRESS_BG = '/lovable-uploads/a070bca1-29cb-463b-bee8-960692557b67.png';
 import progressLogo from '@/assets/logo-colectivo-tombola.png';
 
 interface ProgressSectionProps {
@@ -24,7 +24,7 @@ const ProgressSection = ({ settings }: ProgressSectionProps) => {
       {/* Background Image */}
       <div className="absolute inset-0">
         <img
-          src={progressBackground}
+          src={PROGRESS_BG}
           alt="Progress background"
           className="w-full h-full object-cover opacity-20"
         />

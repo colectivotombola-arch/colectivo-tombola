@@ -91,6 +91,16 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Imagen al final de la página */}
+      <section className="mobile-section p-0" aria-label="Imagen final de la página">
+        <img 
+          src="/lovable-uploads/40dd58e7-1558-43d2-84a8-c2a6176de594.png" 
+          alt="Foto del vehículo - imagen final de la página" 
+          loading="lazy" 
+          className="w-full h-auto object-cover" 
+        />
+      </section>
+
       {/* Footer */}
       <footer className="bg-background text-foreground mobile-section relative overflow-hidden">
         {/* Background Logo - More visible */}

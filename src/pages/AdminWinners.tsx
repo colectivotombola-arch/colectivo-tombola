@@ -56,13 +56,13 @@ const AdminWinners = () => {
 
   const loadWinners = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('winners')
         .select('*')
         .order('position');
       
       if (error) throw error;
-      setWinners(data || []);
+      setWinners((data || []) as Winner[]);
     } catch (error) {
       console.error('Error loading winners:', error);
       toast({
@@ -78,7 +78,7 @@ const AdminWinners = () => {
   const createWinner = async () => {
     setSaving(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('winners')
         .insert([{
           ...newWinner,
@@ -122,7 +122,7 @@ const AdminWinners = () => {
     
     setSaving(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('winners')
         .update({
           name: editingWinner.name,
@@ -163,7 +163,7 @@ const AdminWinners = () => {
     }
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('winners')
         .delete()
         .eq('id', id);
