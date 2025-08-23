@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<!--
+  Web page replicating the Colectivo Tombola site.
+
+  This page is a basic static implementation of the existing Lovable project. It
+  displays the raffle details, embeds an image of the prize, shows pricing and
+  availability information, and includes multiple payment options. The payment
+  integrations use client‑side scripts for PayPal, PayPhone, Kushki and a link
+  placeholder for Stripe. Replace placeholder values (YOUR_CLIENT_ID,
+  YOUR_PAYPHONE_ID, YOUR_MERCHANT_ID, YOUR_STRIPE_LINK) with your actual
+  credentials before deploying.
+-->
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Colectivo Tombola</title>
+    <style>
+      /* Basic reset */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        background: #01161e;
+        color: #e0f5ff;
+        line-height: 1.5;
+      }
+
+      header {
+        background: #012b36;
+        padding: 20px;
+        text-align: center;
+      }
+
+      header h1 {
+        color: #00e5ff;
+        margin-bottom: 5px;
+      }
+
+      header p {
+        font-size: 0.9em;
+        opacity: 0.8;
+      }
+
+      .container {
+        max-width: 1000px;
+        margin: 20px auto;
+        padding: 20px;
+      }
+
+      .hero {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+      }
+
+      .hero img {
+        width: 100%;
+        max-width: 480px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+
+      .hero-details {
+        flex: 1;
+        padding-left: 20px;
+      }
+
+      .price-tag {
+        background: #00d1d1;
+        color: #01333d;
+        padding: 10px 20px;
+        display: inline-block;
+        border-radius: 5px;
+        font-size: 1.3em;
+        margin-bottom: 15px;
+      }
+
+      .buttons {
+        margin-top: 20px;
+      }
+
+      .buttons a,
+      .buttons button {
+        background: #00b4d8;
+        border: none;
+        color: #01212e;
+        padding: 12px 20px;
+        margin-right: 10px;
+        border-radius: 4px;
+        font-size: 1em;
+        cursor: pointer;
+        text-decoration: none;
+      }
+
+      .buttons a:hover,
+      .buttons button:hover {
+        background: #0094b0;
+      }
+
+      .payment-section {
+        margin-top: 40px;
+      }
+
+      .payment-section h2 {
+        margin-bottom: 15px;
+        font-size: 1.4em;
+        color: #00e5ff;
+      }
+
+      .payment-buttons > div,
+      .payment-buttons > button,
+      .payment-buttons > a {
+        margin-bottom: 15px;
+      }
+
+      footer {
+        margin-top: 40px;
+        padding: 20px;
+        text-align: center;
+        font-size: 0.8em;
+        opacity: 0.7;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Colectivo Tombola</h1>
+      <p>Cumpliendo sueños</p>
+    </header>
+    <div class="container">
+      <section class="hero">
+        <!-- Prize image -->
+        <img
+          src="https://images.unsplash.com/photo-1493238792000-8113da705763?auto=format&fit=crop&w=900&q=60"
+          alt="Premio principal"
+        />
+        <div class="hero-details">
+          <h2>¡Gánate esta increíble camioneta!</h2>
+          <p class="price-tag">Por solo $25 cada número</p>
+          <p>
+            Participa en nuestra rifa y cumple tu sueño de llevarte este
+            vehículo a casa. Compra tus números y entérate de más detalles
+            haciendo clic en los botones.
+          </p>
+          <div class="buttons">
+            <!-- Use anchors for sections or separate pages -->
+            <a href="#comprar">Comprar números</a>
+            <a href="#detalles">Ver detalles</a>
+          </div>
+        </div>
+      </section>
+      <!-- Payment section -->
+      <section id="comprar" class="payment-section">
+        <h2>Métodos de pago</h2>
+        <div class="payment-buttons">
+          <!-- Stripe Payment Link -->
+          <a
+            class="stripe-link"
+            href="YOUR_STRIPE_LINK"
+            target="_blank"
+            >Pagar con Stripe</a
+          >
+          <!-- PayPal smart button -->
+          <div id="paypal-button-container"></div>
+          <!-- PayPhone button -->
+          <button id="payphone-button">Pagar con PayPhone</button>
+          <!-- Kushki button -->
+          <button id="kushki-button">Pagar con Kushki</button>
+        </div>
+      </section>
+      <!-- Bank transfer section -->
+      <section id="detalles" class="payment-section">
+        <h2>Datos bancarios para transferencias</h2>
+        <p>Banco: Banco Pichincha</p>
+        <p>Cuenta corriente: 1234567890</p>
+        <p>Titular: Asociación Colectivo Tombola</p>
+        <p>Envia el comprobante a: pagos@example.com</p>
+      </section>
+    </div>
+    <footer>
+      <p>© 2025 Colectivo Tombola. Todos los derechos reservados.</p>
+    </footer>
+    <!-- PayPal SDK -->
+    <script src="https://www.paypal.com/sdk/js?client-id=YOUR_PAYPAL_CLIENT_ID&currency=USD"></script>
+    <script>
+      // PayPal Buttons integration
+      paypal.Buttons({
+        createOrder: function (data, actions) {
+          return actions.order.create({
+            purchase_units: [
+              {
+                amount: {
+                  value: '25.00',
+                },
+              },
+            ],
+          });
+        },
+        onApprove: function (data, actions) {
+          return actions.order.capture().then(function (details) {
+            alert('¡Gracias, ' + details.payer.name.given_name + '! Tu pago se completó con éxito.');
+          });
+        },
+        onError: function (err) {
+          console.error(err);
+          alert('Ocurrió un error al procesar el pago. Inténtalo nuevamente.');
+        },
+      }).render('#paypal-button-container');
+    </script>
+    <!-- PayPhone SDK -->
+    <script src="https://pay.payphonetodoesposible.com/js/payphone.js?payphoneId=YOUR_PAYPHONE_ID"></script>
+    <script>
+      // PayPhone integration
+      document.getElementById('payphone-button').addEventListener('click', function () {
+        PayPhone.Dashboard({
+          form: {
+            amount: 2500, // cents
+            currency: 'USD',
+            reference: 'RifaTombola25',
+            vat: 0,
+            phoneNumber: '',
+            email: '',
+          },
+          onSuccess: function (response) {
+            console.log('PayPhone success:', response);
+            alert('Pago con PayPhone completado.');
+          },
+          onError: function (error) {
+            console.error('PayPhone error:', error);
+            alert('Error al procesar PayPhone.');
+          },
+        });
+      });
+    </script>
+    <!-- Kushki SDK -->
+    <script src="https://static-forms.kushkipagos.com/kushki-checkout.js"></script>
+    <script>
+      // Kushki integration
+      KushkiCheckout.configure({
+        merchantId: 'YOUR_KUSHKI_MERCHANT_ID',
+        currency: 'USD',
+        amount: 25.0,
+        form: 'kushki-form',
+        buttonId: 'kushki-button',
+        onSuccess: function (data) {
+          console.log('Kushki success:', data);
+          alert('Pago con Kushki completado.');
+        },
+        onError: function (err) {
+          console.error('Kushki error:', err);
+          alert('Error al procesar Kushki.');
+        },
+      });
+    </script>
+  </body>
+</html>
