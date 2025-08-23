@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { rafflesAPI, rafflePackagesAPI, type Raffle, type RafflePackage } from '@/lib/supabase';
 import { ArrowLeft, Plus, Edit, Trash2, Eye, Trophy, Users, DollarSign, Package, Star } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import InstantPrizesManager from '@/components/InstantPrizesManager';
 import {
   Dialog,
@@ -160,12 +160,18 @@ const AdminRafflesEnhanced = () => {
 
     setUpdating(true);
     try {
-      const result = await rafflesAPI.update(editRaffle.id, editRaffle);
+      // Ensure price is properly formatted as a number
+      const updatedRaffle = {
+        ...editRaffle,
+        price_per_number: Number(editRaffle.price_per_number) || 1.00
+      };
+      
+      const result = await rafflesAPI.update(updatedRaffle.id, updatedRaffle);
       
       if (result) {
         toast({
           title: "¡Rifa actualizada!",
-          description: `Se actualizó la rifa "${result.title}"`,
+          description: `Rifa "${result.title}" actualizada. Precio: $${updatedRaffle.price_per_number}`,
         });
 
         setIsEditDialogOpen(false);
@@ -176,7 +182,7 @@ const AdminRafflesEnhanced = () => {
       console.error('Error updating raffle:', error);
       toast({
         title: "Error",
-        description: "No se pudo actualizar la rifa",
+        description: "No se pudo actualizar la rifa. Verifique los datos e intente nuevamente.",
         variant: "destructive"
       });
     } finally {
@@ -433,27 +439,24 @@ const AdminRafflesEnhanced = () => {
       <div className="mobile-container py-8">
         {/* Management Buttons */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Button 
-            onClick={() => navigate('/admin/packages')}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:shadow-lg h-16"
-          >
-            <Package className="w-6 h-6 mr-2" />
-            Gestionar Paquetes
-          </Button>
-          <Button 
-            onClick={() => navigate('/admin/instant-prizes')}
-            className="bg-gradient-to-r from-purple-500 to-purple-600 hover:shadow-lg h-16"
-          >
-            <Trophy className="w-6 h-6 mr-2" />
-            Premios Instantáneos
-          </Button>
-          <Button 
-            onClick={() => navigate('/admin/sold-numbers')}
-            className="bg-gradient-to-r from-green-500 to-green-600 hover:shadow-lg h-16"
-          >
-            <Users className="w-6 h-6 mr-2" />
-            Ver Números Vendidos
-          </Button>
+          <Link to="/admin/packages">
+            <Button className="bg-gradient-to-r from-blue-500 to-blue-600 hover:shadow-lg h-16 w-full">
+              <Package className="w-6 h-6 mr-2" />
+              Gestionar Paquetes
+            </Button>
+          </Link>
+          <Link to="/admin/instant-prizes">
+            <Button className="bg-gradient-to-r from-purple-500 to-purple-600 hover:shadow-lg h-16 w-full">
+              <Trophy className="w-6 h-6 mr-2" />
+              Premios Instantáneos
+            </Button>
+          </Link>
+          <Link to="/admin/sold-numbers">
+            <Button className="bg-gradient-to-r from-green-500 to-green-600 hover:shadow-lg h-16 w-full">
+              <Users className="w-6 h-6 mr-2" />
+              Ver Números Vendidos
+            </Button>
+          </Link>
         </div>
 
         {raffles.length === 0 ? (

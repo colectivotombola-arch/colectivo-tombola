@@ -642,6 +642,45 @@ export type Database = {
         }
         Relationships: []
       }
+      winners: {
+        Row: {
+          created_at: string
+          date_won: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          position: number
+          prize: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_won: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          position?: number
+          prize: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_won?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          position?: number
+          prize?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

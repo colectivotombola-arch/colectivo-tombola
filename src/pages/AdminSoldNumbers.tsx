@@ -52,6 +52,7 @@ const AdminSoldNumbers = () => {
 
   const loadSoldNumbers = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('raffle_numbers')
         .select(`
@@ -63,16 +64,32 @@ const AdminSoldNumbers = () => {
         `)
         .order('purchase_date', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       setNumbers(data || []);
+      
+      if (!data || data.length === 0) {
+        toast({
+          title: "Información",
+          description: "No hay números vendidos registrados aún",
+        });
+      }
     } catch (error) {
       console.error('Error loading sold numbers:', error);
       toast({
-        title: "Error",
-        description: "No se pudieron cargar los números vendidos",
+        title: "Error de conexión",
+        description: "No se pudieron cargar los números vendidos. Verifique la conexión a la base de datos.",
         variant: "destructive"
       });
+      
+      // Retry mechanism
+      setTimeout(() => {
+        console.log("Reintenando carga de números...");
+        loadSoldNumbers();
+      }, 3000);
     } finally {
       setLoading(false);
     }
