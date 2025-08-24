@@ -53,11 +53,33 @@ const AdminSoldNumbers = () => {
   const loadSoldNumbers = async () => {
     try {
       setLoading(true);
+      console.log('Iniciando carga de números vendidos...');
+      
+      // Test connection first
+      const { data: testData, error: testError } = await supabase
+        .from('raffle_numbers')
+        .select('count')
+        .limit(1);
+        
+      if (testError) {
+        console.error('Test connection error:', testError);
+        throw new Error('No se pudo conectar a la base de datos');
+      }
+
+      // Load actual data
       const { data, error } = await supabase
         .from('raffle_numbers')
         .select(`
-          *,
-          raffles:raffle_id (
+          id,
+          number_value,
+          buyer_name,
+          buyer_email,
+          buyer_phone,
+          payment_method,
+          payment_status,
+          purchase_date,
+          raffle_id,
+          raffles!inner (
             id,
             title
           )
@@ -69,14 +91,13 @@ const AdminSoldNumbers = () => {
         throw error;
       }
 
+      console.log('Números cargados exitosamente:', data?.length || 0);
       setNumbers(data || []);
       
-      if (!data || data.length === 0) {
-        toast({
-          title: "Información",
-          description: "No hay números vendidos registrados aún",
-        });
-      }
+      toast({
+        title: "Datos cargados",
+        description: `Se cargaron ${data?.length || 0} números vendidos`,
+      });
     } catch (error) {
       console.error('Error loading sold numbers:', error);
       toast({
@@ -85,11 +106,8 @@ const AdminSoldNumbers = () => {
         variant: "destructive"
       });
       
-      // Retry mechanism
-      setTimeout(() => {
-        console.log("Reintenando carga de números...");
-        loadSoldNumbers();
-      }, 3000);
+      // Set empty data to show something
+      setNumbers([]);
     } finally {
       setLoading(false);
     }

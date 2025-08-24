@@ -160,29 +160,44 @@ const AdminRafflesEnhanced = () => {
 
     setUpdating(true);
     try {
-      // Ensure price is properly formatted as a number
+      // Ensure all numeric fields are properly formatted
       const updatedRaffle = {
         ...editRaffle,
-        price_per_number: Number(editRaffle.price_per_number) || 1.00
+        price_per_number: parseFloat(editRaffle.price_per_number?.toString() || '1.00'),
+        total_numbers: parseInt(editRaffle.total_numbers?.toString() || '1000'),
+        min_tickets_per_purchase: parseInt(editRaffle.min_tickets_per_purchase?.toString() || '1'),
+        max_tickets_per_purchase: parseInt(editRaffle.max_tickets_per_purchase?.toString() || '10')
       };
+      
+      console.log('Updating raffle with data:', updatedRaffle);
       
       const result = await rafflesAPI.update(updatedRaffle.id, updatedRaffle);
       
       if (result) {
         toast({
-          title: "¡Rifa actualizada!",
-          description: `Rifa "${result.title}" actualizada. Precio: $${updatedRaffle.price_per_number}`,
+          title: "¡Rifa actualizada correctamente!",
+          description: `Rifa "${result.title}" actualizada. Nuevo precio: $${updatedRaffle.price_per_number}`,
         });
 
         setIsEditDialogOpen(false);
         setEditRaffle(null);
-        loadRaffles();
+        
+        // Actualizar el estado local inmediatamente
+        setRaffles(prevRaffles => 
+          prevRaffles.map(r => r.id === result.id ? result : r)
+        );
+        setSelectedRaffle(result);
+        
+        // Recargar para confirmar cambios
+        await loadRaffles();
+      } else {
+        throw new Error('No se recibió respuesta de la actualización');
       }
     } catch (error) {
       console.error('Error updating raffle:', error);
       toast({
-        title: "Error",
-        description: "No se pudo actualizar la rifa. Verifique los datos e intente nuevamente.",
+        title: "Error al actualizar",
+        description: "No se pudo guardar el precio de la rifa. Verifique su conexión e intente nuevamente.",
         variant: "destructive"
       });
     } finally {

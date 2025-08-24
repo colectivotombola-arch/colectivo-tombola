@@ -1,1 +1,7 @@
 project_id = "xwdrvakfrhlrnvqxodft"
+
+[functions.datafast-checkout]
+verify_jwt = false
+
+[functions.datafast-status]  
+verify_jwt = false

@@ -31,7 +31,7 @@ const PurchaseFlow = () => {
   });
 
   // Método de pago seleccionado
-  const [paymentMethod, setPaymentMethod] = useState<'whatsapp' | 'bank_transfer' | 'paypal'>('whatsapp');
+  const [paymentMethod, setPaymentMethod] = useState<'whatsapp' | 'bank_transfer' | 'paypal' | 'datafast'>('whatsapp');
 
   useEffect(() => {
     loadData();
@@ -534,6 +534,27 @@ const PurchaseFlow = () => {
                       </div>
                     </div>
                   </div>
+                 </div>
+
+                {/* DataFast - Habilitado condicionalmente */}
+                <div 
+                  className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    !settings?.payment_settings?.datafast_enabled ? 'opacity-50' : ''
+                  } ${paymentMethod === 'datafast' ? 'border-primary bg-primary/5' : 'border-border'}`}
+                  onClick={() => settings?.payment_settings?.datafast_enabled && setPaymentMethod('datafast')}
+                >
+                  <div className="flex items-center gap-3">
+                    <CreditCard className="w-5 h-5 text-green-600" />
+                    <div>
+                      <div className="font-medium">DataFast</div>
+                      <div className="text-sm text-muted-foreground">
+                        {settings?.payment_settings?.datafast_enabled 
+                          ? 'Pago con tarjetas de crédito y débito'
+                          : 'Próximamente disponible'
+                        }
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -568,7 +589,16 @@ const PurchaseFlow = () => {
                      Transferencia Bancaria
                    </Button>
                  )}
-               </div>
+                  {paymentMethod === 'datafast' && settings?.payment_settings?.datafast_enabled && (
+                    <Button 
+                      onClick={() => navigate(`/purchase-datafast/${raffle.id}/${getQuantity()}`)} 
+                      className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
+                    >
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      Pagar con DataFast
+                    </Button>
+                  )}
+                </div>
             </CardContent>
           </Card>
         )}

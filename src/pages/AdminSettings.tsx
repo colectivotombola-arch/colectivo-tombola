@@ -56,7 +56,21 @@ const AdminSettings = () => {
     kushki_enabled: false,
     kushki_public_key: '',
     mercadopago_enabled: false,
-    mercadopago_access_token: ''
+    mercadopago_access_token: '',
+    // DataFast configuration
+    datafast_enabled: false,
+    datafast_mode: 'SANDBOX',
+    datafast_entity_id: '',
+    datafast_auth_bearer: '',
+    datafast_shopper_mid: '',
+    datafast_shopper_tid: '',
+    datafast_shopper_pserv: '17913101',
+    datafast_risk_user_data2: 'MiComercio',
+    datafast_currency: 'USD',
+    datafast_iva_rate: 0.12,
+    datafast_success_url: '/pago-exitoso',
+    datafast_failure_url: '/pago-fallido',
+    datafast_cancel_url: '/pago-cancelado'
   });
 
   const [socialMedia, setSocialMedia] = useState({
@@ -137,44 +151,51 @@ const AdminSettings = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
+      console.log('Guardando configuraciones...', {
+        paymentSettings,
+        socialMedia,
+        emailSettings
+      });
+
       // Validar campo obligatorio de WhatsApp
       let whatsappNumber = settings.whatsapp_number || '';
       if (whatsappNumber && !whatsappNumber.startsWith('+')) {
         whatsappNumber = '+593' + whatsappNumber.replace(/^0/, '');
       }
 
-      // Combinar todas las configuraciones
+      // Combinar todas las configuraciones asegurando que se guarden correctamente
       const allSettings = {
         ...settings,
         whatsapp_number: whatsappNumber,
-        payment_settings: JSON.stringify(paymentSettings),
-        social_media: JSON.stringify(socialMedia),
-        email_settings: JSON.stringify(emailSettings)
+        payment_settings: paymentSettings, // Guardar como objeto, no string
+        social_media: socialMedia, // Guardar como objeto, no string  
+        email_settings: emailSettings // Guardar como objeto, no string
       };
 
-      // Update local state
-      setSettings(prev => ({ ...prev, whatsapp_number: whatsappNumber }));
+      console.log('Datos a guardar:', allSettings);
 
       const result = await siteSettingsAPI.update(allSettings);
       if (result) {
         toast({
-          title: "¡Éxito!",
-          description: "Todas las configuraciones se guardaron correctamente",
+          title: "¡Configuraciones guardadas!",
+          description: "Todos los cambios se han guardado correctamente y permanecerán al recargar la página",
         });
         
-        // Recargar configuraciones para confirmar el guardado
-        await loadSettings();
+        // Actualizar estados locales
+        setSettings(prev => ({ ...prev, whatsapp_number: whatsappNumber }));
         
         // Refresh design settings to apply changes immediately
         await refreshFromSiteSettings();
+        
+        console.log('Configuraciones guardadas exitosamente');
       } else {
-        throw new Error('Failed to save settings');
+        throw new Error('No se recibió confirmación de guardado');
       }
     } catch (error) {
       console.error('Error saving settings:', error);
       toast({
-        title: "Error",
-        description: "No se pudieron guardar las configuraciones. Verifica que tengas permisos de administrador.",
+        title: "Error al guardar",
+        description: "No se pudieron guardar las configuraciones. Verifique su conexión e intente nuevamente.",
         variant: "destructive",
       });
     } finally {
@@ -475,7 +496,105 @@ const AdminSettings = () => {
                 </div>
               </div>
 
-              {/* Other Payment Methods */}
+              {/* DataFast Configuration */}
+              <div className="border rounded-lg p-4 bg-green-50 dark:bg-green-950/20">
+                <h4 className="font-semibold mb-4 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4" />
+                  Configuración DataFast (Dataweb / OPPWA)
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="datafast_enabled"
+                      checked={paymentSettings.datafast_enabled || false}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, datafast_enabled: e.target.checked }))}
+                    />
+                    <Label htmlFor="datafast_enabled">Habilitar DataFast</Label>
+                  </div>
+                  <div>
+                    <Label htmlFor="datafast_mode">Modo</Label>
+                    <select
+                      id="datafast_mode"
+                      value={paymentSettings.datafast_mode || 'SANDBOX'}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, datafast_mode: e.target.value }))}
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background"
+                    >
+                      <option value="SANDBOX">SANDBOX (Pruebas)</option>
+                      <option value="PROD">PROD (Producción)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="datafast_entity_id">Entity ID (8a...)</Label>
+                    <Input
+                      id="datafast_entity_id"
+                      value={paymentSettings.datafast_entity_id || ''}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, datafast_entity_id: e.target.value }))}
+                      placeholder="8a829449..."
+                      disabled={!paymentSettings.datafast_enabled}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="datafast_auth_bearer">Auth Bearer Token</Label>
+                    <Input
+                      id="datafast_auth_bearer"
+                      type="password"
+                      value={paymentSettings.datafast_auth_bearer || ''}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, datafast_auth_bearer: e.target.value }))}
+                      placeholder="Bearer token..."
+                      disabled={!paymentSettings.datafast_enabled}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="datafast_shopper_mid">Shopper MID</Label>
+                    <Input
+                      id="datafast_shopper_mid"
+                      value={paymentSettings.datafast_shopper_mid || ''}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, datafast_shopper_mid: e.target.value }))}
+                      placeholder="MID del comercio"
+                      disabled={!paymentSettings.datafast_enabled}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="datafast_shopper_tid">Shopper TID</Label>
+                    <Input
+                      id="datafast_shopper_tid"
+                      value={paymentSettings.datafast_shopper_tid || ''}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, datafast_shopper_tid: e.target.value }))}
+                      placeholder="TID del comercio"
+                      disabled={!paymentSettings.datafast_enabled}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="datafast_risk_user_data2">Nombre del Comercio</Label>
+                    <Input
+                      id="datafast_risk_user_data2"
+                      value={paymentSettings.datafast_risk_user_data2 || 'MiComercio'}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, datafast_risk_user_data2: e.target.value }))}
+                      placeholder="Nombre del comercio"
+                      disabled={!paymentSettings.datafast_enabled}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="datafast_iva_rate">Tasa de IVA</Label>
+                    <Input
+                      id="datafast_iva_rate"
+                      type="number"
+                      step="0.01"
+                      value={paymentSettings.datafast_iva_rate || 0.12}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, datafast_iva_rate: parseFloat(e.target.value) }))}
+                      placeholder="0.12"
+                      disabled={!paymentSettings.datafast_enabled}
+                    />
+                  </div>
+                </div>
+                <div className="mt-4 text-sm text-muted-freground">
+                  <p><strong>Nota:</strong> Los URLs de éxito, fallo y cancelación se configuran automáticamente como:</p>
+                  <p>• Éxito: /pago-exitoso</p>
+                  <p>• Fallo: /pago-fallido</p>
+                  <p>• Cancelado: /pago-cancelado</p>
+                </div>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="border rounded-lg p-4">
                   <div className="flex items-center space-x-2 mb-2">

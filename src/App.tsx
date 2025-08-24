@@ -25,6 +25,9 @@ import ConsultarNumeros from "./pages/ConsultarNumeros";
 import DetallesActividad from "./pages/DetallesActividad";
 import PurchaseFlow from "./pages/PurchaseFlow";
 import TermsAndConditions from "./pages/TermsAndConditions";
+import PagoExitoso from "./pages/PagoExitoso";
+import PagoFallido from "./pages/PagoFallido";
+import PagoCancelado from "./pages/PagoCancelado";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -110,6 +113,9 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/purchase/:raffleId/:packageId" element={<PurchaseFlow />} />
+            <Route path="/pago-exitoso" element={<PagoExitoso />} />
+            <Route path="/pago-fallido" element={<PagoFallido />} />
+            <Route path="/pago-cancelado" element={<PagoCancelado />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
