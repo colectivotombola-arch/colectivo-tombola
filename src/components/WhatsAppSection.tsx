@@ -17,26 +17,16 @@ const WhatsAppSection = ({ settings }: WhatsAppSectionProps) => {
         </p>
         <button
           onClick={() => {
-            const phone = settings?.whatsapp_number?.replace(/\D/g, '') || '593999053073';
+            const phoneRaw = settings?.whatsapp_number || '+593999053073';
+            const phone = phoneRaw.replace(/\D/g, '');
             const message = encodeURIComponent('Hola, tengo preguntas sobre las rifas de Colectivo Tómbola');
-            const whatsappUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${message}`;
-            
-            // Try to open WhatsApp app first, fallback to web
-            const mobileUrl = `whatsapp://send?phone=${phone}&text=${message}`;
-            
-            // Check if mobile device
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            
-            if (isMobile) {
-              // Try mobile app first
-              window.open(mobileUrl, '_blank');
-              // Fallback to web after 2 seconds if app doesn't open
-              setTimeout(() => {
-                window.open(whatsappUrl, '_blank');
-              }, 2000);
-            } else {
-              // Desktop: open web WhatsApp directly
-              window.open(whatsappUrl, '_blank');
+            // Use wa.me which works better across browsers/iframes than api.whatsapp.com
+            const waUrl = `https://wa.me/${phone}?text=${message}`;
+            // Navigate instead of window.open to avoid popup blockers in sandboxed iframes
+            try {
+              window.location.href = waUrl;
+            } catch {
+              window.open(waUrl, '_blank');
             }
           }}
           className="inline-flex items-center px-4 py-3 sm:px-6 sm:py-4 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors mobile-text cursor-pointer"

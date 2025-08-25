@@ -57,6 +57,8 @@ const AdminSettings = () => {
     kushki_public_key: '',
     mercadopago_enabled: false,
     mercadopago_access_token: '',
+    // WhatsApp DataLink mapping
+    whatsapp_datalinks: {},
     // DataFast configuration
     datafast_enabled: false,
     datafast_mode: 'SANDBOX',
