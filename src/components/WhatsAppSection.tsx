@@ -17,16 +17,23 @@ const WhatsAppSection = ({ settings }: WhatsAppSectionProps) => {
         </p>
         <button
           onClick={() => {
-            const phoneRaw = settings?.whatsapp_number || '+593999053073';
-            const phone = phoneRaw.replace(/\D/g, '');
+            const raw = settings?.whatsapp_number || '+593999053073';
+            const phone = raw.replace(/\D/g, '');
             const message = encodeURIComponent('Hola, tengo preguntas sobre las rifas de Colectivo Tómbola');
-            // Use wa.me which works better across browsers/iframes than api.whatsapp.com
-            const waUrl = `https://wa.me/${phone}?text=${message}`;
-            // Navigate instead of window.open to avoid popup blockers in sandboxed iframes
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            const waWeb = `https://web.whatsapp.com/send?phone=${phone}&text=${message}`;
+            const waMe = `https://wa.me/${phone}?text=${message}`;
+            const url = isMobile ? waMe : waWeb;
             try {
-              window.location.href = waUrl;
+              const a = document.createElement('a');
+              a.href = url;
+              a.target = '_blank';
+              a.rel = 'noopener noreferrer';
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
             } catch {
-              window.open(waUrl, '_blank');
+              window.open(url, '_blank');
             }
           }}
           className="inline-flex items-center px-4 py-3 sm:px-6 sm:py-4 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors mobile-text cursor-pointer"

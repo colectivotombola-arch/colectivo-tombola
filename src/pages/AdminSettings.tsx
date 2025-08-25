@@ -596,8 +596,30 @@ const AdminSettings = () => {
                   <p>• Fallo: /pago-fallido</p>
                   <p>• Cancelado: /pago-cancelado</p>
                 </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                </div>
+                {/* WhatsApp + DataLink mapping */}
+                <div className="border rounded-lg p-4 bg-emerald-50 dark:bg-emerald-950/20">
+                  <h4 className="font-semibold mb-4 flex items-center gap-2">
+                    <CreditCard className="w-4 h-4" />
+                    WhatsApp + DataLink (DataFast)
+                  </h4>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Mapea totales a enlaces Datalink de DataFast. Formato JSON: {`{"1.00":"https://...","25.00":"https://..."}`}
+                  </p>
+                  <Textarea
+                    rows={5}
+                    value={JSON.stringify((paymentSettings as any).whatsapp_datalinks || {}, null, 2)}
+                    onChange={(e) => {
+                      try {
+                        const obj = JSON.parse(e.target.value || '{}');
+                        setPaymentSettings(prev => ({ ...prev, whatsapp_datalinks: obj }));
+                      } catch {
+                        // Ignorar errores de parseo mientras el usuario escribe
+                      }
+                    }}
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="border rounded-lg p-4">
                   <div className="flex items-center space-x-2 mb-2">
                     <input

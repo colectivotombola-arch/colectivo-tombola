@@ -192,55 +192,51 @@ const PurchaseFlow = () => {
           throw new Error('No se pudo crear la confirmación de compra');
         }
         
-        // Enviar email de confirmación de compra pendiente
-        const emailResponse = await supabase.functions.invoke('send-purchase-email', {
-          body: {
-            buyer_name: buyerData.name,
-            buyer_email: buyerData.email,
-            buyer_phone: buyerData.phone,
-            raffle_id: raffle.id,
-            quantity,
-            total_amount: total,
-            confirmation_number: confirmationNumber,
-            assigned_numbers: [], // Sin números hasta confirmar pago
-            payment_pending: true
-          }
-        });
-        
-        if (emailResponse.error) {
-          console.error('Error sending email:', emailResponse.error);
-        }
-        
         // Asegurar que el número de WhatsApp tenga código de país
         let whatsappNumber = settings?.whatsapp_number || '+593999053073';
         if (!whatsappNumber.startsWith('+')) {
-          whatsappNumber = '+593' + whatsappNumber;
+          whatsappNumber = '+593' + whatsappNumber.replace(/^0/, '');
         }
         
-        const message = `¡Hola! Quiero comprar boletos para la rifa:
-
-📋 DETALLES DE MI COMPRA:
-• Rifa: ${raffle.title}
-• Cantidad: ${quantity} boletos
-• Total a pagar: $${total.toFixed(2)}
-• Confirmación: ${confirmationNumber}
-
-👤 MIS DATOS:
-• Nombre: ${buyerData.name}
-• Teléfono: ${buyerData.phone}
-• Email: ${buyerData.email}
-
-⚠️ IMPORTANTE: Una vez confirmado el pago, recibiré mis números asignados por email.
-
-¿Cómo procedo con el pago?`;
+        // DataLink por monto (desde Admin)
+        const mapping = (settings?.payment_settings as any)?.whatsapp_datalinks || {};
+        const datalink = mapping[total.toFixed(2)] || '';
         
-        const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, '_blank');
+        const message = `¡Hola! Quiero comprar boletos para la rifa:\n\n` +
+        `📋 DETALLES DE MI COMPRA:\n` +
+        `• Rifa: ${raffle.title}\n` +
+        `• Cantidad: ${quantity} boletos\n` +
+        `• Total a pagar: $${total.toFixed(2)}\n` +
+        `• Confirmación: ${confirmationNumber}\n\n` +
+        `👤 MIS DATOS:\n` +
+        `• Nombre: ${buyerData.name}\n` +
+        `• Teléfono: ${buyerData.phone}\n` +
+        `• Email: ${buyerData.email}\n\n` +
+        (datalink ? `Link de pago DataFast (Datalink):\n${datalink}\n\n` : '') +
+        `⚠️ IMPORTANTE: Una vez confirmado el pago, recibiré mis números asignados por email.`;
+        
+        const phone = whatsappNumber.replace(/\D/g, '');
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const waWeb = `https://web.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`;
+        const waMe = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        const url = isMobile ? waMe : waWeb;
+        
+        try {
+          const a = document.createElement('a');
+          a.href = url;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        } catch {
+          window.open(url, '_blank');
+        }
         
         toast({
           title: "¡Compra registrada exitosamente!",
-          description: `Confirmación: ${confirmationNumber}. Una vez confirmes el pago recibirás tus números por email.`,
-          duration: 8000,
+          description: `Confirmación: ${confirmationNumber}. Abriendo WhatsApp...`,
+          duration: 6000,
         });
         
         setTimeout(() => navigate('/'), 5000);

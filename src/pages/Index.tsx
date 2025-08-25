@@ -7,6 +7,7 @@ import InstagramSection from '@/components/InstagramSection';
 import SocialMediaSection from '@/components/SocialMediaSection';
 import WhatsAppSection from '@/components/WhatsAppSection';
 import { siteSettingsAPI, SiteSettings, rafflesAPI, Raffle } from '@/lib/supabase';
+import { Link } from 'react-router-dom';
 import { useDesignSettings } from '@/hooks/useDesignSettings';
 import footerLogo from '@/assets/logo-colectivo-tombola-new.png';
 
@@ -102,10 +103,10 @@ const Index = () => {
             <div>
               <h4 className="font-semibold mb-4 mobile-text">Enlaces Rápidos</h4>
               <ul className="space-y-2 text-muted-foreground mobile-body">
-                <li><a href="/comprar" className="hover:text-primary transition-colors">Comprar Números</a></li>
-                <li><a href="/consultar" className="hover:text-primary transition-colors">Consultar Números</a></li>
-                <li><a href="/detalles" className="hover:text-primary transition-colors">Detalles de Actividad</a></li>
-                <li><a href="/terminos" className="hover:text-primary transition-colors">Términos y Condiciones</a></li>
+                <li><Link to="/comprar" className="hover:text-primary transition-colors">Comprar Números</Link></li>
+                <li><Link to="/consultar" className="hover:text-primary transition-colors">Consultar Números</Link></li>
+                <li><Link to="/detalles" className="hover:text-primary transition-colors">Detalles de Actividad</Link></li>
+                <li><Link to="/terminos" className="hover:text-primary transition-colors">Términos y Condiciones</Link></li>
               </ul>
             </div>
             <div>
@@ -130,13 +131,13 @@ const Index = () => {
           </div>
           <div className="border-t border-border mt-8 pt-8 text-center text-muted-foreground relative">
             <p className="mobile-body">&copy; 2024 {settings?.site_name || 'Colectivo Tombola'}. Todos los derechos reservados.</p>
-            <a 
-              href="/admin" 
+            <Link 
+              to="/admin" 
               className="fixed bottom-4 right-4 z-50 bg-background/30 backdrop-blur-sm p-1.5 rounded-full border border-border text-muted-foreground hover:text-primary hover:border-primary transition-all duration-300 shadow-md mobile-body opacity-70"
               title="Admin"
             >
               🔐
-            </a>
+            </Link>
           </div>
         </div>
       </footer>
