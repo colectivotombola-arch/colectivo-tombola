@@ -219,18 +219,28 @@ const PurchaseFlow = () => {
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         const waWeb = `https://web.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`;
         const waMe = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-        const url = isMobile ? waMe : waWeb;
-        
-        try {
-          const a = document.createElement('a');
-          a.href = url;
-          a.target = '_blank';
-          a.rel = 'noopener noreferrer';
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-        } catch {
-          window.open(url, '_blank');
+        const waApi = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`;
+        const candidates = isMobile ? [waMe, waApi] : [waWeb, waApi, waMe];
+
+        let opened = false;
+        for (const url of candidates) {
+          try {
+            const a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            opened = true;
+            break;
+          } catch {}
+        }
+        if (!opened) {
+          try { window.location.assign(candidates[0]); opened = true; } catch {}
+        }
+        if (!opened) {
+          console.warn('No se pudo abrir WhatsApp. Enlace:', candidates[0]);
         }
         
         toast({

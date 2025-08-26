@@ -23,17 +23,30 @@ const WhatsAppSection = ({ settings }: WhatsAppSectionProps) => {
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
             const waWeb = `https://web.whatsapp.com/send?phone=${phone}&text=${message}`;
             const waMe = `https://wa.me/${phone}?text=${message}`;
-            const url = isMobile ? waMe : waWeb;
-            try {
-              const a = document.createElement('a');
-              a.href = url;
-              a.target = '_blank';
-              a.rel = 'noopener noreferrer';
-              document.body.appendChild(a);
-              a.click();
-              a.remove();
-            } catch {
-              window.open(url, '_blank');
+            const waApi = `https://api.whatsapp.com/send?phone=${phone}&text=${message}`;
+            const candidates = isMobile ? [waMe, waApi] : [waWeb, waApi, waMe];
+            let opened = false;
+            for (const url of candidates) {
+              try {
+                const a = document.createElement('a');
+                a.href = url;
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                opened = true;
+                break;
+              } catch {}
+            }
+            if (!opened) {
+              try {
+                window.location.assign(candidates[0]);
+                opened = true;
+              } catch {}
+            }
+            if (!opened) {
+              alert('No se pudo abrir WhatsApp. Copia y pega este enlace: ' + candidates[0]);
             }
           }}
           className="inline-flex items-center px-4 py-3 sm:px-6 sm:py-4 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors mobile-text cursor-pointer"

@@ -135,32 +135,11 @@ export const siteSettingsAPI = {
 
   async update(settings: Partial<SiteSettings>): Promise<SiteSettings | null> {
     try {
-      // Ensure we update the SINGLE existing row to avoid creating duplicates
-      const { data: existing } = await supabase
-        .from('site_settings')
-        .select('id')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (existing?.id) {
-        const { data, error } = await supabase
-          .from('site_settings')
-          .update({ ...settings, updated_at: new Date().toISOString() })
-          .eq('id', existing.id)
-          .select()
-          .single();
-        if (error) throw error;
-        return data as SiteSettings;
-      } else {
-        const { data, error } = await supabase
-          .from('site_settings')
-          .insert({ ...settings, created_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-          .select()
-          .single();
-        if (error) throw error;
-        return data as SiteSettings;
-      }
+      const { data, error } = await supabase.functions.invoke('update-site-settings', {
+        body: settings,
+      });
+      if (error) throw error;
+      return data as SiteSettings;
     } catch (error) {
       console.error('Error in siteSettingsAPI.update:', error);
       return null;

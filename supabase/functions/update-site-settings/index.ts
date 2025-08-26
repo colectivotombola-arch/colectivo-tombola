@@ -12,25 +12,40 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
+    // Use service role for privileged writes (RLS bypass) but enforce admin check
+    const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Get the request body
-    const requestData = await req.json();
-
-    // Verify user is authenticated
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header");
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData } = await supabaseClient.auth.getUser(token);
-    
-    if (!userData.user) throw new Error("User not authenticated");
+    const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
+    if (userErr) throw userErr;
+    const user = userData?.user;
+    if (!user) throw new Error("User not authenticated");
 
-    // Update site settings with all fields
-    const { data, error } = await supabaseClient
+    // Enforce admin role
+    const { data: roles, error: roleErr } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .limit(1);
+    if (roleErr) throw roleErr;
+    if (!roles || roles.length === 0) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 403,
+      });
+    }
+
+    const requestData = await req.json();
+
+    // Upsert single row of site_settings
+    const { data, error } = await supabaseAdmin
       .from("site_settings")
       .upsert({
         site_name: requestData.site_name,
@@ -47,7 +62,12 @@ serve(async (req) => {
         social_media: requestData.social_media,
         payment_settings: requestData.payment_settings,
         email_settings: requestData.email_settings,
-        updated_at: new Date().toISOString()
+        price_per_number: requestData.price_per_number,
+        terms_and_conditions: requestData.terms_and_conditions,
+        activity_title: requestData.activity_title,
+        purchase_rules: requestData.purchase_rules,
+        raffle_rules: requestData.raffle_rules,
+        updated_at: new Date().toISOString(),
       })
       .select()
       .single();
@@ -59,7 +79,7 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
