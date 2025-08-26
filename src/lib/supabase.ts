@@ -135,10 +135,43 @@ export const siteSettingsAPI = {
 
   async update(settings: Partial<SiteSettings>): Promise<SiteSettings | null> {
     try {
-      const { data, error } = await supabase.functions.invoke('update-site-settings', {
-        body: settings,
-      });
-      if (error) throw error;
+      console.log('Attempting to save settings:', settings);
+      
+      // Use direct database update with upsert
+      const { data, error } = await supabase
+        .from('site_settings')
+        .upsert({
+          id: settings.id || '30a933b2-6eba-498d-b3be-b97ff3c76784',
+          site_name: settings.site_name || 'TOMBOLA PREMIUM',
+          site_tagline: settings.site_tagline,
+          primary_color: settings.primary_color || '#00e5cc',
+          secondary_color: settings.secondary_color || '#1a1a1a',
+          contact_email: settings.contact_email,
+          contact_phone: settings.contact_phone,
+          logo_url: settings.logo_url,
+          whatsapp_number: settings.whatsapp_number,
+          instagram_video_url: settings.instagram_video_url,
+          hero_title: settings.hero_title || 'TOYOTA FORTUNER 4X4 + CHEVROLET ONIX TURBO RS 0km',
+          hero_subtitle: settings.hero_subtitle || 'Rifas seguras y transparentes con los mejores premios del mercado',
+          social_media: settings.social_media,
+          payment_settings: settings.payment_settings,
+          email_settings: settings.email_settings,
+          price_per_number: settings.price_per_number || '1.50',
+          terms_and_conditions: settings.terms_and_conditions,
+          activity_title: settings.activity_title,
+          purchase_rules: settings.purchase_rules,
+          raffle_rules: settings.raffle_rules,
+          updated_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
+
+      console.log('Settings saved successfully:', data);
       return data as SiteSettings;
     } catch (error) {
       console.error('Error in siteSettingsAPI.update:', error);
