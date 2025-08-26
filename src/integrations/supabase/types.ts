@@ -565,6 +565,7 @@ export type Database = {
           social_media: Json | null
           terms_and_conditions: string | null
           updated_at: string
+          whatsapp_datalinks: Json | null
           whatsapp_number: string | null
         }
         Insert: {
@@ -591,6 +592,7 @@ export type Database = {
           social_media?: Json | null
           terms_and_conditions?: string | null
           updated_at?: string
+          whatsapp_datalinks?: Json | null
           whatsapp_number?: string | null
         }
         Update: {
@@ -617,6 +619,7 @@ export type Database = {
           social_media?: Json | null
           terms_and_conditions?: string | null
           updated_at?: string
+          whatsapp_datalinks?: Json | null
           whatsapp_number?: string | null
         }
         Relationships: []

@@ -216,31 +216,24 @@ const PurchaseFlow = () => {
         `⚠️ IMPORTANTE: Una vez confirmado el pago, recibiré mis números asignados por email.`;
         
         const phone = whatsappNumber.replace(/\D/g, '');
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        const waWeb = `https://web.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`;
-        const waMe = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-        const waApi = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`;
-        const candidates = isMobile ? [waMe, waApi] : [waWeb, waApi, waMe];
+        // Usar solo wa.me para máxima compatibilidad
+        const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
-        let opened = false;
-        for (const url of candidates) {
+        try {
+          const newWindow = window.open(waUrl, '_blank');
+          if (newWindow) {
+            newWindow.focus();
+          } else {
+            window.location.href = waUrl;
+          }
+        } catch (error) {
+          // Copia al portapapeles como último recurso
           try {
-            const a = document.createElement('a');
-            a.href = url;
-            a.target = '_blank';
-            a.rel = 'noopener noreferrer';
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            opened = true;
-            break;
-          } catch {}
-        }
-        if (!opened) {
-          try { window.location.assign(candidates[0]); opened = true; } catch {}
-        }
-        if (!opened) {
-          console.warn('No se pudo abrir WhatsApp. Enlace:', candidates[0]);
+            await navigator.clipboard.writeText(waUrl);
+            alert('Link de WhatsApp copiado al portapapeles: ' + waUrl);
+          } catch {
+            alert('Abre este enlace en tu navegador: ' + waUrl);
+          }
         }
         
         toast({
