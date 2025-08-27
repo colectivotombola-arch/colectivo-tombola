@@ -24,14 +24,14 @@ const WhatsAppSection = ({ settings }: WhatsAppSectionProps) => {
             const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
             const waApp = `whatsapp://send?phone=${phone}&text=${message}`;
             const waMe = `https://wa.me/${phone}?text=${message}`;
-            const targetUrl = isMobile ? waApp : waMe;
-            
+
             try {
-              const newWindow = window.open(targetUrl, '_blank');
-              if (newWindow) {
-                newWindow.focus();
+              if (isMobile) {
+                window.location.href = waApp;
+                // Fallback a web si el esquema no abre
+                setTimeout(() => { window.location.href = waMe; }, 800);
               } else {
-                window.location.href = targetUrl;
+                window.location.href = waMe;
               }
             } catch (error) {
               navigator.clipboard?.writeText(waMe).then(() => {

@@ -219,14 +219,13 @@ const PurchaseFlow = () => {
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         const waApp = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
         const waMe = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-        const targetUrl = isMobile ? waApp : waMe;
 
         try {
-          const newWindow = window.open(targetUrl, '_blank');
-          if (newWindow) {
-            newWindow.focus();
+          if (isMobile) {
+            window.location.href = waApp;
+            setTimeout(() => { window.location.href = waMe; }, 800);
           } else {
-            window.location.href = targetUrl;
+            window.location.href = waMe;
           }
         } catch (error) {
           try {
