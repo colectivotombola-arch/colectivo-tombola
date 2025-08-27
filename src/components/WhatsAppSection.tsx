@@ -20,25 +20,24 @@ const WhatsAppSection = ({ settings }: WhatsAppSectionProps) => {
             const raw = settings?.whatsapp_number || '+593999053073';
             const phone = raw.replace(/\D/g, '');
             const message = encodeURIComponent('Hola, tengo preguntas sobre las rifas de Colectivo Tómbola');
-            
-            // Use only wa.me for maximum compatibility
-            const waUrl = `https://wa.me/${phone}?text=${message}`;
+
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            const waApp = `whatsapp://send?phone=${phone}&text=${message}`;
+            const waMe = `https://wa.me/${phone}?text=${message}`;
+            const targetUrl = isMobile ? waApp : waMe;
             
             try {
-              // Try to open in new tab first
-              const newWindow = window.open(waUrl, '_blank');
+              const newWindow = window.open(targetUrl, '_blank');
               if (newWindow) {
                 newWindow.focus();
               } else {
-                // Fallback to current window
-                window.location.href = waUrl;
+                window.location.href = targetUrl;
               }
             } catch (error) {
-              // Final fallback - copy to clipboard
-              navigator.clipboard?.writeText(waUrl).then(() => {
-                alert('Link de WhatsApp copiado al portapapeles: ' + waUrl);
+              navigator.clipboard?.writeText(waMe).then(() => {
+                alert('Link de WhatsApp copiado al portapapeles: ' + waMe);
               }).catch(() => {
-                alert('Abre este enlace en tu navegador: ' + waUrl);
+                alert('Abre este enlace en tu navegador: ' + waMe);
               });
             }
           }}

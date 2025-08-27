@@ -74,21 +74,12 @@ const Index = () => {
       {/* Contact Section */}
       <WhatsAppSection settings={settings} />
 
-      {/* Imagen al final de la página */}
-      <section className="mobile-section p-0" aria-label="Imagen final de la página">
-        <img 
-          src="/lovable-uploads/40dd58e7-1558-43d2-84a8-c2a6176de594.png" 
-          alt="Foto del vehículo - imagen final de la página" 
-          loading="lazy" 
-          className="w-full h-auto object-cover" 
-        />
-      </section>
 
       {/* Footer */}
       <footer className="bg-background text-foreground mobile-section relative overflow-hidden">
         {/* Background Logo - More visible */}
-        <div className="absolute inset-0 opacity-20 bg-no-repeat bg-center bg-contain" 
-             style={{backgroundImage: `url(${settings?.logo_url || footerLogo})`}}></div>
+        <div className="absolute inset-0 opacity-20 bg-no-repeat bg-center bg-cover" 
+             style={{backgroundImage: `url(/lovable-uploads/40dd58e7-1558-43d2-84a8-c2a6176de594.png)`}}></div>
         <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/80 to-background/95"></div>
         <div className="mobile-container relative z-10">
           <div className="mobile-grid">

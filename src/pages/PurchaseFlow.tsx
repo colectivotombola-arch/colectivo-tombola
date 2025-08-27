@@ -216,23 +216,24 @@ const PurchaseFlow = () => {
         `⚠️ IMPORTANTE: Una vez confirmado el pago, recibiré mis números asignados por email.`;
         
         const phone = whatsappNumber.replace(/\D/g, '');
-        // Usar solo wa.me para máxima compatibilidad
-        const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const waApp = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
+        const waMe = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        const targetUrl = isMobile ? waApp : waMe;
 
         try {
-          const newWindow = window.open(waUrl, '_blank');
+          const newWindow = window.open(targetUrl, '_blank');
           if (newWindow) {
             newWindow.focus();
           } else {
-            window.location.href = waUrl;
+            window.location.href = targetUrl;
           }
         } catch (error) {
-          // Copia al portapapeles como último recurso
           try {
-            await navigator.clipboard.writeText(waUrl);
-            alert('Link de WhatsApp copiado al portapapeles: ' + waUrl);
+            await navigator.clipboard.writeText(waMe);
+            alert('Link de WhatsApp copiado al portapapeles: ' + waMe);
           } catch {
-            alert('Abre este enlace en tu navegador: ' + waUrl);
+            alert('Abre este enlace en tu navegador: ' + waMe);
           }
         }
         

@@ -101,7 +101,7 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
             <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10">
               <div className="bg-primary text-black px-3 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl text-center">
                 <div className="mobile-body font-medium">POR SÓLO</div>
-                <div className="text-xl sm:text-3xl font-black">${activeRaffle?.price_per_number ?? settings?.price_per_number ?? '1.50'}</div>
+                <div className="text-xl sm:text-3xl font-black">${settings?.price_per_number ?? activeRaffle?.price_per_number ?? '1.50'}</div>
                 <div className="mobile-body font-medium">CADA NÚMERO</div>
               </div>
             </div>
@@ -198,7 +198,7 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
             <div className="text-gray-600 mobile-text">Números Disponibles</div>
           </div>
           <div className="text-center">
-            <div className="responsive-subtitle font-bold text-primary mb-2">${activeRaffle?.price_per_number ?? settings?.price_per_number ?? '1.50'}</div>
+            <div className="responsive-subtitle font-bold text-primary mb-2">${settings?.price_per_number ?? activeRaffle?.price_per_number ?? '1.50'}</div>
             <div className="text-gray-600 mobile-text">Cada Número</div>
           </div>
           <div className="text-center">
