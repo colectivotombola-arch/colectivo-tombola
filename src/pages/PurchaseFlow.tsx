@@ -221,12 +221,8 @@ const PurchaseFlow = () => {
         const waMe = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
         try {
-          if (isMobile) {
-            window.location.href = waApp;
-            setTimeout(() => { window.location.href = waMe; }, 800);
-          } else {
-            window.location.href = waMe;
-          }
+          // Usar window.open para no cambiar la página actual
+          window.open(waMe, '_blank');
         } catch (error) {
           try {
             await navigator.clipboard.writeText(waMe);

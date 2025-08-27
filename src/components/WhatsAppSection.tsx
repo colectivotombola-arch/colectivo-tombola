@@ -26,14 +26,10 @@ const WhatsAppSection = ({ settings }: WhatsAppSectionProps) => {
             const waMe = `https://wa.me/${phone}?text=${message}`;
 
             try {
-              if (isMobile) {
-                window.location.href = waApp;
-                // Fallback a web si el esquema no abre
-                setTimeout(() => { window.location.href = waMe; }, 800);
-              } else {
-                window.location.href = waMe;
-              }
+              // Usar window.open para no cambiar la página actual
+              window.open(waMe, '_blank');
             } catch (error) {
+              // Si falla, copiar al portapapeles
               navigator.clipboard?.writeText(waMe).then(() => {
                 alert('Link de WhatsApp copiado al portapapeles: ' + waMe);
               }).catch(() => {

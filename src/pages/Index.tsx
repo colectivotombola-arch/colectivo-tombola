@@ -78,7 +78,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="bg-background text-foreground mobile-section relative overflow-hidden">
         {/* Background Logo - More visible */}
-        <div className="absolute inset-0 opacity-40 bg-no-repeat bg-center bg-cover" 
+        <div className="absolute inset-0 opacity-60 bg-no-repeat bg-center bg-cover" 
              style={{backgroundImage: `url(/lovable-uploads/40dd58e7-1558-43d2-84a8-c2a6176de594.png)`}}></div>
         <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/80 to-background/95"></div>
         <div className="mobile-container relative z-10">
