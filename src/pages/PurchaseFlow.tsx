@@ -221,8 +221,7 @@ const PurchaseFlow = () => {
         const waMe = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
         try {
-          // Usar window.open para no cambiar la página actual
-          window.open(waMe, '_blank');
+          window.location.href = waMe;
         } catch (error) {
           try {
             await navigator.clipboard.writeText(waMe);
