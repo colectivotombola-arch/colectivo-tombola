@@ -220,24 +220,8 @@ const PurchaseFlow = () => {
         const waApp = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
         const waMe = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
-        // For mobile devices, try app first, then web
-        if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-          // Create a temporary link and try to open it
-          const tempLink = document.createElement('a');
-          tempLink.href = waApp;
-          tempLink.style.display = 'none';
-          document.body.appendChild(tempLink);
-          tempLink.click();
-          document.body.removeChild(tempLink);
-          
-          // Fallback to web version after a short delay
-          setTimeout(() => {
-            window.open(waMe, '_blank');
-          }, 1000);
-        } else {
-          // For desktop, open web version directly
-          window.open(waMe, '_blank');
-        }
+        // Simple and reliable: always use window.open with wa.me
+        window.open(waMe, '_blank');
         
         toast({
           title: "¡Compra registrada exitosamente!",
