@@ -220,15 +220,23 @@ const PurchaseFlow = () => {
         const waApp = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
         const waMe = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
-        try {
-          window.location.href = waMe;
-        } catch (error) {
-          try {
-            await navigator.clipboard.writeText(waMe);
-            alert('Link de WhatsApp copiado al portapapeles: ' + waMe);
-          } catch {
-            alert('Abre este enlace en tu navegador: ' + waMe);
-          }
+        // For mobile devices, try app first, then web
+        if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+          // Create a temporary link and try to open it
+          const tempLink = document.createElement('a');
+          tempLink.href = waApp;
+          tempLink.style.display = 'none';
+          document.body.appendChild(tempLink);
+          tempLink.click();
+          document.body.removeChild(tempLink);
+          
+          // Fallback to web version after a short delay
+          setTimeout(() => {
+            window.open(waMe, '_blank');
+          }, 1000);
+        } else {
+          // For desktop, open web version directly
+          window.open(waMe, '_blank');
         }
         
         toast({

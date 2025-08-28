@@ -704,18 +704,24 @@ export type Database = {
       get_public_site_settings: {
         Args: Record<PropertyKey, never>
         Returns: {
+          activity_title: string
           created_at: string
           hero_subtitle: string
           hero_title: string
           id: string
+          instagram_display_name: string
+          instagram_handle: string
+          instagram_video_url: string
           logo_url: string
           price_per_number: string
           primary_color: string
+          purchase_rules: string
           secondary_color: string
           site_name: string
           site_tagline: string
           terms_and_conditions: string
           updated_at: string
+          whatsapp_number: string
         }[]
       }
       has_role: {

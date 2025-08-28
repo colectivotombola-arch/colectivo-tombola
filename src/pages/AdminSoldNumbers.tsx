@@ -18,10 +18,7 @@ interface SoldNumber {
   payment_method: string;
   payment_status: string;
   purchase_date: string;
-  raffles?: {
-    title: string;
-    id: string;
-  };
+  raffle_id: string;
 }
 
 const AdminSoldNumbers = () => {
@@ -55,18 +52,7 @@ const AdminSoldNumbers = () => {
       setLoading(true);
       console.log('Iniciando carga de números vendidos...');
       
-      // Test connection first
-      const { data: testData, error: testError } = await supabase
-        .from('raffle_numbers')
-        .select('count')
-        .limit(1);
-        
-      if (testError) {
-        console.error('Test connection error:', testError);
-        throw new Error('No se pudo conectar a la base de datos');
-      }
-
-      // Load actual data
+      // Load raffle numbers data with error handling
       const { data, error } = await supabase
         .from('raffle_numbers')
         .select(`
@@ -78,11 +64,7 @@ const AdminSoldNumbers = () => {
           payment_method,
           payment_status,
           purchase_date,
-          raffle_id,
-          raffles!inner (
-            id,
-            title
-          )
+          raffle_id
         `)
         .order('purchase_date', { ascending: false });
 
@@ -123,7 +105,7 @@ const AdminSoldNumbers = () => {
       number.payment_method,
       number.payment_status,
       new Date(number.purchase_date).toLocaleDateString(),
-      number.raffles?.title || 'N/A'
+      number.raffle_id || 'N/A'
     ]);
 
     const csvContent = [headers, ...csvData]
@@ -244,7 +226,7 @@ const AdminSoldNumbers = () => {
                     <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-center">
                       <div>
                         <p className="font-bold text-lg text-primary">#{number.number_value}</p>
-                        <p className="text-xs text-muted-foreground">Rifa: {number.raffles?.title || number.raffles?.id || '—'}</p>
+                        <p className="text-xs text-muted-foreground">Rifa ID: {number.raffle_id || '—'}</p>
                       </div>
                       
                       <div>
