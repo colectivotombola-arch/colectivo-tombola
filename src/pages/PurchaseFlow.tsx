@@ -216,11 +216,9 @@ const PurchaseFlow = () => {
         `⚠️ IMPORTANTE: Una vez confirmado el pago, recibiré mis números asignados por email.`;
         
         const phone = whatsappNumber.replace(/\D/g, '');
-        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-        const waApp = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
         const waMe = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
-        // Simple and reliable: always use window.open with wa.me
+        // Always use wa.me format for maximum compatibility
         window.open(waMe, '_blank');
         
         toast({
