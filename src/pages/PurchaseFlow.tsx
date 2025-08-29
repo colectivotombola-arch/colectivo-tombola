@@ -559,7 +559,7 @@ const PurchaseFlow = () => {
                  )}
                  {paymentMethod === 'paypal' && settings?.payment_settings?.paypal_enabled && (
                    <Button 
-                     onClick={() => navigate(`/purchase-paypal/${raffle.id}/${getQuantity()}`)} 
+                     onClick={() => navigate(`/purchase-paypal/${raffle.id}/${getQuantity()}`, { state: { buyerData } })} 
                      className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
                    >
                      <CreditCard className="w-4 h-4 mr-2" />

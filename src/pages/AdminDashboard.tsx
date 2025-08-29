@@ -14,8 +14,7 @@ import {
   Trophy,
   Video
 } from 'lucide-react';
-
-
+import { rafflesAPI } from '@/lib/supabase';
 const AdminDashboard = () => {
   const { user, signOut } = useAuth();
   const [stats, setStats] = useState({
@@ -33,13 +32,17 @@ const AdminDashboard = () => {
 
   const loadDashboardStats = async () => {
     try {
-      // Mock data for now - this will be replaced with real Supabase data later
-      setStats({
-        activeRaffles: 1,
-        totalNumbers: 1000,
-        soldNumbers: 450,
-        totalRevenue: 22500
-      });
+      const raffle = await rafflesAPI.getActive();
+      if (raffle) {
+        setStats({
+          activeRaffles: 1,
+          totalNumbers: raffle.total_numbers || 0,
+          soldNumbers: raffle.numbers_sold || 0,
+          totalRevenue: (raffle.numbers_sold || 0) * (raffle.price_per_number || 0)
+        });
+      } else {
+        setStats({ activeRaffles: 0, totalNumbers: 0, soldNumbers: 0, totalRevenue: 0 });
+      }
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
     } finally {
@@ -48,9 +51,9 @@ const AdminDashboard = () => {
   };
 
   const dashboardStats = [
-    { title: 'Actividades Activas', value: '1', icon: Car, color: 'bg-primary' },
-    { title: 'Total Premios', value: '2', icon: Car, color: 'bg-secondary' },
-    { title: 'Imágenes Subidas', value: '8', icon: ImageIcon, color: 'bg-accent' },
+    { title: 'Actividades Activas', value: String(stats.activeRaffles), icon: Car, color: 'bg-primary' },
+    { title: 'Total Números', value: String(stats.totalNumbers), icon: Car, color: 'bg-secondary' },
+    { title: 'Vendidos', value: String(stats.soldNumbers), icon: ImageIcon, color: 'bg-accent' },
   ];
 
   const quickActions = [

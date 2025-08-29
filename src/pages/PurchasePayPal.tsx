@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
-import { rafflesAPI, siteSettingsAPI, type Raffle, type SiteSettings } from '@/lib/supabase';
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
+import { rafflesAPI, siteSettingsAPI, supabase, type Raffle, type SiteSettings } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import PayPalWidget from '@/components/PayPalWidget';
 
@@ -11,6 +11,8 @@ const PurchasePayPal = () => {
   const { raffleId, quantity } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const location = useLocation();
+  const buyerData = (location.state as any)?.buyerData || null;
   
   const [raffle, setRaffle] = useState<Raffle | null>(null);
   const [settings, setSettings] = useState<Partial<SiteSettings> | null>(null);
@@ -55,16 +57,48 @@ const PurchasePayPal = () => {
     }
   };
 
-  const handlePayPalSuccess = (details: any) => {
-    toast({
-      title: "¡Pago exitoso!",
-      description: `Pago procesado correctamente. ID: ${details.id}`,
-    });
-    
-    // Redirect to confirmation page
-    setTimeout(() => {
-      navigate(`/purchase-confirmation/${details.id}`);
-    }, 2000);
+  const handlePayPalSuccess = async (details: any) => {
+    try {
+      if (!buyerData) {
+        toast({
+          title: "Faltan datos",
+          description: "Vuelve y completa tus datos de comprador",
+          variant: "destructive",
+        });
+        navigate('/comprar');
+        return;
+      }
+
+      const ticketQuantity = parseInt(quantity || '1');
+      const total = ticketQuantity * (raffle?.price_per_number || 0);
+
+      const { error } = await supabase.functions.invoke('process-paypal-purchase', {
+        body: {
+          raffle_id: raffle?.id,
+          quantity: ticketQuantity,
+          total_amount: total,
+          buyer_name: buyerData.name,
+          buyer_email: buyerData.email,
+          buyer_phone: buyerData.phone,
+          paypal_order_id: details?.id,
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "¡Pago exitoso!",
+        description: `Compra confirmada. Recibirás tus números por email. ID: ${details.id}`,
+      });
+      setTimeout(() => navigate(`/`), 2000);
+    } catch (err) {
+      console.error('Error post-pago:', err);
+      toast({
+        title: "Error",
+        description: "No se pudo confirmar la compra. Si el cargo fue realizado, contáctanos.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handlePayPalError = (error: any) => {

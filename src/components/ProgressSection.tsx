@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -12,13 +13,24 @@ interface ProgressSectionProps {
 }
 
 const ProgressSection = ({ settings }: ProgressSectionProps) => {
-  // Mock data - in a real app this would come from database
-  const salesProgress = {
-    sold: 450,
-    total: 1000,
-    percentage: 45
-  };
+  const [raffle, setRaffle] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const { rafflesAPI } = await import('@/lib/supabase');
+        const data = await rafflesAPI.getActive();
+        if (mounted) setRaffle(data);
+      } catch (e) {
+        console.error('Error loading progress:', e);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
   return (
     <section className="py-8 relative">
       {/* Background Image */}
@@ -39,26 +51,26 @@ const ProgressSection = ({ settings }: ProgressSectionProps) => {
                  style={{backgroundImage: `url(${settings?.logo_url || progressLogo})`}}></div>
             <div className="relative z-10">
               <div className="text-center mb-4">
-              <div className="flex items-center justify-center mb-2">
-                <Trophy className="w-6 h-6 text-primary mr-2" />
-                <h3 className="text-xl font-bold text-foreground">Progreso de Ventas</h3>
+                <div className="flex items-center justify-center mb-2">
+                  <Trophy className="w-6 h-6 text-primary mr-2" />
+                  <h3 className="text-xl font-bold text-foreground">Progreso de Ventas</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {loading ? 'Cargando...' : `¡Ya se han vendido ${raffle?.numbers_sold || 0} números de ${raffle?.total_numbers || 0}!`}
+                </p>
               </div>
-              <p className="text-sm text-muted-foreground">
-                ¡Ya se han vendido {salesProgress.sold} números de {salesProgress.total}!
-              </p>
-            </div>
-            
-            <div className="mb-4">
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-muted-foreground">Números vendidos</span>
-                <span className="font-medium text-foreground">{salesProgress.sold}/{salesProgress.total}</span>
+              
+              <div className="mb-4">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-muted-foreground">Números vendidos</span>
+                  <span className="font-medium text-foreground">{raffle?.numbers_sold || 0}/{raffle?.total_numbers || 0}</span>
+                </div>
+                <Progress value={raffle?.sold_percentage || 0} className="h-3" />
+                <div className="text-center mt-2">
+                  <span className="text-lg font-bold text-primary">{(raffle?.sold_percentage || 0).toFixed(2)}%</span>
+                  <span className="text-sm text-muted-foreground ml-1">completado</span>
+                </div>
               </div>
-              <Progress value={salesProgress.percentage} className="h-3" />
-              <div className="text-center mt-2">
-                <span className="text-lg font-bold text-primary">{salesProgress.percentage}%</span>
-                <span className="text-sm text-muted-foreground ml-1">completado</span>
-              </div>
-            </div>
             
             <div className="flex gap-2">
               <Link to="/comprar" className="flex-1">

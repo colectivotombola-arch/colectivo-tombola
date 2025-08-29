@@ -3,5 +3,8 @@ project_id = "xwdrvakfrhlrnvqxodft"
 [functions.datafast-checkout]
 verify_jwt = false
 
-[functions.datafast-status]  
+[functions.datafast-status]
+verify_jwt = false
+
+[functions.process-paypal-purchase]
 verify_jwt = false

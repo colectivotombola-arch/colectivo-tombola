@@ -26,6 +26,16 @@ const WhatsAppSection = ({ settings }: WhatsAppSectionProps) => {
           </svg>
           Escribir por WhatsApp
         </a>
+        {settings?.contact_email && (
+          <div className="mt-4">
+            <a
+              href={`mailto:${settings.contact_email}`}
+              className="inline-flex items-center px-4 py-3 sm:px-6 sm:py-4 bg-card text-foreground font-semibold rounded-lg border border-border hover:bg-muted transition-colors mobile-text no-underline"
+            >
+              ✉️ Contactar por Email
+            </a>
+          </div>
+        )}
       </div>
     </section>
   );
