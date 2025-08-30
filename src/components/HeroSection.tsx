@@ -52,25 +52,14 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
     }
   };
 
-  // Fallback to static content if no prize displays are configured
-  const defaultPrizes = [
-    {
-      id: 'default-1',
-      title: 'TOYOTA FORTUNER 4X4',
-      subtitle: '',
-      image_url: toyotaFortuner,
-      position: 1
-    },
-    {
-      id: 'default-2', 
-      title: 'CHEVROLET ONIX TURBO',
-      subtitle: '0km',
-      image_url: chevroletOnix,
-      position: 2
-    }
-  ];
-
-  const displaysToShow = prizeDisplays.length > 0 ? prizeDisplays : defaultPrizes;
+  // Solo mostrar contenido si hay datos de la base de datos o si hay rifa activa
+  const displaysToShow = prizeDisplays.length > 0 ? prizeDisplays : (activeRaffle ? [{
+    id: 'raffle-main',
+    title: activeRaffle.title || 'Rifa Activa',
+    subtitle: activeRaffle.description || '',
+    image_url: activeRaffle.prize_image || '/placeholder.svg',
+    position: 1
+  }] : []);
 
   return (
     <section className="relative hero-background mobile-section">
@@ -146,25 +135,33 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
             </div>
 
-            {/* Texto central dinámico */}
+            {/* Texto central dinámico - Título de la rifa activa */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="text-center">
                 <h3 className="text-4xl md:text-6xl font-black text-white mb-2">
-                  GÁNATE
+                  {activeRaffle?.title?.split(' ')[0] || 'GÁNATE'}
                 </h3>
-                {displaysToShow.map((display, index) => (
-                  <div key={display.id}>
-                    <div className="text-2xl md:text-4xl lg:text-5xl font-black text-primary">
-                      {display.title}
+                {prizeDisplays.length > 0 ? (
+                  prizeDisplays.map((display, index) => (
+                    <div key={display.id}>
+                      <div className="text-2xl md:text-4xl lg:text-5xl font-black text-primary">
+                        {display.title}
+                      </div>
+                      {display.subtitle && (
+                        <div className="text-xl md:text-2xl lg:text-3xl font-bold text-white">{display.subtitle}</div>
+                      )}
+                      {index < prizeDisplays.length - 1 && (
+                        <div className="text-2xl md:text-4xl font-black text-white">+</div>
+                      )}
                     </div>
-                    {display.subtitle && (
-                      <div className="text-xl md:text-2xl lg:text-3xl font-bold text-white">{display.subtitle}</div>
-                    )}
-                    {index < displaysToShow.length - 1 && (
-                      <div className="text-2xl md:text-4xl font-black text-white">+</div>
-                    )}
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  activeRaffle && (
+                    <div className="text-2xl md:text-4xl lg:text-5xl font-black text-primary">
+                      {activeRaffle.title}
+                    </div>
+                  )
+                )}
               </div>
             </div>
           </div>
@@ -191,18 +188,24 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
           </Link>
         </div>
 
-        {/* Información adicional */}
+        {/* Información adicional - Completamente dinámica */}
         <div className="mt-8 sm:mt-12 mobile-grid max-w-4xl mx-auto">
           <div className="text-center">
-            <div className="responsive-subtitle font-bold text-primary mb-2">1000</div>
+            <div className="responsive-subtitle font-bold text-primary mb-2">
+              {activeRaffle?.total_numbers ? (activeRaffle.total_numbers - (activeRaffle.numbers_sold || 0)) : 'N/A'}
+            </div>
             <div className="text-gray-600 mobile-text">Números Disponibles</div>
           </div>
           <div className="text-center">
-            <div className="responsive-subtitle font-bold text-primary mb-2">${settings?.price_per_number ?? activeRaffle?.price_per_number ?? '1.50'}</div>
+            <div className="responsive-subtitle font-bold text-primary mb-2">
+              ${activeRaffle?.price_per_number ?? settings?.price_per_number ?? 'N/A'}
+            </div>
             <div className="text-gray-600 mobile-text">Cada Número</div>
           </div>
           <div className="text-center">
-            <div className="responsive-subtitle font-bold text-primary mb-2">{displaysToShow.length}</div>
+            <div className="responsive-subtitle font-bold text-primary mb-2">
+              {prizeDisplays.length > 0 ? prizeDisplays.length : 'N/A'}
+            </div>
             <div className="text-gray-600 mobile-text">Premios Principales</div>
           </div>
         </div>
