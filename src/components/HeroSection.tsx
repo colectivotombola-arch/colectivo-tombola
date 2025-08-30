@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import heroBackground from '@/assets/logo-background-1.png';
 import toyotaFortuner from "/public/lovable-uploads/a070bca1-29cb-463b-bee8-960692557b67.png";
 import chevroletOnix from "/public/lovable-uploads/40dd58e7-1558-43d2-84a8-c2a6176de594.png";
@@ -189,24 +190,41 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
         </div>
 
         {/* Información adicional - Completamente dinámica */}
-        <div className="mt-8 sm:mt-12 mobile-grid max-w-4xl mx-auto">
-          <div className="text-center">
-            <div className="responsive-subtitle font-bold text-primary mb-2">
-              {activeRaffle?.total_numbers ? (activeRaffle.total_numbers - (activeRaffle.numbers_sold || 0)) : 'N/A'}
+        <div className="mt-8 sm:mt-12">
+          {/* Barra de progreso en línea con datos reales */}
+          {activeRaffle && (
+            <div className="max-w-lg mx-auto mb-8 bg-card/80 backdrop-blur-sm rounded-xl p-4 border border-primary/20">
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-foreground font-medium">Progreso de venta</span>
+                <span className="text-primary font-bold">{activeRaffle.numbers_sold || 0}/{activeRaffle.total_numbers || 0}</span>
+              </div>
+              <Progress value={activeRaffle.sold_percentage || 0} className="h-2 mb-2" />
+              <div className="text-center">
+                <span className="text-lg font-bold text-primary">{(activeRaffle.sold_percentage || 0).toFixed(1)}%</span>
+                <span className="text-sm text-muted-foreground ml-1">vendido</span>
+              </div>
             </div>
-            <div className="text-gray-600 mobile-text">Números Disponibles</div>
-          </div>
-          <div className="text-center">
-            <div className="responsive-subtitle font-bold text-primary mb-2">
-              ${activeRaffle?.price_per_number ?? settings?.price_per_number ?? 'N/A'}
+          )}
+          
+          <div className="mobile-grid max-w-4xl mx-auto">
+            <div className="text-center">
+              <div className="responsive-subtitle font-bold text-primary mb-2">
+                {activeRaffle?.total_numbers ? (activeRaffle.total_numbers - (activeRaffle.numbers_sold || 0)) : 'N/A'}
+              </div>
+              <div className="text-gray-600 mobile-text">Números Disponibles</div>
             </div>
-            <div className="text-gray-600 mobile-text">Cada Número</div>
-          </div>
-          <div className="text-center">
-            <div className="responsive-subtitle font-bold text-primary mb-2">
-              {prizeDisplays.length > 0 ? prizeDisplays.length : 'N/A'}
+            <div className="text-center">
+              <div className="responsive-subtitle font-bold text-primary mb-2">
+                ${activeRaffle?.price_per_number ?? settings?.price_per_number ?? 'N/A'}
+              </div>
+              <div className="text-gray-600 mobile-text">Cada Número</div>
             </div>
-            <div className="text-gray-600 mobile-text">Premios Principales</div>
+            <div className="text-center">
+              <div className="responsive-subtitle font-bold text-primary mb-2">
+                {prizeDisplays.length > 0 ? prizeDisplays.length : 'N/A'}
+              </div>
+              <div className="text-gray-600 mobile-text">Premios Principales</div>
+            </div>
           </div>
         </div>
       </div>

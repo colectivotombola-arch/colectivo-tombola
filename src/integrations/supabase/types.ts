@@ -80,6 +80,210 @@ export type Database = {
         }
         Relationships: []
       }
+      lottery_draws: {
+        Row: {
+          bonus_max_number: number
+          bonus_number: number | null
+          created_at: string
+          draw_date: string
+          id: string
+          jackpot_amount: number
+          max_number: number
+          name: string
+          numbers_to_select: number
+          status: string
+          ticket_price: number
+          total_tickets_sold: number | null
+          updated_at: string
+          winning_numbers: number[] | null
+        }
+        Insert: {
+          bonus_max_number?: number
+          bonus_number?: number | null
+          created_at?: string
+          draw_date: string
+          id?: string
+          jackpot_amount: number
+          max_number?: number
+          name: string
+          numbers_to_select?: number
+          status?: string
+          ticket_price?: number
+          total_tickets_sold?: number | null
+          updated_at?: string
+          winning_numbers?: number[] | null
+        }
+        Update: {
+          bonus_max_number?: number
+          bonus_number?: number | null
+          created_at?: string
+          draw_date?: string
+          id?: string
+          jackpot_amount?: number
+          max_number?: number
+          name?: string
+          numbers_to_select?: number
+          status?: string
+          ticket_price?: number
+          total_tickets_sold?: number | null
+          updated_at?: string
+          winning_numbers?: number[] | null
+        }
+        Relationships: []
+      }
+      lottery_packages: {
+        Row: {
+          created_at: string
+          discount_percentage: number | null
+          id: string
+          is_active: boolean | null
+          is_popular: boolean | null
+          name: string
+          position: number
+          price: number
+          ticket_count: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          discount_percentage?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_popular?: boolean | null
+          name: string
+          position?: number
+          price: number
+          ticket_count: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          discount_percentage?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_popular?: boolean | null
+          name?: string
+          position?: number
+          price?: number
+          ticket_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lottery_tickets: {
+        Row: {
+          bonus_number: number | null
+          buyer_email: string
+          buyer_name: string
+          buyer_phone: string | null
+          created_at: string
+          draw_id: string
+          id: string
+          numbers: number[]
+          payment_id: string | null
+          payment_status: string
+          purchase_amount: number
+          purchased_at: string
+          ticket_number: string
+        }
+        Insert: {
+          bonus_number?: number | null
+          buyer_email: string
+          buyer_name: string
+          buyer_phone?: string | null
+          created_at?: string
+          draw_id: string
+          id?: string
+          numbers: number[]
+          payment_id?: string | null
+          payment_status?: string
+          purchase_amount: number
+          purchased_at?: string
+          ticket_number: string
+        }
+        Update: {
+          bonus_number?: number | null
+          buyer_email?: string
+          buyer_name?: string
+          buyer_phone?: string | null
+          created_at?: string
+          draw_id?: string
+          id?: string
+          numbers?: number[]
+          payment_id?: string | null
+          payment_status?: string
+          purchase_amount?: number
+          purchased_at?: string
+          ticket_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lottery_tickets_draw_id_fkey"
+            columns: ["draw_id"]
+            isOneToOne: false
+            referencedRelation: "lottery_draws"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lottery_winners: {
+        Row: {
+          category_id: string
+          claimed_at: string | null
+          created_at: string
+          draw_id: string
+          id: string
+          is_claimed: boolean | null
+          prize_amount: number
+          ticket_id: string
+          winner_name: string
+        }
+        Insert: {
+          category_id: string
+          claimed_at?: string | null
+          created_at?: string
+          draw_id: string
+          id?: string
+          is_claimed?: boolean | null
+          prize_amount: number
+          ticket_id: string
+          winner_name: string
+        }
+        Update: {
+          category_id?: string
+          claimed_at?: string | null
+          created_at?: string
+          draw_id?: string
+          id?: string
+          is_claimed?: boolean | null
+          prize_amount?: number
+          ticket_id?: string
+          winner_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lottery_winners_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "prize_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lottery_winners_draw_id_fkey"
+            columns: ["draw_id"]
+            isOneToOne: false
+            referencedRelation: "lottery_draws"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lottery_winners_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "lottery_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       media_gallery: {
         Row: {
           created_at: string
@@ -175,6 +379,51 @@ export type Database = {
           is_active?: boolean
           position?: number
           title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      prize_categories: {
+        Row: {
+          bonus_required: boolean | null
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean | null
+          match_count: number
+          name: string
+          odds_denominator: number
+          position: number
+          prize_amount: number | null
+          prize_percentage: number | null
+          updated_at: string
+        }
+        Insert: {
+          bonus_required?: boolean | null
+          created_at?: string
+          description: string
+          id?: string
+          is_active?: boolean | null
+          match_count: number
+          name: string
+          odds_denominator: number
+          position?: number
+          prize_amount?: number | null
+          prize_percentage?: number | null
+          updated_at?: string
+        }
+        Update: {
+          bonus_required?: boolean | null
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean | null
+          match_count?: number
+          name?: string
+          odds_denominator?: number
+          position?: number
+          prize_amount?: number | null
+          prize_percentage?: number | null
           updated_at?: string
         }
         Relationships: []
@@ -690,6 +939,10 @@ export type Database = {
     }
     Functions: {
       generate_confirmation_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_ticket_number: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
