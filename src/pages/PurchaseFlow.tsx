@@ -221,8 +221,8 @@ const PurchaseFlow = () => {
         const phone = whatsappNumber.replace(/\D/g, '');
         const waMe = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
-        // Always use wa.me format for maximum compatibility
-        window.open(waMe, '_blank');
+        // Abre en la misma pestaña para evitar bloqueadores de ventanas emergentes
+        window.location.href = waMe;
         
         toast({
           title: "¡Compra registrada exitosamente!",
