@@ -16,7 +16,7 @@ const WhatsAppSection = ({ settings }: WhatsAppSectionProps) => {
           Contacta con nosotros por WhatsApp
         </p>
         <a
-          href={`https://wa.me/${(settings?.whatsapp_number || '593999053073').replace(/\D/g, '')}?text=${encodeURIComponent('Hola, tengo preguntas sobre las rifas de Colectivo Tómbola')}`}
+          href={`https://wa.me/${((settings?.payment_settings as any)?.whatsapp?.number || settings?.whatsapp_number || '593999053073').replace(/\D/g, '')}?text=${encodeURIComponent('Hola, tengo preguntas sobre las rifas de Colectivo Tómbola')}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center px-4 py-3 sm:px-6 sm:py-4 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors mobile-text cursor-pointer no-underline"

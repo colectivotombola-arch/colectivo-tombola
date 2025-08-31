@@ -192,14 +192,17 @@ const PurchaseFlow = () => {
           throw new Error('No se pudo crear la confirmación de compra');
         }
         
-        // Asegurar que el número de WhatsApp tenga código de país
-        let whatsappNumber = settings?.whatsapp_number || '+593999053073';
+        // Usar el número de WhatsApp correcto desde las configuraciones
+        const paymentConfig = settings?.payment_settings as any;
+        let whatsappNumber = paymentConfig?.whatsapp?.number || settings?.whatsapp_number || '+593999053073';
+        
+        // Limpiar y formatear el número
         if (!whatsappNumber.startsWith('+')) {
           whatsappNumber = '+593' + whatsappNumber.replace(/^0/, '');
         }
         
         // DataLink por monto (desde Admin)
-        const mapping = (settings?.payment_settings as any)?.whatsapp_datalinks || {};
+        const mapping = paymentConfig?.whatsapp_datalinks || {};
         const datalink = mapping[total.toFixed(2)] || '';
         
         const message = `¡Hola! Quiero comprar boletos para la rifa:\n\n` +
@@ -212,7 +215,7 @@ const PurchaseFlow = () => {
         `• Nombre: ${buyerData.name}\n` +
         `• Teléfono: ${buyerData.phone}\n` +
         `• Email: ${buyerData.email}\n\n` +
-        (datalink ? `Link de pago DataFast (Datalink):\n${datalink}\n\n` : '') +
+        (datalink ? `💳 Link de pago DataFast (Datalink):\n${datalink}\n\n` : '') +
         `⚠️ IMPORTANTE: Una vez confirmado el pago, recibiré mis números asignados por email.`;
         
         const phone = whatsappNumber.replace(/\D/g, '');
@@ -228,6 +231,45 @@ const PurchaseFlow = () => {
         });
         
         setTimeout(() => navigate('/'), 5000);
+      }
+      
+      if (paymentMethod === 'bank_transfer') {
+        // Crear registro de confirmación para transferencia bancaria
+        const { data: confirmationData, error: confirmationError } = await supabase
+          .from('purchase_confirmations')
+          .insert({
+            raffle_id: raffle.id!,
+            buyer_name: buyerData.name,
+            buyer_email: buyerData.email,
+            buyer_phone: buyerData.phone,
+            quantity,
+            total_amount: total,
+            payment_method: paymentMethod,
+            confirmation_number: confirmationNumber,
+            status: 'payment_pending',
+            assigned_numbers: [] // Sin números asignados hasta confirmar pago
+          })
+          .select()
+          .single();
+        
+        if (confirmationError) {
+          console.error('Error creating confirmation:', confirmationError);
+          throw new Error('No se pudo crear la confirmación de compra');
+        }
+        
+        const paymentConfig = settings?.payment_settings as any;
+        const bankInfo = paymentConfig?.bank_transfer?.account_info || 'Información bancaria disponible por WhatsApp';
+        
+        toast({
+          title: "Compra registrada",
+          description: `Confirmación: ${confirmationNumber}. Completa la transferencia bancaria.`,
+          duration: 8000,
+        });
+        
+        // Mostrar información bancaria
+        alert(`DATOS PARA TRANSFERENCIA BANCARIA:\n\n${bankInfo}\n\nMonto a transferir: $${total.toFixed(2)}\nCódigo de confirmación: ${confirmationNumber}\n\nUna vez realizada la transferencia, envía el comprobante por WhatsApp para confirmar tu compra.`);
+        
+        setTimeout(() => navigate('/'), 3000);
       }
       
     } catch (error) {
@@ -481,16 +523,16 @@ const PurchaseFlow = () => {
                 {/* Transferencia Bancaria - Habilitada condicionalmente */}
                 <div 
                   className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                    !settings?.payment_settings?.bank_transfer_enabled ? 'opacity-50' : ''
+                    !(settings?.payment_settings as any)?.bank_transfer?.enabled ? 'opacity-50' : ''
                   } ${paymentMethod === 'bank_transfer' ? 'border-primary bg-primary/5' : 'border-border'}`}
-                  onClick={() => settings?.payment_settings?.bank_transfer_enabled && setPaymentMethod('bank_transfer')}
+                  onClick={() => (settings?.payment_settings as any)?.bank_transfer?.enabled && setPaymentMethod('bank_transfer')}
                 >
                   <div className="flex items-center gap-3">
                     <Building2 className="w-5 h-5 text-blue-600" />
                     <div>
                       <div className="font-medium">Transferencia Bancaria</div>
                       <div className="text-sm text-muted-foreground">
-                        {settings?.payment_settings?.bank_transfer_enabled 
+                        {(settings?.payment_settings as any)?.bank_transfer?.enabled 
                           ? 'Pago directo a cuenta bancaria'
                           : 'Próximamente disponible'
                         }
@@ -502,16 +544,16 @@ const PurchaseFlow = () => {
                 {/* PayPal - Habilitado condicionalmente */}
                 <div 
                   className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                    !settings?.payment_settings?.paypal_enabled ? 'opacity-50' : ''
+                    !(settings?.payment_settings as any)?.paypal?.enabled ? 'opacity-50' : ''
                   } ${paymentMethod === 'paypal' ? 'border-primary bg-primary/5' : 'border-border'}`}
-                  onClick={() => settings?.payment_settings?.paypal_enabled && setPaymentMethod('paypal')}
+                  onClick={() => (settings?.payment_settings as any)?.paypal?.enabled && setPaymentMethod('paypal')}
                 >
                   <div className="flex items-center gap-3">
                     <CreditCard className="w-5 h-5 text-blue-500" />
                     <div>
                       <div className="font-medium">PayPal</div>
                       <div className="text-sm text-muted-foreground">
-                        {settings?.payment_settings?.paypal_enabled 
+                        {(settings?.payment_settings as any)?.paypal?.enabled 
                           ? 'Pago seguro con tarjeta o PayPal'
                           : 'Próximamente disponible'
                         }
@@ -523,16 +565,16 @@ const PurchaseFlow = () => {
                 {/* DataFast - Habilitado condicionalmente */}
                 <div 
                   className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                    !settings?.payment_settings?.datafast_enabled ? 'opacity-50' : ''
+                    !(settings?.payment_settings as any)?.datafast?.enabled ? 'opacity-50' : ''
                   } ${paymentMethod === 'datafast' ? 'border-primary bg-primary/5' : 'border-border'}`}
-                  onClick={() => settings?.payment_settings?.datafast_enabled && setPaymentMethod('datafast')}
+                  onClick={() => (settings?.payment_settings as any)?.datafast?.enabled && setPaymentMethod('datafast')}
                 >
                   <div className="flex items-center gap-3">
                     <CreditCard className="w-5 h-5 text-green-600" />
                     <div>
                       <div className="font-medium">DataFast</div>
                       <div className="text-sm text-muted-foreground">
-                        {settings?.payment_settings?.datafast_enabled 
+                        {(settings?.payment_settings as any)?.datafast?.enabled 
                           ? 'Pago con tarjetas de crédito y débito'
                           : 'Próximamente disponible'
                         }
@@ -555,33 +597,33 @@ const PurchaseFlow = () => {
                      Finalizar en WhatsApp
                    </Button>
                  )}
-                 {paymentMethod === 'paypal' && settings?.payment_settings?.paypal_enabled && (
-                   <Button 
-                     onClick={() => navigate(`/purchase-paypal/${raffle.id}/${getQuantity()}`, { state: { buyerData } })} 
-                     className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
-                   >
-                     <CreditCard className="w-4 h-4 mr-2" />
-                     Pagar con PayPal
-                   </Button>
-                 )}
-                 {paymentMethod === 'bank_transfer' && settings?.payment_settings?.bank_transfer_enabled && (
-                   <Button 
-                     onClick={handlePurchase} 
-                     className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
-                   >
-                     <Building2 className="w-4 h-4 mr-2" />
-                     Transferencia Bancaria
-                   </Button>
-                 )}
-                  {paymentMethod === 'datafast' && settings?.payment_settings?.datafast_enabled && (
+                  {paymentMethod === 'paypal' && (settings?.payment_settings as any)?.paypal?.enabled && (
                     <Button 
-                      onClick={() => navigate(`/purchase-datafast/${raffle.id}/${getQuantity()}`)} 
+                      onClick={() => navigate(`/purchase-paypal/${raffle.id}/${getQuantity()}`, { state: { buyerData } })} 
                       className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
                     >
                       <CreditCard className="w-4 h-4 mr-2" />
-                      Pagar con DataFast
+                      Pagar con PayPal
                     </Button>
                   )}
+                  {paymentMethod === 'bank_transfer' && (settings?.payment_settings as any)?.bank_transfer?.enabled && (
+                    <Button 
+                      onClick={handlePurchase} 
+                      className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
+                    >
+                      <Building2 className="w-4 h-4 mr-2" />
+                      Transferencia Bancaria
+                    </Button>
+                  )}
+                   {paymentMethod === 'datafast' && (settings?.payment_settings as any)?.datafast?.enabled && (
+                     <Button 
+                       onClick={() => navigate(`/purchase-datafast/${raffle.id}/${getQuantity()}`)} 
+                       className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
+                     >
+                       <CreditCard className="w-4 h-4 mr-2" />
+                       Pagar con DataFast
+                     </Button>
+                   )}
                 </div>
             </CardContent>
           </Card>
