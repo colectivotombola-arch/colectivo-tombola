@@ -169,45 +169,7 @@ const PurchaseFlow = () => {
       );
       
       if (paymentMethod === 'whatsapp') {
-        // Generar y preparar el enlace de WhatsApp antes de operaciones async
-        const paymentConfig = settings?.payment_settings as any;
-        let whatsappNumber = paymentConfig?.whatsapp?.number || settings?.whatsapp_number || '+593999053073';
-
-        // Normalizar número (agregar +593 si no existe y quitar 0 inicial)
-        if (!whatsappNumber.startsWith('+')) {
-          whatsappNumber = '+593' + whatsappNumber.replace(/^0/, '');
-        }
-
-        // DataLink por monto (desde Admin)
-        const mapping = paymentConfig?.whatsapp_datalinks || {};
-        const datalink = mapping[total.toFixed(2)] || '';
-
-        const message = `¡Hola! Quiero comprar boletos para la rifa:\n\n` +
-          `📋 DETALLES DE MI COMPRA:\n` +
-          `• Rifa: ${raffle.title}\n` +
-          `• Cantidad: ${quantity} boletos\n` +
-          `• Total a pagar: $${total.toFixed(2)}\n` +
-          `• Confirmación: ${confirmationNumber}\n\n` +
-          `👤 MIS DATOS:\n` +
-          `• Nombre: ${buyerData.name}\n` +
-          `• Teléfono: ${buyerData.phone}\n` +
-          `• Email: ${buyerData.email}\n\n` +
-          (datalink ? `💳 Link de pago DataFast (Datalink):\n${datalink}\n\n` : '') +
-          `⚠️ IMPORTANTE: Una vez confirmado el pago, recibiré mis números asignados por email.`;
-
-        const phone = whatsappNumber.replace(/\D/g, '');
-        const waMe = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-        console.log('WhatsApp URL generada:', waMe);
-
-        // Intentar pre-abrir una pestaña para evitar bloqueadores
-        let waWindow: Window | null = null;
-        try {
-          waWindow = window.open('', '_blank');
-        } catch (e) {
-          console.warn('No se pudo pre-abrir la pestaña de WhatsApp:', e);
-        }
-
-        // Crear registro de confirmación sin números asignados aún
+        // Crear registro de confirmación primero
         const { data: confirmationData, error: confirmationError } = await supabase
           .from('purchase_confirmations')
           .insert({
@@ -220,7 +182,7 @@ const PurchaseFlow = () => {
             payment_method: paymentMethod,
             confirmation_number: confirmationNumber,
             status: 'payment_pending',
-            assigned_numbers: [] // Sin números asignados hasta confirmar pago
+            assigned_numbers: []
           })
           .select()
           .single();
@@ -230,21 +192,32 @@ const PurchaseFlow = () => {
           throw new Error('No se pudo crear la confirmación de compra');
         }
 
-        // Redirigir a WhatsApp de forma confiable
-        if (waWindow) {
-          waWindow.location.href = waMe;
-        } else {
-          // Fallback
-          window.open(waMe, '_blank');
-        }
+        // Generar mensaje de WhatsApp
+        const paymentConfig = settings?.payment_settings as any;
+        const whatsappNumber = ((paymentConfig?.whatsapp?.number || settings?.whatsapp_number || '593999053073').replace(/\D/g, ''));
+        
+        const message = `¡Hola! Quiero comprar boletos para la rifa:\n\n` +
+          `📋 DETALLES:\n` +
+          `• Rifa: ${raffle.title}\n` +
+          `• Cantidad: ${quantity} boletos\n` +
+          `• Total: $${total.toFixed(2)}\n` +
+          `• Confirmación: ${confirmationNumber}\n\n` +
+          `👤 DATOS:\n` +
+          `• Nombre: ${buyerData.name}\n` +
+          `• Teléfono: ${buyerData.phone}\n` +
+          `• Email: ${buyerData.email}`;
+
+        // Abrir WhatsApp de forma simple
+        const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
         
         toast({
-          title: "¡Compra registrada exitosamente!",
-          description: `Confirmación: ${confirmationNumber}. Abriendo WhatsApp...`,
-          duration: 6000,
+          title: "¡Compra registrada!",
+          description: `Confirmación: ${confirmationNumber}`,
+          duration: 4000,
         });
         
-        setTimeout(() => navigate('/'), 5000);
+        setTimeout(() => navigate('/'), 3000);
       }
       
       if (paymentMethod === 'bank_transfer') {
