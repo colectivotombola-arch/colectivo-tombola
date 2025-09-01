@@ -537,16 +537,16 @@ const PurchaseFlow = () => {
                 {/* Transferencia Bancaria - Habilitada condicionalmente */}
                 <div 
                   className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                    !(settings?.payment_settings as any)?.bank_transfer?.enabled ? 'opacity-50' : ''
+                    !(((settings?.payment_settings as any)?.bank_transfer?.enabled) || ((settings?.payment_settings as any)?.bank_transfer_enabled)) ? 'opacity-50' : ''
                   } ${paymentMethod === 'bank_transfer' ? 'border-primary bg-primary/5' : 'border-border'}`}
-                  onClick={() => (settings?.payment_settings as any)?.bank_transfer?.enabled && setPaymentMethod('bank_transfer')}
+                  onClick={() => (((settings?.payment_settings as any)?.bank_transfer?.enabled) || ((settings?.payment_settings as any)?.bank_transfer_enabled)) && setPaymentMethod('bank_transfer')}
                 >
                   <div className="flex items-center gap-3">
                     <Building2 className="w-5 h-5 text-blue-600" />
                     <div>
                       <div className="font-medium">Transferencia Bancaria</div>
                       <div className="text-sm text-muted-foreground">
-                        {(settings?.payment_settings as any)?.bank_transfer?.enabled 
+                        {(((settings?.payment_settings as any)?.bank_transfer?.enabled) || ((settings?.payment_settings as any)?.bank_transfer_enabled)) 
                           ? 'Pago directo a cuenta bancaria'
                           : 'Próximamente disponible'
                         }
@@ -558,16 +558,16 @@ const PurchaseFlow = () => {
                 {/* PayPal - Habilitado condicionalmente */}
                 <div 
                   className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                    !(settings?.payment_settings as any)?.paypal?.enabled ? 'opacity-50' : ''
+                    !(((settings?.payment_settings as any)?.paypal?.enabled) || ((settings?.payment_settings as any)?.paypal_enabled)) ? 'opacity-50' : ''
                   } ${paymentMethod === 'paypal' ? 'border-primary bg-primary/5' : 'border-border'}`}
-                  onClick={() => (settings?.payment_settings as any)?.paypal?.enabled && setPaymentMethod('paypal')}
+                  onClick={() => (((settings?.payment_settings as any)?.paypal?.enabled) || ((settings?.payment_settings as any)?.paypal_enabled)) && setPaymentMethod('paypal')}
                 >
                   <div className="flex items-center gap-3">
                     <CreditCard className="w-5 h-5 text-blue-500" />
                     <div>
                       <div className="font-medium">PayPal</div>
                       <div className="text-sm text-muted-foreground">
-                        {(settings?.payment_settings as any)?.paypal?.enabled 
+                        {(((settings?.payment_settings as any)?.paypal?.enabled) || ((settings?.payment_settings as any)?.paypal_enabled)) 
                           ? 'Pago seguro con tarjeta o PayPal'
                           : 'Próximamente disponible'
                         }
@@ -579,16 +579,16 @@ const PurchaseFlow = () => {
                 {/* DataFast - Habilitado condicionalmente */}
                 <div 
                   className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                    !(settings?.payment_settings as any)?.datafast?.enabled ? 'opacity-50' : ''
+                    !(((settings?.payment_settings as any)?.datafast?.enabled) || ((settings?.payment_settings as any)?.datafast_enabled)) ? 'opacity-50' : ''
                   } ${paymentMethod === 'datafast' ? 'border-primary bg-primary/5' : 'border-border'}`}
-                  onClick={() => (settings?.payment_settings as any)?.datafast?.enabled && setPaymentMethod('datafast')}
+                  onClick={() => (((settings?.payment_settings as any)?.datafast?.enabled) || ((settings?.payment_settings as any)?.datafast_enabled)) && setPaymentMethod('datafast')}
                 >
                   <div className="flex items-center gap-3">
                     <CreditCard className="w-5 h-5 text-green-600" />
                     <div>
                       <div className="font-medium">DataFast</div>
                       <div className="text-sm text-muted-foreground">
-                        {(settings?.payment_settings as any)?.datafast?.enabled 
+                        {(((settings?.payment_settings as any)?.datafast?.enabled) || ((settings?.payment_settings as any)?.datafast_enabled)) 
                           ? 'Pago con tarjetas de crédito y débito'
                           : 'Próximamente disponible'
                         }
@@ -611,7 +611,7 @@ const PurchaseFlow = () => {
                      Finalizar en WhatsApp
                    </Button>
                  )}
-                  {paymentMethod === 'paypal' && (settings?.payment_settings as any)?.paypal?.enabled && (
+                  {paymentMethod === 'paypal' && ((((settings?.payment_settings as any)?.paypal?.enabled) || ((settings?.payment_settings as any)?.paypal_enabled))) && (
                     <Button 
                       onClick={() => navigate(`/purchase-paypal/${raffle.id}/${getQuantity()}`, { state: { buyerData } })} 
                       className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
@@ -620,7 +620,7 @@ const PurchaseFlow = () => {
                       Pagar con PayPal
                     </Button>
                   )}
-                  {paymentMethod === 'bank_transfer' && (settings?.payment_settings as any)?.bank_transfer?.enabled && (
+                  {paymentMethod === 'bank_transfer' && ((((settings?.payment_settings as any)?.bank_transfer?.enabled) || ((settings?.payment_settings as any)?.bank_transfer_enabled))) && (
                     <Button 
                       onClick={handlePurchase} 
                       className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
@@ -629,7 +629,7 @@ const PurchaseFlow = () => {
                       Transferencia Bancaria
                     </Button>
                   )}
-                   {paymentMethod === 'datafast' && (settings?.payment_settings as any)?.datafast?.enabled && (
+                   {paymentMethod === 'datafast' && ((((settings?.payment_settings as any)?.datafast?.enabled) || ((settings?.payment_settings as any)?.datafast_enabled))) && (
                      <Button 
                        onClick={() => navigate(`/purchase-datafast/${raffle.id}/${getQuantity()}`)} 
                        className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
