@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      bingo_games: {
+        Row: {
+          called_numbers: number[] | null
+          created_at: string | null
+          entry_fee: number | null
+          id: string
+          instagram_stream_key: string | null
+          is_streaming: boolean | null
+          max_players: number | null
+          name: string
+          prize_pool: number | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          called_numbers?: number[] | null
+          created_at?: string | null
+          entry_fee?: number | null
+          id?: string
+          instagram_stream_key?: string | null
+          is_streaming?: boolean | null
+          max_players?: number | null
+          name: string
+          prize_pool?: number | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          called_numbers?: number[] | null
+          created_at?: string | null
+          entry_fee?: number | null
+          id?: string
+          instagram_stream_key?: string | null
+          is_streaming?: boolean | null
+          max_players?: number | null
+          name?: string
+          prize_pool?: number | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       design_settings: {
         Row: {
           border_radius: number | null
