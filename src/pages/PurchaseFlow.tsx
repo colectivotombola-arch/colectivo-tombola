@@ -207,9 +207,15 @@ const PurchaseFlow = () => {
           `• Teléfono: ${buyerData.phone}\n` +
           `• Email: ${buyerData.email}`;
 
-        // Abrir WhatsApp de forma simple
+        // Crear enlace temporal y abrirlo (más compatible con navegadores)
         const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, '_blank');
+        const link = document.createElement('a');
+        link.href = whatsappUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
         
         toast({
           title: "¡Compra registrada!",
