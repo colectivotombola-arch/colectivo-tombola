@@ -17,7 +17,8 @@ import {
   Facebook,
   Twitter,
   Globe,
-  Mail
+  Mail,
+  Building2
 } from 'lucide-react';
 import { ImageUpload } from '@/components/ImageUpload';
 
@@ -35,44 +36,18 @@ const AdminSettings = () => {
     hero_subtitle: 'Rifas seguras y transparentes con los mejores premios del mercado'
   });
   
-  // Estados adicionales para funcionalidades completas
+  // Estados para PayPal y transferencia bancaria únicamente
   const [paymentSettings, setPaymentSettings] = useState({
     paypal_enabled: true,
     paypal_client_id: 'AcThy7S3bmb6CLJVF9IhV0xsbEkrXmYm-rilgJHnf3t4XVE_3zQrtHSW_tudJvXPlZEE912X9tlsR624',
     paypal_currency: 'USD',
     paypal_min_amount: 1.00,
     paypal_email: '',
-    payphone_enabled: false,
-    payphone_number: '',
     bank_transfer_enabled: true,
     bank_account: '',
     bank_name: '',
     account_holder: '',
-    routing_number: '',
-    stripe_enabled: false,
-    stripe_public_key: '',
-    wompi_enabled: false,
-    wompi_public_key: '',
-    kushki_enabled: false,
-    kushki_public_key: '',
-    mercadopago_enabled: false,
-    mercadopago_access_token: '',
-    // WhatsApp DataLink mapping
-    whatsapp_datalinks: {},
-    // DataFast configuration
-    datafast_enabled: false,
-    datafast_mode: 'SANDBOX',
-    datafast_entity_id: '',
-    datafast_auth_bearer: '',
-    datafast_shopper_mid: '',
-    datafast_shopper_tid: '',
-    datafast_shopper_pserv: '17913101',
-    datafast_risk_user_data2: 'MiComercio',
-    datafast_currency: 'USD',
-    datafast_iva_rate: 0.12,
-    datafast_success_url: '/pago-exitoso',
-    datafast_failure_url: '/pago-fallido',
-    datafast_cancel_url: '/pago-cancelado'
+    routing_number: ''
   });
 
   const [socialMedia, setSocialMedia] = useState({
@@ -432,7 +407,7 @@ const AdminSettings = () => {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <CreditCard className="w-5 h-5" />
-                <span>Métodos de Pago y Cuentas Bancarias</span>
+                <span>Métodos de Pago</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -498,234 +473,21 @@ const AdminSettings = () => {
                 </div>
               </div>
 
-              {/* DataFast Configuration */}
+              {/* Transferencia Bancaria */}
               <div className="border rounded-lg p-4 bg-green-50 dark:bg-green-950/20">
                 <h4 className="font-semibold mb-4 flex items-center gap-2">
-                  <CreditCard className="w-4 h-4" />
-                  Configuración DataFast (Dataweb / OPPWA)
+                  <Building2 className="w-4 h-4" />
+                  Transferencia Bancaria
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="datafast_enabled"
-                      checked={paymentSettings.datafast_enabled || false}
-                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, datafast_enabled: e.target.checked }))}
-                    />
-                    <Label htmlFor="datafast_enabled">Habilitar DataFast</Label>
-                  </div>
-                  <div>
-                    <Label htmlFor="datafast_mode">Modo</Label>
-                    <select
-                      id="datafast_mode"
-                      value={paymentSettings.datafast_mode || 'SANDBOX'}
-                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, datafast_mode: e.target.value }))}
-                      className="w-full px-3 py-2 border border-border rounded-md bg-background"
-                    >
-                      <option value="SANDBOX">SANDBOX (Pruebas)</option>
-                      <option value="PROD">PROD (Producción)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <Label htmlFor="datafast_entity_id">Entity ID (8a...)</Label>
-                    <Input
-                      id="datafast_entity_id"
-                      value={paymentSettings.datafast_entity_id || ''}
-                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, datafast_entity_id: e.target.value }))}
-                      placeholder="8a829449..."
-                      disabled={!paymentSettings.datafast_enabled}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="datafast_auth_bearer">Auth Bearer Token</Label>
-                    <Input
-                      id="datafast_auth_bearer"
-                      type="password"
-                      value={paymentSettings.datafast_auth_bearer || ''}
-                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, datafast_auth_bearer: e.target.value }))}
-                      placeholder="Bearer token..."
-                      disabled={!paymentSettings.datafast_enabled}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="datafast_shopper_mid">Shopper MID</Label>
-                    <Input
-                      id="datafast_shopper_mid"
-                      value={paymentSettings.datafast_shopper_mid || ''}
-                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, datafast_shopper_mid: e.target.value }))}
-                      placeholder="MID del comercio"
-                      disabled={!paymentSettings.datafast_enabled}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="datafast_shopper_tid">Shopper TID</Label>
-                    <Input
-                      id="datafast_shopper_tid"
-                      value={paymentSettings.datafast_shopper_tid || ''}
-                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, datafast_shopper_tid: e.target.value }))}
-                      placeholder="TID del comercio"
-                      disabled={!paymentSettings.datafast_enabled}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="datafast_risk_user_data2">Nombre del Comercio</Label>
-                    <Input
-                      id="datafast_risk_user_data2"
-                      value={paymentSettings.datafast_risk_user_data2 || 'MiComercio'}
-                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, datafast_risk_user_data2: e.target.value }))}
-                      placeholder="Nombre del comercio"
-                      disabled={!paymentSettings.datafast_enabled}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="datafast_iva_rate">Tasa de IVA</Label>
-                    <Input
-                      id="datafast_iva_rate"
-                      type="number"
-                      step="0.01"
-                      value={paymentSettings.datafast_iva_rate || 0.12}
-                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, datafast_iva_rate: parseFloat(e.target.value) }))}
-                      placeholder="0.12"
-                      disabled={!paymentSettings.datafast_enabled}
-                    />
-                  </div>
-                </div>
-                <div className="mt-4 text-sm text-muted-freground">
-                  <p><strong>Nota:</strong> Los URLs de éxito, fallo y cancelación se configuran automáticamente como:</p>
-                  <p>• Éxito: /pago-exitoso</p>
-                  <p>• Fallo: /pago-fallido</p>
-                  <p>• Cancelado: /pago-cancelado</p>
-                </div>
-                </div>
-                {/* WhatsApp + DataLink mapping */}
-                <div className="border rounded-lg p-4 bg-emerald-50 dark:bg-emerald-950/20">
-                  <h4 className="font-semibold mb-4 flex items-center gap-2">
-                    <CreditCard className="w-4 h-4" />
-                    WhatsApp + DataLink (DataFast)
-                  </h4>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Mapea totales a enlaces Datalink de DataFast. Formato JSON: {`{"1.00":"https://...","25.00":"https://..."}`}
-                  </p>
-                  <Textarea
-                    rows={5}
-                    value={JSON.stringify((paymentSettings as any).whatsapp_datalinks || {}, null, 2)}
-                    onChange={(e) => {
-                      try {
-                        const obj = JSON.parse(e.target.value || '{}');
-                        setPaymentSettings(prev => ({ ...prev, whatsapp_datalinks: obj }));
-                      } catch {
-                        // Ignorar errores de parseo mientras el usuario escribe
-                      }
-                    }}
+                <div className="flex items-center space-x-2 mb-4">
+                  <input
+                    type="checkbox"
+                    id="bank_transfer_enabled"
+                    checked={paymentSettings.bank_transfer_enabled}
+                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, bank_transfer_enabled: e.target.checked }))}
                   />
+                  <Label htmlFor="bank_transfer_enabled">Habilitar Transferencia Bancaria</Label>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="border rounded-lg p-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <input
-                      type="checkbox"
-                      id="bank_transfer_enabled"
-                      checked={paymentSettings.bank_transfer_enabled}
-                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, bank_transfer_enabled: e.target.checked }))}
-                    />
-                    <Label htmlFor="bank_transfer_enabled">Habilitar Transferencia Bancaria</Label>
-                  </div>
-                </div>
-                <div className="border rounded-lg p-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <input
-                      type="checkbox"
-                      id="payphone_enabled"
-                      checked={paymentSettings.payphone_enabled}
-                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, payphone_enabled: e.target.checked }))}
-                    />
-                    <Label htmlFor="payphone_enabled">Habilitar PayPhone</Label>
-                  </div>
-                  <Input
-                    value={paymentSettings.payphone_number || ''}
-                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, payphone_number: e.target.value }))}
-                    placeholder="+593999123456"
-                    disabled={!paymentSettings.payphone_enabled}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <input
-                      type="checkbox"
-                      id="stripe_enabled"
-                      checked={paymentSettings.stripe_enabled}
-                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, stripe_enabled: e.target.checked }))}
-                    />
-                    <Label htmlFor="stripe_enabled">Habilitar Stripe</Label>
-                  </div>
-                  <Input
-                    value={paymentSettings.stripe_public_key}
-                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, stripe_public_key: e.target.value }))}
-                    placeholder="pk_live_..."
-                    disabled={!paymentSettings.stripe_enabled}
-                  />
-                </div>
-                <div>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <input
-                      type="checkbox"
-                      id="wompi_enabled"
-                      checked={paymentSettings.wompi_enabled}
-                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, wompi_enabled: e.target.checked }))}
-                    />
-                    <Label htmlFor="wompi_enabled">Habilitar Wompi</Label>
-                  </div>
-                  <Input
-                    value={paymentSettings.wompi_public_key || ''}
-                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, wompi_public_key: e.target.value }))}
-                    placeholder="pub_test_..."
-                    disabled={!paymentSettings.wompi_enabled}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <input
-                      type="checkbox"
-                      id="mercadopago_enabled"
-                      checked={paymentSettings.mercadopago_enabled}
-                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, mercadopago_enabled: e.target.checked }))}
-                    />
-                    <Label htmlFor="mercadopago_enabled">Habilitar MercadoPago</Label>
-                  </div>
-                  <Input
-                    value={paymentSettings.mercadopago_access_token}
-                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, mercadopago_access_token: e.target.value }))}
-                    placeholder="APP_USR-..."
-                    disabled={!paymentSettings.mercadopago_enabled}
-                  />
-                </div>
-                <div>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <input
-                      type="checkbox"
-                      id="kushki_enabled"
-                      checked={paymentSettings.kushki_enabled}
-                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, kushki_enabled: e.target.checked }))}
-                    />
-                    <Label htmlFor="kushki_enabled">Habilitar Kushki</Label>
-                  </div>
-                  <Input
-                    value={paymentSettings.kushki_public_key || ''}
-                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, kushki_public_key: e.target.value }))}
-                    placeholder="10000001..."
-                    disabled={!paymentSettings.kushki_enabled}
-                  />
-                </div>
-              </div>
-
-              <div className="border-t pt-4">
-                <h4 className="font-semibold mb-4">Información Bancaria</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="bank_name">Nombre del Banco</Label>
@@ -734,6 +496,7 @@ const AdminSettings = () => {
                       value={paymentSettings.bank_name}
                       onChange={(e) => setPaymentSettings(prev => ({ ...prev, bank_name: e.target.value }))}
                       placeholder="Banco Nacional"
+                      disabled={!paymentSettings.bank_transfer_enabled}
                     />
                   </div>
                   <div>
@@ -743,6 +506,7 @@ const AdminSettings = () => {
                       value={paymentSettings.account_holder}
                       onChange={(e) => setPaymentSettings(prev => ({ ...prev, account_holder: e.target.value }))}
                       placeholder="Nombre Completo"
+                      disabled={!paymentSettings.bank_transfer_enabled}
                     />
                   </div>
                   <div>
@@ -752,6 +516,7 @@ const AdminSettings = () => {
                       value={paymentSettings.bank_account}
                       onChange={(e) => setPaymentSettings(prev => ({ ...prev, bank_account: e.target.value }))}
                       placeholder="1234567890"
+                      disabled={!paymentSettings.bank_transfer_enabled}
                     />
                   </div>
                   <div>
@@ -761,6 +526,7 @@ const AdminSettings = () => {
                       value={paymentSettings.routing_number}
                       onChange={(e) => setPaymentSettings(prev => ({ ...prev, routing_number: e.target.value }))}
                       placeholder="SWIFT123"
+                      disabled={!paymentSettings.bank_transfer_enabled}
                     />
                   </div>
                 </div>

@@ -30,7 +30,6 @@ import PagoFallido from "./pages/PagoFallido";
 import PagoCancelado from "./pages/PagoCancelado";
 import NotFound from "./pages/NotFound";
 import PurchasePayPal from "./pages/PurchasePayPal";
-import PurchaseDataFast from "./pages/PurchaseDataFast";
 
 const queryClient = new QueryClient();
 
@@ -116,7 +115,6 @@ const App = () => (
             } />
             <Route path="/purchase/:raffleId/:packageId" element={<PurchaseFlow />} />
             <Route path="/purchase-paypal/:raffleId/:quantity" element={<PurchasePayPal />} />
-            <Route path="/purchase-datafast/:raffleId/:quantity" element={<PurchaseDataFast />} />
             <Route path="/pago-exitoso" element={<PagoExitoso />} />
             <Route path="/pago-fallido" element={<PagoFallido />} />
             <Route path="/pago-cancelado" element={<PagoCancelado />} />

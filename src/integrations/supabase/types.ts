@@ -1011,6 +1011,7 @@ export type Database = {
           price_per_number: string
           primary_color: string
           purchase_rules: string
+          raffle_rules: string
           secondary_color: string
           site_name: string
           site_tagline: string
