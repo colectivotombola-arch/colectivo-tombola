@@ -3,7 +3,7 @@ import Header from '@/components/Header';
 import HeroSection from '@/components/HeroSection';
 import ProgressSection from '@/components/ProgressSection';
 import GallerySection from '@/components/GallerySection';
-import InstagramSection from '@/components/InstagramSection';
+
 import SocialMediaSection from '@/components/SocialMediaSection';
 import WhatsAppSection from '@/components/WhatsAppSection';
 import { siteSettingsAPI, SiteSettings, rafflesAPI, Raffle } from '@/lib/supabase';
@@ -50,7 +50,6 @@ const Index = () => {
       <Header settings={settings} />
       <HeroSection settings={settings} />
       <ProgressSection settings={settings} />
-      <InstagramSection settings={settings} />
       {/* Instant Prizes Section */}
       {activeRaffle?.instant_prizes && (Array.isArray(activeRaffle.instant_prizes) ? activeRaffle.instant_prizes.length > 0 : false) && (
         <section className="mobile-section bg-card/50">
