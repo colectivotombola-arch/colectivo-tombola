@@ -30,8 +30,8 @@ const PurchaseFlow = () => {
     terms_accepted: false
   });
 
-  // Método de pago seleccionado (solo PayPal y transferencia bancaria)
-  const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'paypal'>('paypal');
+  // Método de pago seleccionado
+  const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'paypal' | 'whatsapp'>('whatsapp');
 
   useEffect(() => {
     loadData();
@@ -102,51 +102,50 @@ const PurchaseFlow = () => {
   };
 
   const handleNextStep = () => {
-    if (step === 1) {
-      // Validar cantidad mínima y permitir paquetes mayores al límite configurado
-      const quantity = getQuantity();
-      const minTickets = raffle.min_tickets_per_purchase || 1;
-      const maxTickets = raffle.max_tickets_per_purchase || 1000;
-      const effectiveMax = Math.max(maxTickets, quantity);
-      
-      if (quantity < minTickets) {
-        toast({
-          title: "Cantidad insuficiente",
-          description: `El mínimo de boletos es ${minTickets}`,
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      if (quantity > effectiveMax) {
-        toast({
-          title: "Cantidad excesiva",
-          description: `El máximo de boletos es ${effectiveMax}`,
-          variant: "destructive",
-        });
-        return;
-      }
-      setStep(2);
-    } else if (step === 2) {
-      // Validar datos del cliente
-      if (!buyerData.name || !buyerData.phone || !buyerData.email) {
-        toast({
-          title: "Datos incompletos",
-          description: "Por favor completa todos los campos",
-          variant: "destructive",
-        });
-        return;
-      }
-      if (!buyerData.terms_accepted) {
-        toast({
-          title: "Términos y condiciones",
-          description: "Debes aceptar los términos y condiciones",
-          variant: "destructive",
-        });
-        return;
-      }
-      setStep(3);
+    // Validar cantidad
+    const quantity = getQuantity();
+    const minTickets = raffle.min_tickets_per_purchase || 1;
+    const maxTickets = raffle.max_tickets_per_purchase || 1000;
+    const effectiveMax = Math.max(maxTickets, quantity);
+    
+    if (quantity < minTickets) {
+      toast({
+        title: "Cantidad insuficiente",
+        description: `El mínimo de boletos es ${minTickets}`,
+        variant: "destructive",
+      });
+      return;
     }
+    
+    if (quantity > effectiveMax) {
+      toast({
+        title: "Cantidad excesiva",
+        description: `El máximo de boletos es ${effectiveMax}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validar datos del cliente
+    if (!buyerData.name || !buyerData.phone || !buyerData.email) {
+      toast({
+        title: "Datos incompletos",
+        description: "Por favor completa todos los campos",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!buyerData.terms_accepted) {
+      toast({
+        title: "Términos y condiciones",
+        description: "Debes aceptar los términos y condiciones",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setStep(2);
   };
 
   const handlePurchase = async () => {
@@ -199,6 +198,44 @@ const PurchaseFlow = () => {
         alert(`DATOS PARA TRANSFERENCIA BANCARIA:\n\n${bankInfo}\n\nMonto a transferir: $${total.toFixed(2)}\nCódigo de confirmación: ${confirmationNumber}\n\nUna vez realizada la transferencia, contacta por WhatsApp con el comprobante para confirmar tu compra.`);
         
         setTimeout(() => navigate('/'), 3000);
+      } else if (paymentMethod === 'whatsapp') {
+        // Proceso de WhatsApp
+        const { data: confirmationData, error: confirmationError } = await supabase
+          .from('purchase_confirmations')
+          .insert({
+            raffle_id: raffle.id!,
+            buyer_name: buyerData.name,
+            buyer_email: buyerData.email,
+            buyer_phone: buyerData.phone,
+            quantity,
+            total_amount: total,
+            payment_method: paymentMethod,
+            confirmation_number: confirmationNumber,
+            status: 'payment_pending',
+            assigned_numbers: []
+          })
+          .select()
+          .single();
+        
+        if (confirmationError) {
+          console.error('Error creating confirmation:', confirmationError);
+          throw new Error('No se pudo crear la confirmación de compra');
+        }
+
+        // Construir mensaje de WhatsApp
+        const whatsappNumber = settings?.whatsapp_number || '';
+        const message = `Hola! Quiero comprar ${quantity} boletos de ${raffle.title}.\n\nMis datos:\nNombre: ${buyerData.name}\nEmail: ${buyerData.email}\nTeléfono: ${buyerData.phone}\nTotal: $${total.toFixed(2)}\nCódigo: ${confirmationNumber}`;
+        
+        const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+        
+        toast({
+          title: "Compra registrada",
+          description: "Te contactaremos por WhatsApp para confirmar tu compra",
+          duration: 5000,
+        });
+        
+        setTimeout(() => navigate('/'), 3000);
       }
       
     } catch (error) {
@@ -231,39 +268,34 @@ const PurchaseFlow = () => {
       </header>
 
       <div className="container mx-auto mobile-container py-4 sm:py-6 max-w-2xl">
-        {/* Progress Steps - Mobile Responsive */}
+        {/* Progress Steps - Simplified */}
         <div className="flex items-center justify-center mb-6 sm:mb-8">
           <div className="flex items-center space-x-2 sm:space-x-4">
-            <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold ${
+            <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm sm:text-base font-bold ${
               step >= 1 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
             }`}>
               1
             </div>
-            <div className={`w-4 sm:w-8 h-1 ${step > 1 ? 'bg-primary' : 'bg-muted'}`}></div>
-            <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold ${
+            <div className={`w-8 sm:w-12 h-1 ${step > 1 ? 'bg-primary' : 'bg-muted'}`}></div>
+            <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm sm:text-base font-bold ${
               step >= 2 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
             }`}>
               2
             </div>
-            <div className={`w-4 sm:w-8 h-1 ${step > 2 ? 'bg-primary' : 'bg-muted'}`}></div>
-            <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold ${
-              step >= 3 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-            }`}>
-              3
-            </div>
           </div>
         </div>
 
-        {/* Step 1: Confirmar Cantidad */}
+        {/* Step 1: Datos y Cantidad */}
         {step === 1 && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ShoppingCart className="w-5 h-5" />
-                Confirma tu compra
+                Completa tu compra
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Cantidad */}
               {packageId === 'custom' ? (
                 <div>
                   <Label htmlFor="custom_quantity">Cantidad de boletos</Label>
@@ -272,24 +304,16 @@ const PurchaseFlow = () => {
                     type="number"
                     value={customQuantity}
                     onChange={(e) => setCustomQuantity(e.target.value)}
-                  min="1"
-                  max={raffle.max_tickets_per_purchase || 1000}
-                  placeholder={`Mínimo ${raffle.min_tickets_per_purchase || 1}, máximo ${raffle.max_tickets_per_purchase || 1000}`}
+                    min="1"
+                    max={raffle.max_tickets_per_purchase || 1000}
+                    placeholder={`Mínimo ${raffle.min_tickets_per_purchase || 1}, máximo ${raffle.max_tickets_per_purchase || 1000}`}
                   />
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Límite: {raffle.min_tickets_per_purchase || 1} - {raffle.max_tickets_per_purchase || 1000} boletos
-                  </p>
                 </div>
               ) : (
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                   <div className="flex items-center gap-3">
-                    <div className="text-2xl font-bold">{selectedPackage?.ticket_count}</div>
-                    <div>
-                      <div className="font-medium">boletos</div>
-                      {selectedPackage?.is_popular && (
-                        <Badge className="text-xs">Más popular</Badge>
-                      )}
-                    </div>
+                    <div className="text-2xl font-bold text-primary">{selectedPackage?.ticket_count}</div>
+                    <div className="font-medium">boletos</div>
                   </div>
                   <div className="text-2xl font-bold text-primary">
                     ${(selectedPackage?.ticket_count || 0) * raffle.price_per_number}
@@ -299,74 +323,64 @@ const PurchaseFlow = () => {
 
               <Separator />
 
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Precio por boleto:</span>
-                  <span>${raffle.price_per_number}</span>
+              {/* Datos del cliente */}
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="buyer_name">Nombre completo *</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="buyer_name"
+                      value={buyerData.name}
+                      onChange={(e) => setBuyerData(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Tu nombre completo"
+                      className="pl-10"
+                    />
+                  </div>
                 </div>
-                <div className="flex justify-between">
+
+                <div>
+                  <Label htmlFor="buyer_phone">Teléfono *</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="buyer_phone"
+                      value={buyerData.phone}
+                      onChange={(e) => setBuyerData(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="Tu número de teléfono"
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="buyer_email">Correo electrónico *</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="buyer_email"
+                      type="email"
+                      value={buyerData.email}
+                      onChange={(e) => setBuyerData(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="correo@ejemplo.com"
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Resumen */}
+              <div className="bg-primary/5 p-4 rounded-lg space-y-2">
+                <div className="flex justify-between text-sm">
                   <span>Cantidad:</span>
-                  <span>{getQuantity()} boletos</span>
+                  <span className="font-medium">{getQuantity()} boletos</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total:</span>
                   <span className="text-primary">${getTotal().toFixed(2)}</span>
                 </div>
-              </div>
-
-              <Button 
-                onClick={handleNextStep} 
-                className="w-full bg-gradient-aqua hover:shadow-aqua"
-                disabled={getQuantity() === 0}
-              >
-                Continuar con los datos
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Step 2: Datos del Cliente */}
-        {step === 2 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="w-5 h-5" />
-                Tus datos
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="buyer_name">Nombre completo *</Label>
-                <Input
-                  id="buyer_name"
-                  value={buyerData.name}
-                  onChange={(e) => setBuyerData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Tu nombre completo"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="buyer_phone">Teléfono *</Label>
-                <Input
-                  id="buyer_phone"
-                  value={buyerData.phone}
-                  onChange={(e) => setBuyerData(prev => ({ ...prev, phone: e.target.value }))}
-                  placeholder="Tu número de teléfono"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="buyer_email">Correo electrónico *</Label>
-                <Input
-                  id="buyer_email"
-                  type="email"
-                  value={buyerData.email}
-                  onChange={(e) => setBuyerData(prev => ({ ...prev, email: e.target.value }))}
-                  placeholder="Tu correo electrónico"
-                />
-                <p className="text-sm text-muted-foreground mt-1">
-                  Aquí recibirás tus números asignados
-                </p>
               </div>
 
               <div className="flex items-start space-x-2">
@@ -378,27 +392,23 @@ const PurchaseFlow = () => {
                   className="mt-1"
                 />
                 <label htmlFor="terms" className="text-sm text-muted-foreground">
-                  Acepto los términos y condiciones. Los números se asignarán aleatoriamente una vez confirmado el pago.
+                  Acepto los términos y condiciones *
                 </label>
               </div>
 
-               <div className="flex flex-col sm:flex-row gap-2">
-                 <Button variant="outline" onClick={() => setStep(1)} className="touch-target">
-                   Volver
-                 </Button>
-                 <Button 
-                   onClick={handleNextStep} 
-                   className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
-                 >
-                   Continuar al pago
-                 </Button>
-               </div>
+              <Button 
+                onClick={handleNextStep} 
+                className="w-full bg-gradient-aqua hover:shadow-aqua"
+                disabled={getQuantity() === 0}
+              >
+                Continuar al pago
+              </Button>
             </CardContent>
           </Card>
         )}
 
-        {/* Step 3: Método de Pago */}
-        {step === 3 && (
+        {/* Step 2: Método de Pago */}
+        {step === 2 && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -432,72 +442,91 @@ const PurchaseFlow = () => {
 
               {/* Métodos de pago */}
               <div className="space-y-3">
-                {/* PayPal - Habilitado condicionalmente */}
+                {/* WhatsApp */}
                 <div 
                   className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                    !(((settings?.payment_settings as any)?.paypal?.enabled) || ((settings?.payment_settings as any)?.paypal_enabled)) ? 'opacity-50' : ''
-                  } ${paymentMethod === 'paypal' ? 'border-primary bg-primary/5' : 'border-border'}`}
-                  onClick={() => (((settings?.payment_settings as any)?.paypal?.enabled) || ((settings?.payment_settings as any)?.paypal_enabled)) && setPaymentMethod('paypal')}
+                    paymentMethod === 'whatsapp' ? 'border-primary bg-primary/5' : 'border-border'
+                  }`}
+                  onClick={() => setPaymentMethod('whatsapp')}
                 >
                   <div className="flex items-center gap-3">
-                    <CreditCard className="w-5 h-5 text-blue-500" />
+                    <Smartphone className="w-5 h-5 text-green-600" />
                     <div>
-                      <div className="font-medium">PayPal</div>
-                      <div className="text-sm text-muted-foreground">
-                        {(((settings?.payment_settings as any)?.paypal?.enabled) || ((settings?.payment_settings as any)?.paypal_enabled)) 
-                          ? 'Pago seguro con tarjeta o PayPal'
-                          : 'No disponible'
-                        }
-                      </div>
+                      <div className="font-medium">WhatsApp</div>
+                      <div className="text-sm text-muted-foreground">Coordina tu pago por WhatsApp</div>
                     </div>
                   </div>
                 </div>
 
-                {/* Transferencia Bancaria - Habilitada condicionalmente */}
-                <div 
-                  className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                    !(((settings?.payment_settings as any)?.bank_transfer?.enabled) || ((settings?.payment_settings as any)?.bank_transfer_enabled)) ? 'opacity-50' : ''
-                  } ${paymentMethod === 'bank_transfer' ? 'border-primary bg-primary/5' : 'border-border'}`}
-                  onClick={() => (((settings?.payment_settings as any)?.bank_transfer?.enabled) || ((settings?.payment_settings as any)?.bank_transfer_enabled)) && setPaymentMethod('bank_transfer')}
-                >
-                  <div className="flex items-center gap-3">
-                    <Building2 className="w-5 h-5 text-blue-600" />
-                    <div>
-                      <div className="font-medium">Transferencia Bancaria</div>
-                      <div className="text-sm text-muted-foreground">
-                        {(((settings?.payment_settings as any)?.bank_transfer?.enabled) || ((settings?.payment_settings as any)?.bank_transfer_enabled)) 
-                          ? 'Pago directo a cuenta bancaria'
-                          : 'No disponible'
-                        }
+                {/* PayPal */}
+                {(((settings?.payment_settings as any)?.paypal?.enabled) || ((settings?.payment_settings as any)?.paypal_enabled)) && (
+                  <div 
+                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                      paymentMethod === 'paypal' ? 'border-primary bg-primary/5' : 'border-border'
+                    }`}
+                    onClick={() => setPaymentMethod('paypal')}
+                  >
+                    <div className="flex items-center gap-3">
+                      <CreditCard className="w-5 h-5 text-blue-500" />
+                      <div>
+                        <div className="font-medium">PayPal</div>
+                        <div className="text-sm text-muted-foreground">Pago seguro con tarjeta o PayPal</div>
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
+
+                {/* Transferencia Bancaria */}
+                {(((settings?.payment_settings as any)?.bank_transfer?.enabled) || ((settings?.payment_settings as any)?.bank_transfer_enabled)) && (
+                  <div 
+                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                      paymentMethod === 'bank_transfer' ? 'border-primary bg-primary/5' : 'border-border'
+                    }`}
+                    onClick={() => setPaymentMethod('bank_transfer')}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Building2 className="w-5 h-5 text-blue-600" />
+                      <div>
+                        <div className="font-medium">Transferencia Bancaria</div>
+                        <div className="text-sm text-muted-foreground">Pago directo a cuenta bancaria</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
-               <div className="flex flex-col sm:flex-row gap-2">
-                 <Button variant="outline" onClick={() => setStep(2)} className="touch-target">
-                   Volver
-                 </Button>
-                  {paymentMethod === 'paypal' && ((((settings?.payment_settings as any)?.paypal?.enabled) || ((settings?.payment_settings as any)?.paypal_enabled))) && (
-                    <Button 
-                      onClick={() => navigate(`/purchase-paypal/${raffle.id}/${getQuantity()}`, { state: { buyerData } })} 
-                      className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
-                    >
-                      <CreditCard className="w-4 h-4 mr-2" />
-                      Pagar con PayPal
-                    </Button>
-                  )}
-                  {paymentMethod === 'bank_transfer' && ((((settings?.payment_settings as any)?.bank_transfer?.enabled) || ((settings?.payment_settings as any)?.bank_transfer_enabled))) && (
-                    <Button 
-                      onClick={handlePurchase} 
-                      className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
-                    >
-                      <Building2 className="w-4 h-4 mr-2" />
-                      Transferencia Bancaria
-                    </Button>
-                  )}
-                </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button variant="outline" onClick={() => setStep(1)} className="touch-target">
+                  Volver
+                </Button>
+                {paymentMethod === 'whatsapp' && (
+                  <Button 
+                    onClick={handlePurchase} 
+                    className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
+                  >
+                    <Smartphone className="w-4 h-4 mr-2" />
+                    Contactar por WhatsApp
+                  </Button>
+                )}
+                {paymentMethod === 'paypal' && (
+                  <Button 
+                    onClick={() => navigate(`/purchase-paypal/${raffle.id}/${getQuantity()}`, { state: { buyerData } })} 
+                    className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
+                  >
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Pagar con PayPal
+                  </Button>
+                )}
+                {paymentMethod === 'bank_transfer' && (
+                  <Button 
+                    onClick={handlePurchase} 
+                    className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
+                  >
+                    <Building2 className="w-4 h-4 mr-2" />
+                    Confirmar Transferencia
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
         )}
