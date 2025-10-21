@@ -31,7 +31,7 @@ const PurchaseFlow = () => {
   });
 
   // Método de pago seleccionado
-  const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'paypal' | 'whatsapp'>('whatsapp');
+  const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'paypal' | 'whatsapp' | 'payphone'>('whatsapp');
 
   useEffect(() => {
     loadData();
@@ -234,6 +234,40 @@ const PurchaseFlow = () => {
           description: "Te contactaremos por WhatsApp para confirmar tu compra",
           duration: 5000,
         });
+        
+        setTimeout(() => navigate('/'), 3000);
+      } else if (paymentMethod === 'payphone') {
+        // Proceso de Payphone
+        const { data: confirmationData, error: confirmationError } = await supabase
+          .from('purchase_confirmations')
+          .insert({
+            raffle_id: raffle.id!,
+            buyer_name: buyerData.name,
+            buyer_email: buyerData.email,
+            buyer_phone: buyerData.phone,
+            quantity,
+            total_amount: total,
+            payment_method: paymentMethod,
+            confirmation_number: confirmationNumber,
+            status: 'payment_pending',
+            assigned_numbers: []
+          })
+          .select()
+          .single();
+        
+        if (confirmationError) {
+          console.error('Error creating confirmation:', confirmationError);
+          throw new Error('No se pudo crear la confirmación de compra');
+        }
+
+        toast({
+          title: "Redirigiendo a Payphone",
+          description: "Serás redirigido al sistema de pago",
+          duration: 3000,
+        });
+        
+        // Aquí iría la integración con Payphone cuando esté configurada
+        alert(`Integración con Payphone pendiente.\nCódigo de confirmación: ${confirmationNumber}\nTotal: $${total.toFixed(2)}`);
         
         setTimeout(() => navigate('/'), 3000);
       }
@@ -476,6 +510,24 @@ const PurchaseFlow = () => {
                   </div>
                 )}
 
+                {/* Payphone */}
+                {(((settings?.payment_settings as any)?.payphone?.enabled) || ((settings?.payment_settings as any)?.payphone_enabled)) && (
+                  <div 
+                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                      paymentMethod === 'payphone' ? 'border-primary bg-primary/5' : 'border-border'
+                    }`}
+                    onClick={() => setPaymentMethod('payphone')}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Smartphone className="w-5 h-5 text-purple-500" />
+                      <div>
+                        <div className="font-medium">Payphone</div>
+                        <div className="text-sm text-muted-foreground">Pago rápido y seguro</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Transferencia Bancaria */}
                 {(((settings?.payment_settings as any)?.bank_transfer?.enabled) || ((settings?.payment_settings as any)?.bank_transfer_enabled)) && (
                   <div 
@@ -515,6 +567,15 @@ const PurchaseFlow = () => {
                   >
                     <CreditCard className="w-4 h-4 mr-2" />
                     Pagar con PayPal
+                  </Button>
+                )}
+                {paymentMethod === 'payphone' && (
+                  <Button 
+                    onClick={handlePurchase} 
+                    className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
+                  >
+                    <Smartphone className="w-4 h-4 mr-2" />
+                    Pagar con Payphone
                   </Button>
                 )}
                 {paymentMethod === 'bank_transfer' && (
