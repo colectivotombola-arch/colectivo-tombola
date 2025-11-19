@@ -980,24 +980,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_confirmation_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_ticket_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_current_user_email: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_confirmation_number: { Args: never; Returns: string }
+      generate_ticket_number: { Args: never; Returns: string }
+      get_current_user_email: { Args: never; Returns: string }
       get_current_user_role: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: Database["public"]["Enums"]["app_role"]
       }
       get_public_site_settings: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           activity_title: string
           created_at: string
