@@ -31,7 +31,7 @@ const PurchaseFlow = () => {
   });
 
   // Método de pago seleccionado
-  const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'paypal' | 'whatsapp' | 'payphone'>('whatsapp');
+  const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'paypal' | 'whatsapp' | 'payphone' | 'hotmart'>('whatsapp');
 
   useEffect(() => {
     loadData();
@@ -270,6 +270,45 @@ const PurchaseFlow = () => {
         alert(`Integración con Payphone pendiente.\nCódigo de confirmación: ${confirmationNumber}\nTotal: $${total.toFixed(2)}`);
         
         setTimeout(() => navigate('/'), 3000);
+      } else if (paymentMethod === 'hotmart') {
+        // Proceso de Hotmart Pay
+        const { data: confirmationData, error: confirmationError } = await supabase
+          .from('purchase_confirmations')
+          .insert({
+            raffle_id: raffle.id!,
+            buyer_name: buyerData.name,
+            buyer_email: buyerData.email,
+            buyer_phone: buyerData.phone,
+            quantity,
+            total_amount: total,
+            payment_method: paymentMethod,
+            confirmation_number: confirmationNumber,
+            status: 'payment_pending',
+            assigned_numbers: []
+          })
+          .select()
+          .single();
+        
+        if (confirmationError) {
+          console.error('Error creating confirmation:', confirmationError);
+          throw new Error('No se pudo crear la confirmación de compra');
+        }
+
+        const paymentConfig = settings?.payment_settings as any;
+        const hotmartLink = paymentConfig?.hotmart_payment_link || paymentConfig?.hotmart?.payment_link;
+        
+        if (hotmartLink) {
+          toast({
+            title: "Redirigiendo a Hotmart Pay",
+            description: "Serás redirigido al sistema de pago seguro",
+            duration: 3000,
+          });
+          
+          // Redirigir al enlace de pago de Hotmart
+          window.location.href = hotmartLink;
+        } else {
+          throw new Error('Enlace de pago de Hotmart no configurado');
+        }
       }
       
     } catch (error) {
@@ -541,6 +580,24 @@ const PurchaseFlow = () => {
                       <div>
                         <div className="font-medium">Transferencia Bancaria</div>
                         <div className="text-sm text-muted-foreground">Pago directo a cuenta bancaria</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Hotmart Pay */}
+                {(((settings?.payment_settings as any)?.hotmart?.enabled) || ((settings?.payment_settings as any)?.hotmart_enabled)) && (
+                  <div 
+                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                      paymentMethod === 'hotmart' ? 'border-primary bg-primary/5' : 'border-border'
+                    }`}
+                    onClick={() => setPaymentMethod('hotmart')}
+                  >
+                    <div className="flex items-center gap-3">
+                      <CreditCard className="w-5 h-5 text-orange-600" />
+                      <div>
+                        <div className="font-medium">Hotmart Pay</div>
+                        <div className="text-sm text-muted-foreground">Pago seguro con Hotmart</div>
                       </div>
                     </div>
                   </div>
