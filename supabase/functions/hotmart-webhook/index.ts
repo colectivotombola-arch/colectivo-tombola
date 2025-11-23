@@ -1,4 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import React from 'npm:react@18.3.1';
+import { Resend } from 'npm:resend@4.0.0';
+import { renderAsync } from 'npm:@react-email/components@0.0.22';
+import { PurchaseConfirmationEmail } from './_templates/purchase-confirmation.tsx';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -212,6 +216,43 @@ Deno.serve(async (req) => {
       confirmationId: confirmation.id,
       assignedNumbers,
     });
+
+    // Send confirmation email
+    try {
+      const resendApiKey = Deno.env.get('RESEND_API_KEY');
+      if (resendApiKey) {
+        const resend = new Resend(resendApiKey);
+        
+        const html = await renderAsync(
+          React.createElement(PurchaseConfirmationEmail, {
+            buyerName,
+            raffleTitle: raffle.title,
+            assignedNumbers,
+            confirmationNumber: confirmation.confirmation_number,
+            quantity: confirmation.quantity,
+            totalAmount: confirmation.total_amount,
+          })
+        );
+
+        const { error: emailError } = await resend.emails.send({
+          from: 'Rifas <onboarding@resend.dev>',
+          to: [buyerEmail],
+          subject: `¡Pago Confirmado! Tus números para ${raffle.title}`,
+          html,
+        });
+
+        if (emailError) {
+          console.error('Error sending confirmation email:', emailError);
+        } else {
+          console.log('Confirmation email sent successfully to:', buyerEmail);
+        }
+      } else {
+        console.warn('RESEND_API_KEY not configured, skipping email notification');
+      }
+    } catch (emailError) {
+      console.error('Error in email sending process:', emailError);
+      // Don't fail the webhook if email fails
+    }
 
     return new Response(
       JSON.stringify({
