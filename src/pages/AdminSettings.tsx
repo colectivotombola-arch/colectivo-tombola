@@ -36,7 +36,7 @@ const AdminSettings = () => {
     hero_subtitle: 'Rifas seguras y transparentes con los mejores premios del mercado'
   });
   
-  // Estados para PayPal y transferencia bancaria únicamente
+  // Estados para métodos de pago
   const [paymentSettings, setPaymentSettings] = useState({
     paypal_enabled: true,
     paypal_client_id: 'AcThy7S3bmb6CLJVF9IhV0xsbEkrXmYm-rilgJHnf3t4XVE_3zQrtHSW_tudJvXPlZEE912X9tlsR624',
@@ -47,7 +47,9 @@ const AdminSettings = () => {
     bank_account: '',
     bank_name: '',
     account_holder: '',
-    routing_number: ''
+    routing_number: '',
+    hotmart_enabled: false,
+    hotmart_payment_link: ''
   });
 
   const [socialMedia, setSocialMedia] = useState({
@@ -528,6 +530,38 @@ const AdminSettings = () => {
                       placeholder="SWIFT123"
                       disabled={!paymentSettings.bank_transfer_enabled}
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* Hotmart Pay */}
+              <div className="border rounded-lg p-4 bg-orange-50 dark:bg-orange-950/20">
+                <h4 className="font-semibold mb-4 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4" />
+                  Hotmart Pay
+                </h4>
+                <div className="flex items-center space-x-2 mb-4">
+                  <input
+                    type="checkbox"
+                    id="hotmart_enabled"
+                    checked={paymentSettings.hotmart_enabled}
+                    onChange={(e) => setPaymentSettings(prev => ({ ...prev, hotmart_enabled: e.target.checked }))}
+                  />
+                  <Label htmlFor="hotmart_enabled">Habilitar Hotmart Pay</Label>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="hotmart_payment_link">Enlace de pago de Hotmart</Label>
+                    <Input
+                      id="hotmart_payment_link"
+                      value={paymentSettings.hotmart_payment_link}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, hotmart_payment_link: e.target.value }))}
+                      placeholder="https://pay.hotmart.com/..."
+                      disabled={!paymentSettings.hotmart_enabled}
+                    />
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Crea un enlace de pago en tu cuenta de Hotmart y pégalo aquí
+                    </p>
                   </div>
                 </div>
               </div>
