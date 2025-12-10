@@ -234,8 +234,10 @@ Deno.serve(async (req) => {
           })
         );
 
+        const emailFrom = Deno.env.get('EMAIL_FROM') || 'Rifas <onboarding@resend.dev>';
+        
         const { error: emailError } = await resend.emails.send({
-          from: 'Rifas <onboarding@resend.dev>',
+          from: emailFrom,
           to: [buyerEmail],
           subject: `¡Pago Confirmado! Tus números para ${raffle.title}`,
           html,
