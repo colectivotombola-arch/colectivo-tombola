@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import HeroSection from '@/components/HeroSection';
+import PackagesSection from '@/components/PackagesSection';
 import GallerySection from '@/components/GallerySection';
 
 import SocialMediaSection from '@/components/SocialMediaSection';
@@ -48,6 +49,10 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-card to-background">
       <Header settings={settings} />
       <HeroSection settings={settings} />
+      
+      {/* Packages/Combos Section */}
+      <PackagesSection />
+      
       {/* Instant Prizes Section */}
       {activeRaffle?.instant_prizes && (Array.isArray(activeRaffle.instant_prizes) ? activeRaffle.instant_prizes.length > 0 : false) && (
         <section className="mobile-section bg-card/50">
