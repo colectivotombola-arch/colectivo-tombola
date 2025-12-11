@@ -83,7 +83,8 @@ const PackagesSection = () => {
                 </div>
                 <Link to={`/purchase/${raffle.id}/${pkg.id}`}>
                   <Button 
-                    className="w-full bg-foreground hover:bg-foreground/90 text-background font-bold text-sm"
+                    size="sm"
+                    className="w-full bg-foreground hover:bg-foreground/90 text-background font-bold text-xs h-8"
                     disabled={raffle.status !== 'active'}
                   >
                     {raffle.status === 'active' ? 'COMPRAR' : 'AGOTADO'}
@@ -97,7 +98,7 @@ const PackagesSection = () => {
         {/* Link to custom purchase */}
         <div className="text-center mt-6">
           <Link to="/comprar">
-            <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+            <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground h-8 text-xs">
               VER MÁS OPCIONES
             </Button>
           </Link>
