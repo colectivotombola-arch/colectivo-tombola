@@ -25,42 +25,42 @@ export const AdminLayout = ({ children, title, subtitle, showBackButton = true }
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-card border-b border-border sticky top-0 z-50">
-        <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-4">
+        <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 sm:space-x-4">
+            <div className="flex items-center space-x-2">
               {showBackButton && (
                 <Button 
                   variant="outline" 
                   size="sm"
                   onClick={() => navigate('/admin')}
-                  className="flex items-center space-x-1 sm:space-x-2 mr-2"
+                  className="h-7 px-2 text-xs"
                 >
-                  <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Volver</span>
+                  <ArrowLeft className="w-3 h-3" />
+                  <span className="hidden sm:inline ml-1">Volver</span>
                 </Button>
               )}
               
-              <LayoutDashboard className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+              <LayoutDashboard className="w-4 h-4 text-primary" />
               <div>
-                <h1 className="text-sm sm:text-lg lg:text-xl font-bold text-foreground">{title}</h1>
+                <h1 className="text-xs sm:text-sm font-bold text-foreground">{title}</h1>
                 {subtitle && (
-                  <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">{subtitle}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">{subtitle}</p>
                 )}
               </div>
             </div>
             
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <Badge variant="outline" className="border-primary text-primary hidden md:flex text-xs">
+            <div className="flex items-center space-x-2">
+              <Badge variant="outline" className="border-primary text-primary hidden md:flex text-[10px] h-5">
                 {user?.email}
               </Badge>
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={handleSignOut} 
-                className="flex items-center space-x-1 text-xs sm:text-sm"
+                className="h-7 px-2 text-xs"
               >
-                <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span>Salir</span>
+                <LogOut className="w-3 h-3" />
+                <span className="ml-1">Salir</span>
               </Button>
             </div>
           </div>
