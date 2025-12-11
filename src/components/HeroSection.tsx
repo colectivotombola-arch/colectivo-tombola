@@ -189,41 +189,40 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
           </Link>
         </div>
 
-        {/* Información adicional - Completamente dinámica */}
-        <div className="mt-8 sm:mt-12">
-          {/* Barra de progreso en línea con datos reales */}
+        {/* Información adicional - Compacta */}
+        <div className="mt-4">
+          {/* Barra de progreso */}
           {activeRaffle && (
-            <div className="max-w-lg mx-auto mb-8 bg-card/80 backdrop-blur-sm rounded-xl p-4 border border-primary/20">
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-foreground font-medium">Progreso de venta</span>
+            <div className="max-w-md mx-auto mb-4 bg-card/80 backdrop-blur-sm rounded-lg p-2 border border-primary/20">
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-foreground">Progreso</span>
                 <span className="text-primary font-bold">{activeRaffle.numbers_sold || 0}/{activeRaffle.total_numbers || 0}</span>
               </div>
-              <Progress value={activeRaffle.sold_percentage || 0} className="h-2 mb-2" />
+              <Progress value={activeRaffle.sold_percentage || 0} className="h-1.5 mb-1" />
               <div className="text-center">
-                <span className="text-lg font-bold text-primary">{(activeRaffle.sold_percentage || 0).toFixed(1)}%</span>
-                <span className="text-sm text-muted-foreground ml-1">vendido</span>
+                <span className="text-sm font-bold text-primary">{(activeRaffle.sold_percentage || 0).toFixed(1)}%</span>
               </div>
             </div>
           )}
           
-          <div className="mobile-grid max-w-4xl mx-auto">
+          <div className="grid grid-cols-3 gap-2 max-w-lg mx-auto">
             <div className="text-center">
-              <div className="responsive-subtitle font-bold text-primary mb-2">
+              <div className="text-base font-bold text-primary">
                 {activeRaffle?.total_numbers ? (activeRaffle.total_numbers - (activeRaffle.numbers_sold || 0)) : 'N/A'}
               </div>
-              <div className="text-gray-600 mobile-text">Números Disponibles</div>
+              <div className="text-gray-600 text-[10px]">Disponibles</div>
             </div>
             <div className="text-center">
-              <div className="responsive-subtitle font-bold text-primary mb-2">
+              <div className="text-base font-bold text-primary">
                 ${activeRaffle?.price_per_number ?? settings?.price_per_number ?? 'N/A'}
               </div>
-              <div className="text-gray-600 mobile-text">Cada Número</div>
+              <div className="text-gray-600 text-[10px]">Por Número</div>
             </div>
             <div className="text-center">
-              <div className="responsive-subtitle font-bold text-primary mb-2">
+              <div className="text-base font-bold text-primary">
                 {prizeDisplays.length > 0 ? prizeDisplays.length : 'N/A'}
               </div>
-              <div className="text-gray-600 mobile-text">Premios Principales</div>
+              <div className="text-gray-600 text-[10px]">Premios</div>
             </div>
           </div>
         </div>

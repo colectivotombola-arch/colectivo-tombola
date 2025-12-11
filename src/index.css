@@ -158,13 +158,13 @@ All colors MUST be HSL.
     @apply text-base sm:text-lg lg:text-xl xl:text-2xl;
   }
   
-  /* Mobile-optimized spacing */
+  /* Mobile-optimized spacing - Compact */
   .mobile-section {
-    @apply py-6 sm:py-8 lg:py-12;
+    @apply py-3 sm:py-4 lg:py-6;
   }
   
   .mobile-gap {
-    @apply gap-4 sm:gap-6 lg:gap-8;
+    @apply gap-2 sm:gap-3 lg:gap-4;
   }
 
   /* Fix white spaces and improve mobile responsiveness */

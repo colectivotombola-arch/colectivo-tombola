@@ -8,6 +8,9 @@ import { supabase, type Raffle } from '@/lib/supabase';
 import Header from '@/components/Header';
 import { Search, Phone, User, Calendar, CreditCard, Trophy } from 'lucide-react';
 
+const ICON_SM = "w-3 h-3";
+const ICON_MD = "w-4 h-4";
+
 interface RaffleNumber {
   id: string;
   raffle_id: string;
@@ -120,45 +123,46 @@ const ConsultarNumeros = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto space-y-6">
+      <div className="container mx-auto px-3 py-3">
+        <div className="max-w-4xl mx-auto space-y-3">
           
           {/* Header */}
-          <div className="text-center space-y-4">
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+          <div className="text-center space-y-1">
+            <h1 className="text-lg font-bold text-foreground">
               Consultar Mis Números
             </h1>
-            <p className="text-lg text-muted-foreground">
-              Ingresa tu número de teléfono para ver todos tus números comprados
+            <p className="text-xs text-muted-foreground">
+              Ingresa tu teléfono para ver tus números
             </p>
           </div>
 
           {/* Search Form */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Search className="w-5 h-5" />
-                <span>Buscar Números</span>
+            <CardHeader className="py-2 px-3">
+              <CardTitle className="flex items-center space-x-1 text-sm">
+                <Search className={ICON_SM} />
+                <span>Buscar</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="px-3 pb-3 pt-0">
               <div>
-                <Label htmlFor="phone">Número de Teléfono</Label>
-                <div className="flex space-x-2">
+                <Label htmlFor="phone" className="text-xs">Teléfono</Label>
+                <div className="flex space-x-1.5 mt-1">
                   <Input
                     id="phone"
                     type="tel"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     placeholder="Ej: 3001234567"
-                    className="flex-1"
+                    className="flex-1 h-8 text-sm"
                   />
                   <Button 
                     onClick={handleSearch}
                     disabled={loading}
-                    className="bg-primary hover:bg-primary/90 text-black"
+                    size="sm"
+                    className="bg-primary hover:bg-primary/90 text-black h-8 text-xs"
                   >
-                    {loading ? 'Buscando...' : 'Buscar'}
+                    {loading ? '...' : 'Buscar'}
                   </Button>
                 </div>
               </div>
@@ -168,66 +172,60 @@ const ConsultarNumeros = () => {
           {/* Results */}
           {searched && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Trophy className="w-5 h-5" />
+              <CardHeader className="py-2 px-3">
+                <CardTitle className="flex items-center space-x-1 text-sm">
+                  <Trophy className={ICON_SM} />
                   <span>Mis Números ({numbers.length})</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-3 pb-3 pt-0">
                 {numbers.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Phone className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                    <p className="text-lg">No se encontraron números para este teléfono</p>
-                    <p className="text-sm">Verifica que el número esté correcto</p>
+                  <div className="text-center py-4 text-muted-foreground">
+                    <Phone className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No se encontraron números</p>
+                    <p className="text-[10px]">Verifica el número ingresado</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-2">
                     {numbers.map((number, index) => (
-                      <div key={index} className="border rounded-lg p-4 space-y-3">
+                      <div key={index} className="border rounded p-2 space-y-1">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h3 className="font-bold text-2xl text-primary">
-                              Número: {number.number_value}
+                            <h3 className="font-bold text-lg text-primary">
+                              #{number.number_value}
                             </h3>
-                            <p className="text-lg font-medium text-foreground">
+                            <p className="text-xs font-medium text-foreground">
                               {getRaffleName(number.raffle_id)}
                             </p>
                           </div>
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(number.payment_status || 'pending')}`}>
+                          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${getStatusColor(number.payment_status || 'pending')}`}>
                             {number.payment_status === 'paid' ? 'Pagado' : 
                              number.payment_status === 'pending' ? 'Pendiente' : 
                              number.payment_status === 'cancelled' ? 'Cancelado' : 'Pendiente'}
                           </span>
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                          <div className="flex items-center space-x-2">
-                            <User className="w-4 h-4 text-muted-foreground" />
+                        <div className="flex flex-wrap gap-2 text-[10px]">
+                          <div className="flex items-center space-x-1">
+                            <User className={ICON_SM + " text-muted-foreground"} />
                             <span>{number.buyer_name}</span>
                           </div>
                           
-                          <div className="flex items-center space-x-2">
-                            <Calendar className="w-4 h-4 text-muted-foreground" />
+                          <div className="flex items-center space-x-1">
+                            <Calendar className={ICON_SM + " text-muted-foreground"} />
                             <span>{formatDate(number.purchase_date || number.created_at || '')}</span>
                           </div>
                           
-                          <div className="flex items-center space-x-2">
-                            <CreditCard className="w-4 h-4 text-muted-foreground" />
+                          <div className="flex items-center space-x-1">
+                            <CreditCard className={ICON_SM + " text-muted-foreground"} />
                             <span className="capitalize">
                               {number.payment_method === 'cash' ? 'Efectivo' :
                                number.payment_method === 'transfer' ? 'Transferencia' :
                                number.payment_method === 'whatsapp' ? 'WhatsApp' :
-                               number.payment_method || 'No especificado'}
+                               number.payment_method || 'N/A'}
                             </span>
                           </div>
                         </div>
-                        
-                        {number.buyer_email && (
-                          <div className="text-sm text-muted-foreground">
-                            Email: {number.buyer_email}
-                          </div>
-                        )}
                       </div>
                     ))}
                   </div>
@@ -238,12 +236,11 @@ const ConsultarNumeros = () => {
 
           {/* Instructions */}
           <Card>
-            <CardContent className="pt-6">
-              <div className="text-center space-y-2">
-                <h3 className="font-semibold text-lg">¿No encuentras tus números?</h3>
-                <p className="text-muted-foreground">
-                  Asegúrate de ingresar el mismo número de teléfono que usaste al comprar.
-                  Si tienes problemas, contáctanos por WhatsApp.
+            <CardContent className="py-3 px-3">
+              <div className="text-center space-y-1">
+                <h3 className="font-semibold text-xs">¿No encuentras tus números?</h3>
+                <p className="text-[10px] text-muted-foreground">
+                  Verifica el teléfono o contáctanos por WhatsApp.
                 </p>
               </div>
             </CardContent>
