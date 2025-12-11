@@ -104,23 +104,35 @@ const PurchaseFlow = () => {
   const handleNextStep = () => {
     // Validar cantidad
     const quantity = getQuantity();
-    const minTickets = raffle.min_tickets_per_purchase || 1;
-    const maxTickets = raffle.max_tickets_per_purchase || 1000;
-    const effectiveMax = Math.max(maxTickets, quantity);
     
-    if (quantity < minTickets) {
-      toast({
-        title: "Cantidad insuficiente",
-        description: `El mínimo de boletos es ${minTickets}`,
-        variant: "destructive",
-      });
-      return;
+    // Solo aplicar validación de min/max para compras personalizadas, no para paquetes predefinidos
+    if (packageId === 'custom') {
+      const minTickets = raffle.min_tickets_per_purchase || 1;
+      const maxTickets = raffle.max_tickets_per_purchase || 1000;
+      
+      if (quantity < minTickets) {
+        toast({
+          title: "Cantidad insuficiente",
+          description: `El mínimo de boletos es ${minTickets}`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (quantity > maxTickets) {
+        toast({
+          title: "Cantidad excesiva",
+          description: `El máximo de boletos es ${maxTickets}`,
+          variant: "destructive",
+        });
+        return;
+      }
     }
     
-    if (quantity > effectiveMax) {
+    if (quantity <= 0) {
       toast({
-        title: "Cantidad excesiva",
-        description: `El máximo de boletos es ${effectiveMax}`,
+        title: "Cantidad inválida",
+        description: "Selecciona al menos 1 boleto",
         variant: "destructive",
       });
       return;
