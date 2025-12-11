@@ -79,70 +79,66 @@ const Index = () => {
 
 
       {/* Footer */}
-      <footer className="bg-background text-foreground mobile-section relative overflow-hidden">
-        {/* Background Logo - More visible */}
+      <footer className="bg-background text-foreground py-4 relative overflow-hidden">
+        {/* Background Logo */}
         <div className="absolute inset-0 opacity-60 bg-no-repeat bg-center bg-cover" 
              style={{backgroundImage: `url(/lovable-uploads/40dd58e7-1558-43d2-84a8-c2a6176de594.png)`}}></div>
         <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/80 to-background/95"></div>
-        <div className="mobile-container relative z-10">
-          <div className="mobile-grid">
+        <div className="px-4 relative z-10">
+          <div className="grid grid-cols-3 gap-3 text-xs">
             <div>
-              <h3 className="responsive-subtitle mb-4 text-primary">
+              <h3 className="text-sm font-bold text-primary mb-1">
                 {settings?.site_name || 'Colectivo Tombola'}
               </h3>
-              <p className="text-muted-foreground mobile-text">
-                {settings?.hero_subtitle || 'Rifas seguras y transparentes con los mejores premios'}
+              <p className="text-[10px] text-muted-foreground">
+                {settings?.hero_subtitle || 'Rifas seguras'}
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4 mobile-text">Enlaces Rápidos</h4>
-              <ul className="space-y-2 text-muted-foreground mobile-body">
-                <li><Link to="/comprar" className="hover:text-primary transition-colors">Comprar Números</Link></li>
-                <li><Link to="/consultar" className="hover:text-primary transition-colors">Consultar Números</Link></li>
-                <li><Link to="/detalles" className="hover:text-primary transition-colors">Detalles de Actividad</Link></li>
-                <li><Link to="/terminos" className="hover:text-primary transition-colors">Términos y Condiciones</Link></li>
+              <h4 className="font-semibold mb-1 text-xs">Enlaces</h4>
+              <ul className="space-y-0.5 text-muted-foreground text-[10px]">
+                <li><Link to="/comprar" className="hover:text-primary">Comprar</Link></li>
+                <li><Link to="/consultar" className="hover:text-primary">Consultar</Link></li>
+                <li><Link to="/detalles" className="hover:text-primary">Detalles</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4 mobile-text">Síguenos</h4>
-              <div className="flex space-x-4">
+              <h4 className="font-semibold mb-1 text-xs">Síguenos</h4>
+              <div className="flex space-x-2">
                 <a 
                   href={socialMedia.instagram_url || '#'} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="text-muted-foreground hover:text-pink-500 transition-colors"
-                  aria-label="Síguenos en Instagram"
+                  className="text-muted-foreground hover:text-pink-500"
                 >
-                  <Instagram className="w-8 h-8" />
+                  <Instagram className="w-5 h-5" />
                 </a>
                 <a 
                   href={socialMedia.facebook_url || '#'} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="text-muted-foreground hover:text-blue-500 transition-colors"
-                  aria-label="Síguenos en Facebook"
+                  className="text-muted-foreground hover:text-blue-500"
                 >
-                  <Facebook className="w-8 h-8" />
+                  <Facebook className="w-5 h-5" />
                 </a>
                 <a 
                   href={socialMedia.tiktok_url || '#'} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="text-muted-foreground hover:text-red-500 transition-colors"
-                  aria-label="Síguenos en TikTok"
+                  className="text-muted-foreground hover:text-red-500"
                 >
-                  <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-.88-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/>
                   </svg>
                 </a>
               </div>
             </div>
           </div>
-          <div className="border-t border-border mt-8 pt-8 text-center text-muted-foreground relative">
-            <p className="mobile-body">&copy; 2024 {settings?.site_name || 'Colectivo Tombola'}. Todos los derechos reservados.</p>
+          <div className="border-t border-border mt-3 pt-2 text-center text-muted-foreground relative">
+            <p className="text-[10px]">&copy; 2024 {settings?.site_name || 'Colectivo Tombola'}</p>
             <Link 
               to="/admin" 
-              className="fixed bottom-4 right-4 z-50 bg-background/30 backdrop-blur-sm p-1.5 rounded-full border border-border text-muted-foreground hover:text-primary hover:border-primary transition-all duration-300 shadow-md mobile-body opacity-70"
+              className="fixed bottom-2 right-2 z-50 bg-background/30 backdrop-blur-sm p-1 rounded-full border border-border text-muted-foreground hover:text-primary text-xs opacity-70"
               title="Admin"
             >
               🔐
