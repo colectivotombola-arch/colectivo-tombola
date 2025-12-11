@@ -48,43 +48,43 @@ const PackagesSection = () => {
   }
 
   return (
-    <section className="mobile-section bg-card/30">
+    <section className="py-4 sm:py-6 bg-card/30">
       <div className="mobile-container">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl sm:text-3xl font-black text-foreground mb-2">
+        <div className="text-center mb-4">
+          <h2 className="text-lg sm:text-xl font-black text-foreground mb-1">
             ¡ADQUIERE TUS NÚMEROS!
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Valor de la Unidad: <span className="text-primary font-bold">${raffle.price_per_number}</span>
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
           {packages.map((pkg) => (
             <Card 
               key={pkg.id}
-              className={`relative overflow-hidden transition-all duration-300 hover:shadow-lg ${
+              className={`relative overflow-hidden transition-all duration-300 hover:shadow-md ${
                 pkg.is_popular 
-                  ? 'ring-2 ring-primary shadow-lg' 
+                  ? 'ring-1 ring-primary shadow-md' 
                   : 'border-border'
               }`}
             >
               {pkg.is_popular && (
-                <Badge className="absolute -top-0 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-b-md rounded-t-none">
-                  ★ Más Vendido ★
+                <Badge className="absolute -top-0 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground text-[9px] px-1 py-0 rounded-b-sm rounded-t-none">
+                  ★ Popular ★
                 </Badge>
               )}
-              <CardContent className={`text-center p-4 ${pkg.is_popular ? 'pt-6' : 'pt-4'}`}>
-                <div className="text-sm sm:text-base font-bold text-foreground mb-2">
-                  x{pkg.ticket_count} Números
+              <CardContent className={`text-center p-2 ${pkg.is_popular ? 'pt-4' : 'pt-2'}`}>
+                <div className="text-xs font-bold text-foreground mb-1">
+                  x{pkg.ticket_count}
                 </div>
-                <div className="text-2xl sm:text-3xl font-black text-primary mb-4">
+                <div className="text-base sm:text-lg font-black text-primary mb-2">
                   ${(pkg.ticket_count * pkg.price_per_ticket).toFixed(0)}
                 </div>
                 <Link to={`/purchase/${raffle.id}/${pkg.id}`}>
                   <Button 
                     size="sm"
-                    className="w-full bg-foreground hover:bg-foreground/90 text-background font-bold text-xs h-8"
+                    className="w-full bg-foreground hover:bg-foreground/90 text-background font-bold text-[10px] h-6 px-1"
                     disabled={raffle.status !== 'active'}
                   >
                     {raffle.status === 'active' ? 'COMPRAR' : 'AGOTADO'}
@@ -95,10 +95,9 @@ const PackagesSection = () => {
           ))}
         </div>
 
-        {/* Link to custom purchase */}
-        <div className="text-center mt-6">
+        <div className="text-center mt-3">
           <Link to="/comprar">
-            <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground h-8 text-xs">
+            <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground h-6 text-[10px] px-2">
               VER MÁS OPCIONES
             </Button>
           </Link>
