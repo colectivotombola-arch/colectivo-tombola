@@ -30,6 +30,7 @@ import PagoFallido from "./pages/PagoFallido";
 import PagoCancelado from "./pages/PagoCancelado";
 import NotFound from "./pages/NotFound";
 import PurchasePayPal from "./pages/PurchasePayPal";
+import PagoTransferencia from "./pages/PagoTransferencia";
 
 const queryClient = new QueryClient();
 
@@ -118,6 +119,7 @@ const App = () => (
             <Route path="/pago-exitoso" element={<PagoExitoso />} />
             <Route path="/pago-fallido" element={<PagoFallido />} />
             <Route path="/pago-cancelado" element={<PagoCancelado />} />
+            <Route path="/pago-transferencia" element={<PagoTransferencia />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

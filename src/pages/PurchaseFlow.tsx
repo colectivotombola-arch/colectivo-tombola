@@ -30,8 +30,8 @@ const PurchaseFlow = () => {
     terms_accepted: false
   });
 
-  // Método de pago seleccionado
-  const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'paypal' | 'whatsapp' | 'payphone' | 'hotmart'>('whatsapp');
+  // Errores de validación
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     loadData();
@@ -101,6 +101,28 @@ const PurchaseFlow = () => {
     return quantity * raffle.price_per_number;
   };
 
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+    
+    if (!buyerData.name.trim()) {
+      errors.name = 'El nombre es requerido';
+    }
+    if (!buyerData.phone.trim()) {
+      errors.phone = 'El teléfono es requerido';
+    }
+    if (!buyerData.email.trim()) {
+      errors.email = 'El correo es requerido';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyerData.email)) {
+      errors.email = 'El correo no es válido';
+    }
+    if (!buyerData.terms_accepted) {
+      errors.terms = 'Debes aceptar los términos y condiciones';
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleNextStep = () => {
     // Validar cantidad
     const quantity = getQuantity();
@@ -138,20 +160,11 @@ const PurchaseFlow = () => {
       return;
     }
 
-    // Validar datos del cliente
-    if (!buyerData.name || !buyerData.phone || !buyerData.email) {
+    // Validar formulario
+    if (!validateForm()) {
       toast({
         title: "Datos incompletos",
-        description: "Por favor completa todos los campos",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (!buyerData.terms_accepted) {
-      toast({
-        title: "Términos y condiciones",
-        description: "Debes aceptar los términos y condiciones",
+        description: "Por favor completa todos los campos correctamente",
         variant: "destructive",
       });
       return;
@@ -160,174 +173,59 @@ const PurchaseFlow = () => {
     setStep(2);
   };
 
-  const handlePurchase = async () => {
+  const handlePayment = async (metodo: 'paypal' | 'transferencia' | 'payphone') => {
+    const quantity = getQuantity();
+    const total = getTotal();
+    
     try {
-      const quantity = getQuantity();
-      const total = getTotal();
+      // Guardar orden en Supabase
+      const { error } = await supabase
+        .from('orders')
+        .insert({
+          nombre: buyerData.name.trim(),
+          telefono: buyerData.phone.trim(),
+          email: buyerData.email.trim(),
+          cantidad_boletos: quantity,
+          total: total,
+          metodo_pago: metodo,
+          estado: 'pendiente'
+        });
       
-      // Generar número de confirmación único
-      const confirmationNumber = `RF${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
-      
-      if (paymentMethod === 'bank_transfer') {
-        // Crear registro de confirmación para transferencia bancaria
-        const { data: confirmationData, error: confirmationError } = await supabase
-          .from('purchase_confirmations')
-          .insert({
-            raffle_id: raffle.id!,
-            buyer_name: buyerData.name,
-            buyer_email: buyerData.email,
-            buyer_phone: buyerData.phone,
-            quantity,
-            total_amount: total,
-            payment_method: paymentMethod,
-            confirmation_number: confirmationNumber,
-            status: 'payment_pending',
-            assigned_numbers: [] // Sin números asignados hasta confirmar pago
-          })
-          .select()
-          .single();
-        
-        if (confirmationError) {
-          console.error('Error creating confirmation:', confirmationError);
-          throw new Error('No se pudo crear la confirmación de compra');
-        }
-        
+      if (error) {
+        console.error('Error saving order:', error);
+        toast({
+          title: "Error",
+          description: "No se pudo registrar la orden. Intenta nuevamente.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Pedido registrado",
+        description: "Tu pedido ha sido registrado correctamente.",
+      });
+
+      // Lógica según método de pago
+      if (metodo === 'paypal') {
+        // Obtener usuario PayPal desde settings o usar placeholder
         const paymentConfig = settings?.payment_settings as any;
-        const bankName = paymentConfig?.bank_name || 'Banco';
-        const accountHolder = paymentConfig?.account_holder || 'Titular';
-        const bankAccount = paymentConfig?.bank_account || 'Cuenta bancaria';
-        const routingNumber = paymentConfig?.routing_number || '';
-        
-        const bankInfo = `Banco: ${bankName}\nTitular: ${accountHolder}\nCuenta: ${bankAccount}${routingNumber ? '\nCódigo: ' + routingNumber : ''}`;
-        
-        toast({
-          title: "Compra registrada",
-          description: `Confirmación: ${confirmationNumber}. Completa la transferencia bancaria.`,
-          duration: 8000,
-        });
-        
-        // Mostrar información bancaria
-        alert(`DATOS PARA TRANSFERENCIA BANCARIA:\n\n${bankInfo}\n\nMonto a transferir: $${total.toFixed(2)}\nCódigo de confirmación: ${confirmationNumber}\n\nUna vez realizada la transferencia, contacta por WhatsApp con el comprobante para confirmar tu compra.`);
-        
-        setTimeout(() => navigate('/'), 3000);
-      } else if (paymentMethod === 'whatsapp') {
-        // Proceso de WhatsApp
-        const { data: confirmationData, error: confirmationError } = await supabase
-          .from('purchase_confirmations')
-          .insert({
-            raffle_id: raffle.id!,
-            buyer_name: buyerData.name,
-            buyer_email: buyerData.email,
-            buyer_phone: buyerData.phone,
-            quantity,
-            total_amount: total,
-            payment_method: paymentMethod,
-            confirmation_number: confirmationNumber,
-            status: 'payment_pending',
-            assigned_numbers: []
-          })
-          .select()
-          .single();
-        
-        if (confirmationError) {
-          console.error('Error creating confirmation:', confirmationError);
-          throw new Error('No se pudo crear la confirmación de compra');
-        }
-
-        // Construir mensaje de WhatsApp
-        const whatsappNumber = settings?.whatsapp_number || '';
-        const message = `Hola! Quiero comprar ${quantity} boletos de ${raffle.title}.\n\nMis datos:\nNombre: ${buyerData.name}\nEmail: ${buyerData.email}\nTeléfono: ${buyerData.phone}\nTotal: $${total.toFixed(2)}\nCódigo: ${confirmationNumber}`;
-        
-        const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, '_blank');
-        
-        toast({
-          title: "Compra registrada",
-          description: "Te contactaremos por WhatsApp para confirmar tu compra",
-          duration: 5000,
-        });
-        
-        setTimeout(() => navigate('/'), 3000);
-      } else if (paymentMethod === 'payphone') {
-        // Proceso de Payphone
-        const { data: confirmationData, error: confirmationError } = await supabase
-          .from('purchase_confirmations')
-          .insert({
-            raffle_id: raffle.id!,
-            buyer_name: buyerData.name,
-            buyer_email: buyerData.email,
-            buyer_phone: buyerData.phone,
-            quantity,
-            total_amount: total,
-            payment_method: paymentMethod,
-            confirmation_number: confirmationNumber,
-            status: 'payment_pending',
-            assigned_numbers: []
-          })
-          .select()
-          .single();
-        
-        if (confirmationError) {
-          console.error('Error creating confirmation:', confirmationError);
-          throw new Error('No se pudo crear la confirmación de compra');
-        }
-
-        toast({
-          title: "Redirigiendo a Payphone",
-          description: "Serás redirigido al sistema de pago",
-          duration: 3000,
-        });
-        
-        // Aquí iría la integración con Payphone cuando esté configurada
-        alert(`Integración con Payphone pendiente.\nCódigo de confirmación: ${confirmationNumber}\nTotal: $${total.toFixed(2)}`);
-        
-        setTimeout(() => navigate('/'), 3000);
-      } else if (paymentMethod === 'hotmart') {
-        // Proceso de Hotmart Pay
-        const { data: confirmationData, error: confirmationError } = await supabase
-          .from('purchase_confirmations')
-          .insert({
-            raffle_id: raffle.id!,
-            buyer_name: buyerData.name,
-            buyer_email: buyerData.email,
-            buyer_phone: buyerData.phone,
-            quantity,
-            total_amount: total,
-            payment_method: paymentMethod,
-            confirmation_number: confirmationNumber,
-            status: 'payment_pending',
-            assigned_numbers: []
-          })
-          .select()
-          .single();
-        
-        if (confirmationError) {
-          console.error('Error creating confirmation:', confirmationError);
-          throw new Error('No se pudo crear la confirmación de compra');
-        }
-
+        const paypalUser = paymentConfig?.paypal_me_user || 'TU_USUARIO_PAYPAL';
+        const paypalUrl = `https://paypal.me/${paypalUser}/${total.toFixed(2)}`;
+        window.open(paypalUrl, '_blank', 'noopener,noreferrer');
+      } else if (metodo === 'transferencia') {
+        navigate('/pago-transferencia');
+      } else if (metodo === 'payphone') {
         const paymentConfig = settings?.payment_settings as any;
-        const hotmartLink = paymentConfig?.hotmart_payment_link || paymentConfig?.hotmart?.payment_link;
-        
-        if (hotmartLink) {
-          toast({
-            title: "Redirigiendo a Hotmart Pay",
-            description: "Serás redirigido al sistema de pago seguro",
-            duration: 3000,
-          });
-          
-          // Redirigir al enlace de pago de Hotmart
-          window.location.href = hotmartLink;
-        } else {
-          throw new Error('Enlace de pago de Hotmart no configurado');
-        }
+        const payphoneLink = paymentConfig?.payphone_link || paymentConfig?.payphone?.payment_link || 'https://payphone.app';
+        window.open(payphoneLink, '_blank', 'noopener,noreferrer');
       }
       
     } catch (error) {
-      console.error('Error processing purchase:', error);
+      console.error('Error processing payment:', error);
       toast({
         title: "Error",
-        description: "No se pudo procesar la compra. Intenta nuevamente.",
+        description: "No se pudo procesar el pago. Intenta nuevamente.",
         variant: "destructive",
       });
     }
@@ -419,9 +317,10 @@ const PurchaseFlow = () => {
                       value={buyerData.name}
                       onChange={(e) => setBuyerData(prev => ({ ...prev, name: e.target.value }))}
                       placeholder="Tu nombre completo"
-                      className="pl-10"
+                      className={`pl-10 ${formErrors.name ? 'border-destructive' : ''}`}
                     />
                   </div>
+                  {formErrors.name && <p className="text-destructive text-xs mt-1">{formErrors.name}</p>}
                 </div>
 
                 <div>
@@ -433,9 +332,10 @@ const PurchaseFlow = () => {
                       value={buyerData.phone}
                       onChange={(e) => setBuyerData(prev => ({ ...prev, phone: e.target.value }))}
                       placeholder="Tu número de teléfono"
-                      className="pl-10"
+                      className={`pl-10 ${formErrors.phone ? 'border-destructive' : ''}`}
                     />
                   </div>
+                  {formErrors.phone && <p className="text-destructive text-xs mt-1">{formErrors.phone}</p>}
                 </div>
 
                 <div>
@@ -448,9 +348,10 @@ const PurchaseFlow = () => {
                       value={buyerData.email}
                       onChange={(e) => setBuyerData(prev => ({ ...prev, email: e.target.value }))}
                       placeholder="correo@ejemplo.com"
-                      className="pl-10"
+                      className={`pl-10 ${formErrors.email ? 'border-destructive' : ''}`}
                     />
                   </div>
+                  {formErrors.email && <p className="text-destructive text-xs mt-1">{formErrors.email}</p>}
                 </div>
               </div>
 
@@ -468,17 +369,20 @@ const PurchaseFlow = () => {
                 </div>
               </div>
 
-              <div className="flex items-start space-x-2">
-                <input
-                  type="checkbox"
-                  id="terms"
-                  checked={buyerData.terms_accepted}
-                  onChange={(e) => setBuyerData(prev => ({ ...prev, terms_accepted: e.target.checked }))}
-                  className="mt-1"
-                />
-                <label htmlFor="terms" className="text-sm text-muted-foreground">
-                  Acepto los términos y condiciones *
-                </label>
+              <div>
+                <div className="flex items-start space-x-2">
+                  <input
+                    type="checkbox"
+                    id="terms"
+                    checked={buyerData.terms_accepted}
+                    onChange={(e) => setBuyerData(prev => ({ ...prev, terms_accepted: e.target.checked }))}
+                    className="mt-1"
+                  />
+                  <label htmlFor="terms" className="text-sm text-muted-foreground">
+                    Acepto los términos y condiciones *
+                  </label>
+                </div>
+                {formErrors.terms && <p className="text-destructive text-xs mt-1">{formErrors.terms}</p>}
               </div>
 
               <Button 
@@ -495,168 +399,68 @@ const PurchaseFlow = () => {
         {/* Step 2: Método de Pago */}
         {step === 2 && (
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="w-5 h-5" />
-                Método de pago
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <CreditCard className="w-4 h-4" />
+                Selecciona tu método de pago
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4">
               {/* Resumen de la compra */}
-              <div className="bg-muted/50 p-4 rounded-lg">
-                <h3 className="font-semibold mb-2">Resumen de tu compra</h3>
+              <div className="bg-muted/50 p-3 rounded-lg">
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span>Nombre:</span>
+                    <span className="text-muted-foreground">Nombre:</span>
                     <span>{buyerData.name}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Email:</span>
-                    <span>{buyerData.email}</span>
+                    <span className="text-muted-foreground">Boletos:</span>
+                    <span className="font-medium">{getQuantity()}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Boletos:</span>
-                    <span>{getQuantity()}</span>
-                  </div>
-                  <div className="flex justify-between font-bold">
+                  <div className="flex justify-between text-base font-bold pt-1 border-t border-border mt-1">
                     <span>Total:</span>
                     <span className="text-primary">${getTotal().toFixed(2)}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Métodos de pago */}
-              <div className="space-y-3">
-                {/* WhatsApp */}
-                <div 
-                  className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                    paymentMethod === 'whatsapp' ? 'border-primary bg-primary/5' : 'border-border'
-                  }`}
-                  onClick={() => setPaymentMethod('whatsapp')}
+              {/* Mensaje de confirmación */}
+              <div className="bg-green-500/10 border border-green-500/30 p-3 rounded-lg">
+                <p className="text-sm text-green-700 dark:text-green-400">
+                  Tu pedido ha sido registrado. Después de confirmar el pago, recibirás tus números digitales.
+                </p>
+              </div>
+
+              {/* Botones de pago */}
+              <div className="space-y-2">
+                <Button 
+                  onClick={() => handlePayment('paypal')} 
+                  className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                  <div className="flex items-center gap-3">
-                    <Smartphone className="w-5 h-5 text-green-600" />
-                    <div>
-                      <div className="font-medium">WhatsApp</div>
-                      <div className="text-sm text-muted-foreground">Coordina tu pago por WhatsApp</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* PayPal */}
-                {(((settings?.payment_settings as any)?.paypal?.enabled) || ((settings?.payment_settings as any)?.paypal_enabled)) && (
-                  <div 
-                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                      paymentMethod === 'paypal' ? 'border-primary bg-primary/5' : 'border-border'
-                    }`}
-                    onClick={() => setPaymentMethod('paypal')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <CreditCard className="w-5 h-5 text-blue-500" />
-                      <div>
-                        <div className="font-medium">PayPal</div>
-                        <div className="text-sm text-muted-foreground">Pago seguro con tarjeta o PayPal</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Payphone */}
-                {(((settings?.payment_settings as any)?.payphone?.enabled) || ((settings?.payment_settings as any)?.payphone_enabled)) && (
-                  <div 
-                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                      paymentMethod === 'payphone' ? 'border-primary bg-primary/5' : 'border-border'
-                    }`}
-                    onClick={() => setPaymentMethod('payphone')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Smartphone className="w-5 h-5 text-purple-500" />
-                      <div>
-                        <div className="font-medium">Payphone</div>
-                        <div className="text-sm text-muted-foreground">Pago rápido y seguro</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Transferencia Bancaria */}
-                {(((settings?.payment_settings as any)?.bank_transfer?.enabled) || ((settings?.payment_settings as any)?.bank_transfer_enabled)) && (
-                  <div 
-                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                      paymentMethod === 'bank_transfer' ? 'border-primary bg-primary/5' : 'border-border'
-                    }`}
-                    onClick={() => setPaymentMethod('bank_transfer')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Building2 className="w-5 h-5 text-blue-600" />
-                      <div>
-                        <div className="font-medium">Transferencia Bancaria</div>
-                        <div className="text-sm text-muted-foreground">Pago directo a cuenta bancaria</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Hotmart Pay */}
-                {(((settings?.payment_settings as any)?.hotmart?.enabled) || ((settings?.payment_settings as any)?.hotmart_enabled)) && (
-                  <div 
-                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                      paymentMethod === 'hotmart' ? 'border-primary bg-primary/5' : 'border-border'
-                    }`}
-                    onClick={() => setPaymentMethod('hotmart')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <CreditCard className="w-5 h-5 text-orange-600" />
-                      <div>
-                        <div className="font-medium">Hotmart Pay</div>
-                        <div className="text-sm text-muted-foreground">Pago seguro con Hotmart</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Button variant="outline" onClick={() => setStep(1)} className="touch-target">
-                  Volver
+                  <CreditCard className="w-5 h-5 mr-2" />
+                  Pagar con PayPal
                 </Button>
-                {paymentMethod === 'whatsapp' && (
-                  <Button 
-                    onClick={handlePurchase} 
-                    className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
-                  >
-                    <Smartphone className="w-4 h-4 mr-2" />
-                    Contactar por WhatsApp
-                  </Button>
-                )}
-                {paymentMethod === 'paypal' && (
-                  <Button 
-                    onClick={() => navigate(`/purchase-paypal/${raffle.id}/${getQuantity()}`, { state: { buyerData } })} 
-                    className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
-                  >
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    Pagar con PayPal
-                  </Button>
-                )}
-                {paymentMethod === 'payphone' && (
-                  <Button 
-                    onClick={handlePurchase} 
-                    className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
-                  >
-                    <Smartphone className="w-4 h-4 mr-2" />
-                    Pagar con Payphone
-                  </Button>
-                )}
-                {paymentMethod === 'bank_transfer' && (
-                  <Button 
-                    onClick={handlePurchase} 
-                    className="flex-1 bg-gradient-aqua hover:shadow-aqua touch-target"
-                  >
-                    <Building2 className="w-4 h-4 mr-2" />
-                    Confirmar Transferencia
-                  </Button>
-                )}
+
+                <Button 
+                  onClick={() => handlePayment('transferencia')} 
+                  className="w-full h-12 text-base bg-gray-700 hover:bg-gray-800 text-white"
+                >
+                  <Building2 className="w-5 h-5 mr-2" />
+                  Pagar por Transferencia Bancaria
+                </Button>
+
+                <Button 
+                  onClick={() => handlePayment('payphone')} 
+                  className="w-full h-12 text-base bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Smartphone className="w-5 h-5 mr-2" />
+                  Pagar con PayPhone
+                </Button>
               </div>
+
+              <Button variant="outline" onClick={() => setStep(1)} className="w-full">
+                Volver
+              </Button>
             </CardContent>
           </Card>
         )}

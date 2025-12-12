@@ -392,6 +392,42 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          cantidad_boletos: number
+          created_at: string
+          email: string
+          estado: string
+          id: string
+          metodo_pago: string
+          nombre: string
+          telefono: string
+          total: number
+        }
+        Insert: {
+          cantidad_boletos: number
+          created_at?: string
+          email: string
+          estado?: string
+          id?: string
+          metodo_pago: string
+          nombre: string
+          telefono: string
+          total: number
+        }
+        Update: {
+          cantidad_boletos?: number
+          created_at?: string
+          email?: string
+          estado?: string
+          id?: string
+          metodo_pago?: string
+          nombre?: string
+          telefono?: string
+          total?: number
+        }
+        Relationships: []
+      }
       photo_gallery: {
         Row: {
           created_at: string
@@ -912,6 +948,33 @@ export type Database = {
           updated_at?: string
           whatsapp_datalinks?: Json | null
           whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
+      transferencias: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          monto_pagado: number
+          nombre: string
+          numero_referencia: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          monto_pagado: number
+          nombre: string
+          numero_referencia?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          monto_pagado?: number
+          nombre?: string
+          numero_referencia?: string | null
         }
         Relationships: []
       }
