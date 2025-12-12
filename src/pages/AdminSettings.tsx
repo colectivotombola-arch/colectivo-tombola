@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { siteSettingsAPI, SiteSettings } from '@/lib/supabase';
+import { toFloat, normalizeWhatsApp } from '@/lib/numberUtils';
 import { AdminLayout } from '@/components/AdminLayout';
 import { useDesignSettings } from '@/hooks/useDesignSettings';
 import { 
@@ -130,25 +131,23 @@ const AdminSettings = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      console.log('Guardando configuraciones...', {
-        paymentSettings,
-        socialMedia,
-        emailSettings
-      });
+      // Normalize WhatsApp number
+      const whatsappNumber = normalizeWhatsApp(settings.whatsapp_number || '', '+593');
 
-      // Validar campo obligatorio de WhatsApp
-      let whatsappNumber = settings.whatsapp_number || '';
-      if (whatsappNumber && !whatsappNumber.startsWith('+')) {
-        whatsappNumber = '+593' + whatsappNumber.replace(/^0/, '');
-      }
+      // Ensure numeric fields are properly converted
+      const normalizedPaymentSettings = {
+        ...paymentSettings,
+        paypal_min_amount: toFloat(paymentSettings.paypal_min_amount, 1)
+      };
 
-      // Combinar todas las configuraciones asegurando que se guarden correctamente
+      // Combine all settings
       const allSettings = {
         ...settings,
         whatsapp_number: whatsappNumber,
-        payment_settings: paymentSettings, // Guardar como objeto, no string
-        social_media: socialMedia, // Guardar como objeto, no string  
-        email_settings: emailSettings // Guardar como objeto, no string
+        price_per_number: String(toFloat(settings.price_per_number, 1.5)),
+        payment_settings: normalizedPaymentSettings,
+        social_media: socialMedia,
+        email_settings: emailSettings
       };
 
       console.log('Datos a guardar:', allSettings);
@@ -459,7 +458,7 @@ const AdminSettings = () => {
                       type="number"
                       step="0.01"
                       value={paymentSettings.paypal_min_amount}
-                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, paypal_min_amount: parseFloat(e.target.value) }))}
+                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, paypal_min_amount: e.target.value as any }))}
                       placeholder="1.00"
                     />
                   </div>

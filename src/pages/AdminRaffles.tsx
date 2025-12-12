@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,9 +8,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { rafflesAPI, rafflePackagesAPI, type Raffle, type RafflePackage } from '@/lib/supabase';
-import { ArrowLeft, Plus, Edit, Trash2, Eye, Trophy, Users, DollarSign, Package, Star } from 'lucide-react';
+import { toFloat, toInt } from '@/lib/numberUtils';
+import { 
+  ArrowLeft, Plus, Edit, Trash2, Eye, Trophy, Users, DollarSign, 
+  Package, Star, Search, CheckCircle, XCircle 
+} from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import InstantPrizesManager from '@/components/InstantPrizesManager';
 import {
@@ -22,57 +28,155 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
+// Form state interface - using strings for numeric inputs
+interface RaffleFormState {
+  title: string;
+  description: string;
+  prize_image: string;
+  total_numbers: string;
+  price_per_number: string;
+  min_tickets_per_purchase: string;
+  max_tickets_per_purchase: string;
+  status: string;
+  is_sold_out: boolean;
+}
+
+interface PackageFormState {
+  ticket_count: string;
+  price_per_ticket: string;
+  is_popular: boolean;
+  display_order: string;
+}
+
+const initialRaffleForm: RaffleFormState = {
+  title: '',
+  description: '',
+  prize_image: '',
+  total_numbers: '1000',
+  price_per_number: '1.00',
+  min_tickets_per_purchase: '10',
+  max_tickets_per_purchase: '100',
+  status: 'active',
+  is_sold_out: false
+};
+
+const initialPackageForm: PackageFormState = {
+  ticket_count: '',
+  price_per_ticket: '',
+  is_popular: false,
+  display_order: ''
+};
+
+// Skeleton component for loading states
+const RaffleCardSkeleton = () => (
+  <div className="p-3 border rounded-lg space-y-2">
+    <Skeleton className="h-4 w-3/4" />
+    <Skeleton className="h-3 w-1/2" />
+    <div className="flex gap-2">
+      <Skeleton className="h-5 w-16" />
+      <Skeleton className="h-5 w-12" />
+    </div>
+  </div>
+);
+
 const AdminRafflesEnhanced = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  // Core state
   const [raffles, setRaffles] = useState<Raffle[]>([]);
-  const [selectedRaffle, setSelectedRaffle] = useState<Raffle | null>(null);
+  const [selectedRaffleId, setSelectedRaffleId] = useState<string | null>(null);
   const [packages, setPackages] = useState<RafflePackage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingPackages, setLoadingPackages] = useState(false);
+  
+  // UI state
+  const [searchTerm, setSearchTerm] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [editRaffle, setEditRaffle] = useState<Raffle | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
   
-  const [newRaffle, setNewRaffle] = useState({
-    title: '',
-    description: '',
-    prize_image: '',
-    total_numbers: 1000,
-    price_per_number: 1.00,
-    min_tickets_per_purchase: 10,
-    max_tickets_per_purchase: 100,
-    status: 'active' as const,
-    is_sold_out: false
-  });
+  // Form state - using strings for all numeric inputs
+  const [newRaffle, setNewRaffle] = useState<RaffleFormState>(initialRaffleForm);
+  const [editForm, setEditForm] = useState<RaffleFormState | null>(null);
+  const [newPackage, setNewPackage] = useState<PackageFormState>(initialPackageForm);
 
-  const [newPackage, setNewPackage] = useState({
-    ticket_count: '',
-    price_per_ticket: '',
-    is_popular: false,
-    display_order: ''
-  });
+  // Derived state
+  const selectedRaffle = useMemo(() => 
+    raffles.find(r => r.id === selectedRaffleId) || null,
+    [raffles, selectedRaffleId]
+  );
 
+  const filteredRaffles = useMemo(() => 
+    raffles.filter(r => 
+      r.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      r.description.toLowerCase().includes(searchTerm.toLowerCase())
+    ),
+    [raffles, searchTerm]
+  );
+
+  // Load raffles on mount
   useEffect(() => {
     loadRaffles();
   }, []);
 
+  // Auto-select first raffle when raffles load and nothing is selected
+  useEffect(() => {
+    if (raffles.length > 0 && !selectedRaffleId) {
+      setSelectedRaffleId(raffles[0].id!);
+    }
+  }, [raffles, selectedRaffleId]);
+
+  // Load packages when selected raffle changes
+  useEffect(() => {
+    if (selectedRaffleId) {
+      setPackages([]); // Clear old packages first
+      loadPackages(selectedRaffleId);
+    }
+  }, [selectedRaffleId]);
+
+  // Sync edit form when selected raffle changes
   useEffect(() => {
     if (selectedRaffle) {
-      loadPackages();
+      setEditForm(raffleToForm(selectedRaffle));
+    } else {
+      setEditForm(null);
     }
   }, [selectedRaffle]);
 
+  // Convert Raffle to form state (numbers to strings)
+  const raffleToForm = (raffle: Raffle): RaffleFormState => ({
+    title: raffle.title || '',
+    description: raffle.description || '',
+    prize_image: raffle.prize_image || '',
+    total_numbers: String(raffle.total_numbers ?? 1000),
+    price_per_number: String(raffle.price_per_number ?? 1),
+    min_tickets_per_purchase: String(raffle.min_tickets_per_purchase ?? 1),
+    max_tickets_per_purchase: String(raffle.max_tickets_per_purchase ?? 100),
+    status: raffle.status || 'active',
+    is_sold_out: raffle.is_sold_out || false
+  });
+
+  // Convert form state to API payload (strings to numbers)
+  const formToRafflePayload = (form: RaffleFormState) => ({
+    title: form.title,
+    description: form.description,
+    prize_image: form.prize_image || null,
+    total_numbers: toInt(form.total_numbers, 1000),
+    price_per_number: toFloat(form.price_per_number, 1),
+    min_tickets_per_purchase: toInt(form.min_tickets_per_purchase, 1),
+    max_tickets_per_purchase: toInt(form.max_tickets_per_purchase, 100),
+    status: form.status as 'active' | 'paused' | 'completed' | 'cancelled',
+    is_sold_out: form.is_sold_out
+  });
+
   const loadRaffles = async () => {
     try {
+      setLoading(true);
       const data = await rafflesAPI.getAll();
       setRaffles(data);
-      if (data.length > 0 && !selectedRaffle) {
-        setSelectedRaffle(data[0]);
-      }
     } catch (error) {
       console.error('Error loading raffles:', error);
       toast({
@@ -85,11 +189,10 @@ const AdminRafflesEnhanced = () => {
     }
   };
 
-  const loadPackages = async () => {
-    if (!selectedRaffle?.id) return;
-    
+  const loadPackages = async (raffleId: string) => {
+    setLoadingPackages(true);
     try {
-      const data = await rafflePackagesAPI.getByRaffle(selectedRaffle.id);
+      const data = await rafflePackagesAPI.getByRaffle(raffleId);
       setPackages(data);
     } catch (error) {
       console.error('Error loading packages:', error);
@@ -98,6 +201,8 @@ const AdminRafflesEnhanced = () => {
         description: "No se pudieron cargar los paquetes",
         variant: "destructive",
       });
+    } finally {
+      setLoadingPackages(false);
     }
   };
 
@@ -113,28 +218,21 @@ const AdminRafflesEnhanced = () => {
 
     setCreating(true);
     try {
-      const result = await rafflesAPI.create(newRaffle);
+      const payload = formToRafflePayload(newRaffle);
+      const result = await rafflesAPI.create(payload);
       
       if (result) {
         toast({
           title: "¡Rifa creada!",
-          description: `Se creó la rifa "${result.title}" con ${result.total_numbers} números`,
+          description: `Se creó la rifa "${result.title}"`,
         });
 
         setIsCreateDialogOpen(false);
-        setNewRaffle({
-          title: '',
-          description: '',
-          prize_image: '',
-          total_numbers: 1000,
-          price_per_number: 1.00,
-          min_tickets_per_purchase: 10,
-          max_tickets_per_purchase: 100,
-          status: 'active',
-          is_sold_out: false
-        });
+        setNewRaffle(initialRaffleForm);
         
-        loadRaffles();
+        // Reload and select the new raffle
+        await loadRaffles();
+        setSelectedRaffleId(result.id!);
       }
     } catch (error) {
       console.error('Error creating raffle:', error);
@@ -149,7 +247,9 @@ const AdminRafflesEnhanced = () => {
   };
 
   const updateRaffle = async () => {
-    if (!editRaffle?.id || !editRaffle.title || !editRaffle.description) {
+    if (!editForm || !selectedRaffleId) return;
+
+    if (!editForm.title || !editForm.description) {
       toast({
         title: "Error",
         description: "Por favor completa todos los campos requeridos",
@@ -160,44 +260,23 @@ const AdminRafflesEnhanced = () => {
 
     setUpdating(true);
     try {
-      // Ensure all numeric fields are properly formatted
-      const updatedRaffle = {
-        ...editRaffle,
-        price_per_number: parseFloat(editRaffle.price_per_number?.toString() || '1.00'),
-        total_numbers: parseInt(editRaffle.total_numbers?.toString() || '1000'),
-        min_tickets_per_purchase: parseInt(editRaffle.min_tickets_per_purchase?.toString() || '1'),
-        max_tickets_per_purchase: parseInt(editRaffle.max_tickets_per_purchase?.toString() || '10')
-      };
-      
-      console.log('Updating raffle with data:', updatedRaffle);
-      
-      const result = await rafflesAPI.update(updatedRaffle.id, updatedRaffle);
+      const payload = formToRafflePayload(editForm);
+      const result = await rafflesAPI.update(selectedRaffleId, payload);
       
       if (result) {
         toast({
-          title: "¡Rifa actualizada correctamente!",
-          description: `Rifa "${result.title}" actualizada. Nuevo precio: $${updatedRaffle.price_per_number}`,
+          title: "¡Rifa actualizada!",
+          description: `Rifa "${result.title}" actualizada correctamente`,
         });
 
-        setIsEditDialogOpen(false);
-        setEditRaffle(null);
-        
-        // Actualizar el estado local inmediatamente
-        setRaffles(prevRaffles => 
-          prevRaffles.map(r => r.id === result.id ? result : r)
-        );
-        setSelectedRaffle(result);
-        
-        // Recargar para confirmar cambios
-        await loadRaffles();
-      } else {
-        throw new Error('No se recibió respuesta de la actualización');
+        // Update local state immediately
+        setRaffles(prev => prev.map(r => r.id === result.id ? result : r));
       }
     } catch (error) {
       console.error('Error updating raffle:', error);
       toast({
         title: "Error al actualizar",
-        description: "No se pudo guardar el precio de la rifa. Verifique su conexión e intente nuevamente.",
+        description: "No se pudo guardar la rifa",
         variant: "destructive"
       });
     } finally {
@@ -205,16 +284,8 @@ const AdminRafflesEnhanced = () => {
     }
   };
 
-  const openEditDialog = (raffle: Raffle) => {
-    setEditRaffle({ ...raffle });
-    setSelectedRaffle(raffle);
-    setIsEditDialogOpen(true);
-  };
-
   const deleteRaffle = async (id: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta rifa?')) {
-      return;
-    }
+    if (!confirm('¿Estás seguro de que quieres eliminar esta rifa?')) return;
 
     try {
       const success = await rafflesAPI.delete(id);
@@ -223,7 +294,15 @@ const AdminRafflesEnhanced = () => {
           title: "Rifa eliminada",
           description: "La rifa se eliminó correctamente",
         });
-        loadRaffles();
+        
+        // Update local state
+        const newRaffles = raffles.filter(r => r.id !== id);
+        setRaffles(newRaffles);
+        
+        // Select next raffle or clear selection
+        if (selectedRaffleId === id) {
+          setSelectedRaffleId(newRaffles.length > 0 ? newRaffles[0].id! : null);
+        }
       }
     } catch (error) {
       console.error('Error deleting raffle:', error);
@@ -235,8 +314,38 @@ const AdminRafflesEnhanced = () => {
     }
   };
 
+  const toggleSoldOut = async (raffle: Raffle) => {
+    const newStatus = !raffle.is_sold_out;
+    
+    // Optimistic update
+    setRaffles(prev => prev.map(r => 
+      r.id === raffle.id ? { ...r, is_sold_out: newStatus } : r
+    ));
+
+    try {
+      await rafflesAPI.update(raffle.id!, { is_sold_out: newStatus });
+      
+      toast({
+        title: "Estado actualizado",
+        description: `La rifa ahora está ${newStatus ? 'AGOTADA' : 'DISPONIBLE'}`,
+      });
+    } catch (error) {
+      // Revert on error
+      setRaffles(prev => prev.map(r => 
+        r.id === raffle.id ? { ...r, is_sold_out: !newStatus } : r
+      ));
+      
+      console.error('Error updating sold out status:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el estado",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleCreatePackage = async () => {
-    if (!selectedRaffle?.id || !newPackage.ticket_count || !newPackage.price_per_ticket) {
+    if (!selectedRaffleId || !newPackage.ticket_count || !newPackage.price_per_ticket) {
       toast({
         title: "Error",
         description: "Complete todos los campos obligatorios",
@@ -247,11 +356,11 @@ const AdminRafflesEnhanced = () => {
 
     try {
       const packageData = {
-        raffle_id: selectedRaffle.id,
-        ticket_count: parseInt(newPackage.ticket_count),
-        price_per_ticket: parseFloat(newPackage.price_per_ticket),
+        raffle_id: selectedRaffleId,
+        ticket_count: toInt(newPackage.ticket_count, 1),
+        price_per_ticket: toFloat(newPackage.price_per_ticket, 1),
         is_popular: newPackage.is_popular,
-        display_order: parseInt(newPackage.display_order) || packages.length + 1
+        display_order: toInt(newPackage.display_order, packages.length + 1)
       };
 
       await rafflePackagesAPI.create(packageData);
@@ -261,14 +370,8 @@ const AdminRafflesEnhanced = () => {
         description: "Paquete creado correctamente",
       });
       
-      setNewPackage({
-        ticket_count: '',
-        price_per_ticket: '',
-        is_popular: false,
-        display_order: ''
-      });
-      
-      loadPackages();
+      setNewPackage(initialPackageForm);
+      loadPackages(selectedRaffleId);
     } catch (error) {
       console.error('Error creating package:', error);
       toast({
@@ -281,7 +384,7 @@ const AdminRafflesEnhanced = () => {
 
   const getStatusBadge = (raffle: Raffle) => {
     if (raffle.is_sold_out) {
-      return <Badge variant="destructive">AGOTADO</Badge>;
+      return <Badge variant="destructive" className="text-xs">AGOTADO</Badge>;
     }
     
     const statusMap = {
@@ -292,36 +395,41 @@ const AdminRafflesEnhanced = () => {
     };
     
     const statusInfo = statusMap[raffle.status as keyof typeof statusMap] || statusMap.active;
-    return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>;
+    return <Badge variant={statusInfo.variant} className="text-xs">{statusInfo.label}</Badge>;
   };
 
-  const toggleSoldOut = async (raffle: Raffle) => {
-    try {
-      const updatedRaffle = { ...raffle, is_sold_out: !raffle.is_sold_out };
-      await rafflesAPI.update(raffle.id!, updatedRaffle);
-      
-      toast({
-        title: "Estado actualizado",
-        description: `La rifa ahora está ${updatedRaffle.is_sold_out ? 'AGOTADA' : 'DISPONIBLE'}`,
-      });
-      
-      loadRaffles();
-    } catch (error) {
-      console.error('Error updating sold out status:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el estado",
-        variant: "destructive"
-      });
-    }
-  };
-
+  // Loading skeleton
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Cargando rifas...</p>
+      <div className="min-h-screen bg-background">
+        <header className="bg-card border-b border-border">
+          <div className="mobile-container py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-9 w-20" />
+                <div>
+                  <Skeleton className="h-6 w-48" />
+                  <Skeleton className="h-4 w-32 mt-1" />
+                </div>
+              </div>
+              <Skeleton className="h-9 w-28" />
+            </div>
+          </div>
+        </header>
+        <div className="mobile-container py-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div className="lg:col-span-4 space-y-3">
+              {[1, 2, 3].map(i => <RaffleCardSkeleton key={i} />)}
+            </div>
+            <div className="lg:col-span-8">
+              <Card>
+                <CardContent className="p-6 space-y-4">
+                  <Skeleton className="h-8 w-1/2" />
+                  <Skeleton className="h-32 w-full" />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -330,470 +438,478 @@ const AdminRafflesEnhanced = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-card border-b border-border">
-        <div className="mobile-container py-4">
+      <header className="bg-card border-b border-border sticky top-0 z-10">
+        <div className="mobile-container py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-3">
               <Button 
                 variant="outline" 
+                size="sm"
                 onClick={() => navigate('/admin')}
-                className="flex items-center space-x-2"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>Volver</span>
               </Button>
               <div>
-                <h1 className="responsive-title text-foreground">Gestión Completa de Rifas</h1>
-                <p className="text-muted-foreground mobile-text">Rifas, paquetes y premios instantáneos</p>
+                <h1 className="text-lg font-bold text-foreground">Gestión de Rifas</h1>
+                <p className="text-xs text-muted-foreground">Rifas, paquetes y premios</p>
               </div>
             </div>
             
-            <div className="flex items-center space-x-4">
-              <span className="text-muted-foreground mobile-text">{user?.email}</span>
-              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-gradient-aqua hover:shadow-aqua">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Nueva Rifa
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>Crear Nueva Rifa</DialogTitle>
-                    <DialogDescription>
-                      Completa la información para crear una nueva rifa
-                    </DialogDescription>
-                  </DialogHeader>
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="bg-gradient-aqua hover:shadow-aqua">
+                  <Plus className="w-4 h-4 mr-1" />
+                  Nueva
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>Crear Nueva Rifa</DialogTitle>
+                </DialogHeader>
+                
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="title">Título *</Label>
+                    <Input
+                      id="title"
+                      value={newRaffle.title}
+                      onChange={(e) => setNewRaffle(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="Ej: Gran Rifa Toyota 2024"
+                    />
+                  </div>
                   
-                  <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="description">Descripción *</Label>
+                    <Textarea
+                      id="description"
+                      value={newRaffle.description}
+                      onChange={(e) => setNewRaffle(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Describe los premios..."
+                      rows={3}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="prize_image">URL Imagen</Label>
+                    <Input
+                      id="prize_image"
+                      value={newRaffle.prize_image}
+                      onChange={(e) => setNewRaffle(prev => ({ ...prev, prize_image: e.target.value }))}
+                      placeholder="https://..."
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label htmlFor="title">Título de la Rifa *</Label>
+                      <Label htmlFor="total_numbers">Total Números</Label>
                       <Input
-                        id="title"
-                        value={newRaffle.title}
-                        onChange={(e) => setNewRaffle(prev => ({ ...prev, title: e.target.value }))}
-                        placeholder="Ej: Gran Rifa Toyota Fortuner 2024"
+                        id="total_numbers"
+                        type="number"
+                        value={newRaffle.total_numbers}
+                        onChange={(e) => setNewRaffle(prev => ({ ...prev, total_numbers: e.target.value }))}
+                        min="1"
                       />
                     </div>
-                    
                     <div>
-                      <Label htmlFor="description">Descripción *</Label>
-                      <Textarea
-                        id="description"
-                        value={newRaffle.description}
-                        onChange={(e) => setNewRaffle(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="Describe los premios y detalles de la rifa..."
-                        rows={4}
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="prize_image">URL de la Imagen del Premio</Label>
+                      <Label htmlFor="price_per_number">Precio ($)</Label>
                       <Input
-                        id="prize_image"
-                        value={newRaffle.prize_image}
-                        onChange={(e) => setNewRaffle(prev => ({ ...prev, prize_image: e.target.value }))}
-                        placeholder="Ej: https://ejemplo.com/toyota-fortuner.jpg"
+                        id="price_per_number"
+                        type="number"
+                        step="0.01"
+                        value={newRaffle.price_per_number}
+                        onChange={(e) => setNewRaffle(prev => ({ ...prev, price_per_number: e.target.value }))}
+                        min="0.01"
                       />
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="total_numbers">Total de Números</Label>
-                        <Input
-                          id="total_numbers"
-                          type="number"
-                          value={newRaffle.total_numbers}
-                          onChange={(e) => setNewRaffle(prev => ({ ...prev, total_numbers: parseInt(e.target.value) || 1000 }))}
-                          min="1"
-                          max="10000"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="price_per_number">Precio por Número ($)</Label>
-                        <Input
-                          id="price_per_number"
-                          type="number"
-                          step="0.01"
-                          value={newRaffle.price_per_number}
-                          onChange={(e) => setNewRaffle(prev => ({ ...prev, price_per_number: parseFloat(e.target.value) || 1.00 }))}
-                          min="0.01"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="is_sold_out"
-                        checked={newRaffle.is_sold_out}
-                        onCheckedChange={(checked) => setNewRaffle(prev => ({ ...prev, is_sold_out: checked }))}
-                      />
-                      <Label htmlFor="is_sold_out">Marcar como AGOTADO</Label>
-                    </div>
-                    
-                    <div className="flex justify-end space-x-2 pt-4">
-                      <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                        Cancelar
-                      </Button>
-                      <Button 
-                        onClick={createRaffle}
-                        className="bg-gradient-aqua hover:shadow-aqua"
-                        disabled={creating || !newRaffle.title || !newRaffle.description}
-                      >
-                        {creating ? 'Creando...' : 'Crear Rifa'}
-                      </Button>
                     </div>
                   </div>
-                </DialogContent>
-              </Dialog>
-            </div>
+                  
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="outline" size="sm" onClick={() => setIsCreateDialogOpen(false)}>
+                      Cancelar
+                    </Button>
+                    <Button 
+                      size="sm"
+                      onClick={createRaffle}
+                      className="bg-gradient-aqua"
+                      disabled={creating || !newRaffle.title || !newRaffle.description}
+                    >
+                      {creating ? 'Creando...' : 'Crear'}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </header>
 
-      <div className="mobile-container py-8">
-        {/* Management Buttons */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      {/* Quick Actions */}
+      <div className="mobile-container py-3">
+        <div className="flex gap-2 overflow-x-auto pb-2">
           <Link to="/admin/packages">
-            <Button className="bg-gradient-to-r from-blue-500 to-blue-600 hover:shadow-lg h-16 w-full">
-              <Package className="w-6 h-6 mr-2" />
-              Gestionar Paquetes
+            <Button variant="outline" size="sm">
+              <Package className="w-4 h-4 mr-1" />
+              Paquetes
             </Button>
           </Link>
           <Link to="/admin/instant-prizes">
-            <Button className="bg-gradient-to-r from-purple-500 to-purple-600 hover:shadow-lg h-16 w-full">
-              <Trophy className="w-6 h-6 mr-2" />
-              Premios Instantáneos
+            <Button variant="outline" size="sm">
+              <Trophy className="w-4 h-4 mr-1" />
+              Premios
             </Button>
           </Link>
           <Link to="/admin/sold-numbers">
-            <Button className="bg-gradient-to-r from-green-500 to-green-600 hover:shadow-lg h-16 w-full">
-              <Users className="w-6 h-6 mr-2" />
-              Ver Números Vendidos
+            <Button variant="outline" size="sm">
+              <Users className="w-4 h-4 mr-1" />
+              Vendidos
             </Button>
           </Link>
         </div>
+      </div>
 
+      <div className="mobile-container pb-6">
         {raffles.length === 0 ? (
           <div className="text-center py-12">
-            <Trophy className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="mobile-heading text-foreground mb-2">No hay rifas creadas</h3>
-            <p className="text-muted-foreground mb-4 mobile-text">Crea tu primera rifa para comenzar a vender números</p>
+            <Trophy className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+            <h3 className="font-semibold text-foreground mb-1">No hay rifas</h3>
+            <p className="text-sm text-muted-foreground mb-3">Crea tu primera rifa</p>
             <Button 
+              size="sm"
               onClick={() => setIsCreateDialogOpen(true)}
-              className="bg-gradient-aqua hover:shadow-aqua"
+              className="bg-gradient-aqua"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Crear Primera Rifa
+              <Plus className="w-4 h-4 mr-1" />
+              Crear Rifa
             </Button>
           </div>
         ) : (
-          <div className="mobile-grid">
-            {raffles.map((raffle) => (
-              <Card key={raffle.id} className="overflow-hidden">
-                {raffle.prize_image && (
-                  <div className="aspect-video bg-muted">
-                    <img 
-                      src={raffle.prize_image} 
-                      alt={raffle.title}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = '/placeholder.svg';
-                      }}
-                    />
-                  </div>
-                )}
-                
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="mobile-heading">{raffle.title}</CardTitle>
-                      <p className="mobile-body text-muted-foreground mt-1 line-clamp-2">
-                        {raffle.description}
-                      </p>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      {getStatusBadge(raffle)}
-                      <Button
-                        size="sm"
-                        variant={raffle.is_sold_out ? "destructive" : "outline"}
-                        onClick={() => toggleSoldOut(raffle)}
-                        className="mobile-body"
-                      >
-                        {raffle.is_sold_out ? 'Activar' : 'Agotar'}
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between mobile-body">
-                      <span className="flex items-center text-muted-foreground">
-                        <Users className="w-4 h-4 mr-1" />
-                        Números
-                      </span>
-                      <span className="font-medium">{raffle.total_numbers.toLocaleString()}</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between mobile-body">
-                      <span className="flex items-center text-muted-foreground">
-                        <DollarSign className="w-4 h-4 mr-1" />
-                        Precio
-                      </span>
-                      <span className="font-medium">${raffle.price_per_number}</span>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2 pt-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex-1 mobile-body"
-                        onClick={() => navigate(`/comprar?raffle=${raffle.id}`)}
-                      >
-                        <Eye className="w-4 h-4 mr-1" />
-                        Ver
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex-1 mobile-body"
-                        onClick={() => openEditDialog(raffle)}
-                      >
-                        <Edit className="w-4 h-4 mr-1" />
-                        Editar
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => deleteRaffle(raffle.id!)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            {/* Left Column: Raffle List */}
+            <div className="lg:col-span-4 space-y-3">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar rifa..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8 h-9"
+                />
+              </div>
 
-      {/* Enhanced Edit Dialog with Tabs */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Gestión Completa de Rifa</DialogTitle>
-            <DialogDescription>
-              Edita rifa, gestiona paquetes y premios instantáneos
-            </DialogDescription>
-          </DialogHeader>
-          
-          {editRaffle && (
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="details">Detalles</TabsTrigger>
-                <TabsTrigger value="packages">Paquetes</TabsTrigger>
-                <TabsTrigger value="instant-prizes">Premios Instantáneos</TabsTrigger>
-              </TabsList>
+              {/* Raffle Cards */}
+              <ScrollArea className="h-[calc(100vh-280px)] lg:h-[calc(100vh-220px)]">
+                <div className="space-y-2 pr-2">
+                  {filteredRaffles.map((raffle) => (
+                    <div
+                      key={raffle.id}
+                      onClick={() => setSelectedRaffleId(raffle.id!)}
+                      className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                        selectedRaffleId === raffle.id 
+                          ? 'border-primary bg-primary/5 ring-1 ring-primary' 
+                          : 'border-border hover:border-muted-foreground/50'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-sm truncate">{raffle.title}</h3>
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">
+                            {raffle.total_numbers.toLocaleString()} nums · ${raffle.price_per_number}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          {getStatusBadge(raffle)}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 px-2 text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleSoldOut(raffle);
+                            }}
+                          >
+                            {raffle.is_sold_out ? (
+                              <><CheckCircle className="w-3 h-3 mr-1" />Activar</>
+                            ) : (
+                              <><XCircle className="w-3 h-3 mr-1" />Agotar</>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 mt-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-7 text-xs flex-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/comprar?raffle=${raffle.id}`);
+                          }}
+                        >
+                          <Eye className="w-3 h-3 mr-1" />
+                          Ver
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-7 w-7 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteRaffle(raffle.id!);
+                          }}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
 
-              <TabsContent value="details" className="space-y-4">
-                <div>
-                  <Label htmlFor="edit_title">Título de la Rifa *</Label>
-                  <Input
-                    id="edit_title"
-                    value={editRaffle.title}
-                    onChange={(e) => setEditRaffle(prev => prev ? ({ ...prev, title: e.target.value }) : null)}
-                    placeholder="Ej: Gran Rifa Toyota Fortuner 2024"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="edit_description">Descripción *</Label>
-                  <Textarea
-                    id="edit_description"
-                    value={editRaffle.description}
-                    onChange={(e) => setEditRaffle(prev => prev ? ({ ...prev, description: e.target.value }) : null)}
-                    placeholder="Describe los premios y detalles de la rifa..."
-                    rows={4}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="edit_prize_image">URL de la Imagen del Premio</Label>
-                  <Input
-                    id="edit_prize_image"
-                    value={editRaffle.prize_image || ''}
-                    onChange={(e) => setEditRaffle(prev => prev ? ({ ...prev, prize_image: e.target.value }) : null)}
-                    placeholder="Ej: https://ejemplo.com/toyota-fortuner.jpg"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="edit_total_numbers">Total de Números</Label>
-                    <Input
-                      id="edit_total_numbers"
-                      type="number"
-                      value={editRaffle.total_numbers}
-                      onChange={(e) => setEditRaffle(prev => prev ? ({ ...prev, total_numbers: parseInt(e.target.value) || 1000 }) : null)}
-                      min="1"
-                      max="100000"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="edit_price_per_number">Precio por Número ($)</Label>
-                    <Input
-                      id="edit_price_per_number"
-                      type="number"
-                      step="0.01"
-                      value={editRaffle.price_per_number}
-                      onChange={(e) => setEditRaffle(prev => prev ? ({ ...prev, price_per_number: parseFloat(e.target.value) || 1.00 }) : null)}
-                      min="0.01"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="edit_is_sold_out"
-                    checked={editRaffle.is_sold_out || false}
-                    onCheckedChange={(checked) => setEditRaffle(prev => prev ? ({ ...prev, is_sold_out: checked }) : null)}
-                  />
-                  <Label htmlFor="edit_is_sold_out">Marcar como AGOTADO</Label>
-                </div>
-                
-                <div className="flex justify-end space-x-2 pt-4">
-                  <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                    Cancelar
-                  </Button>
-                  <Button 
-                    onClick={updateRaffle}
-                    className="bg-gradient-aqua hover:shadow-aqua"
-                    disabled={updating || !editRaffle.title || !editRaffle.description}
-                  >
-                    {updating ? 'Actualizando...' : 'Actualizar Rifa'}
-                  </Button>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="packages" className="space-y-4">
-                {/* Create Package Section */}
+            {/* Right Column: Editor Panel */}
+            <div className="lg:col-span-8">
+              {selectedRaffle && editForm ? (
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Plus className="w-5 h-5" />
-                      Crear Nuevo Paquete
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <div>
-                        <Label htmlFor="package_ticket_count">Cantidad de Boletos</Label>
-                        <Input
-                          id="package_ticket_count"
-                          type="number"
-                          value={newPackage.ticket_count}
-                          onChange={(e) => setNewPackage(prev => ({ ...prev, ticket_count: e.target.value }))}
-                          placeholder="10"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="package_price_per_ticket">Precio por Boleto</Label>
-                        <Input
-                          id="package_price_per_ticket"
-                          type="number"
-                          step="0.01"
-                          value={newPackage.price_per_ticket}
-                          onChange={(e) => setNewPackage(prev => ({ ...prev, price_per_ticket: e.target.value }))}
-                          placeholder="1.00"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="package_display_order">Orden de Mostrar</Label>
-                        <Input
-                          id="package_display_order"
-                          type="number"
-                          value={newPackage.display_order}
-                          onChange={(e) => setNewPackage(prev => ({ ...prev, display_order: e.target.value }))}
-                          placeholder="1"
-                        />
-                      </div>
-                      <div className="flex items-center space-x-2 pt-6">
-                        <Switch
-                          id="package_is_popular"
-                          checked={newPackage.is_popular}
-                          onCheckedChange={(checked) => setNewPackage(prev => ({ ...prev, is_popular: checked }))}
-                        />
-                        <Label htmlFor="package_is_popular">Más Popular</Label>
-                      </div>
-                    </div>
-                    <Button onClick={handleCreatePackage} className="bg-gradient-aqua hover:shadow-aqua">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Crear Paquete
-                    </Button>
-                  </CardContent>
-                </Card>
+                  <CardContent className="p-4">
+                    <Tabs value={activeTab} onValueChange={setActiveTab}>
+                      <TabsList className="grid w-full grid-cols-3 mb-4">
+                        <TabsTrigger value="details" className="text-xs">Detalles</TabsTrigger>
+                        <TabsTrigger value="packages" className="text-xs">Paquetes</TabsTrigger>
+                        <TabsTrigger value="instant-prizes" className="text-xs">Premios</TabsTrigger>
+                      </TabsList>
 
-                {/* Existing Packages */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Package className="w-5 h-5" />
-                      Paquetes Existentes ({packages.length})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {packages.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        No hay paquetes configurados para esta rifa
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {packages.map((pkg) => (
-                          <div key={pkg.id} className="border rounded-lg p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-4">
-                                <div>
-                                  <div className="text-lg font-bold">{pkg.ticket_count} boletos</div>
-                                  <div className="text-sm text-muted-foreground">
-                                    ${pkg.price_per_ticket} c/u = ${(pkg.ticket_count * pkg.price_per_ticket).toFixed(2)}
-                                  </div>
-                                </div>
-                                {pkg.is_popular && (
-                                  <Badge className="bg-primary">
-                                    <Star className="w-3 h-3 mr-1" />
-                                    Más Popular
-                                  </Badge>
-                                )}
-                                <div className="text-sm text-muted-foreground">
-                                  Orden: {pkg.display_order}
+                      <TabsContent value="details" className="space-y-3 mt-0">
+                        <div>
+                          <Label htmlFor="edit_title" className="text-xs">Título *</Label>
+                          <Input
+                            id="edit_title"
+                            value={editForm.title}
+                            onChange={(e) => setEditForm(prev => prev ? ({ ...prev, title: e.target.value }) : null)}
+                            className="h-9"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="edit_description" className="text-xs">Descripción *</Label>
+                          <Textarea
+                            id="edit_description"
+                            value={editForm.description}
+                            onChange={(e) => setEditForm(prev => prev ? ({ ...prev, description: e.target.value }) : null)}
+                            rows={3}
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="edit_prize_image" className="text-xs">URL Imagen</Label>
+                          <Input
+                            id="edit_prize_image"
+                            value={editForm.prize_image}
+                            onChange={(e) => setEditForm(prev => prev ? ({ ...prev, prize_image: e.target.value }) : null)}
+                            className="h-9"
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label htmlFor="edit_total_numbers" className="text-xs">Total Números</Label>
+                            <Input
+                              id="edit_total_numbers"
+                              type="number"
+                              value={editForm.total_numbers}
+                              onChange={(e) => setEditForm(prev => prev ? ({ ...prev, total_numbers: e.target.value }) : null)}
+                              className="h-9"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="edit_price_per_number" className="text-xs">Precio ($)</Label>
+                            <Input
+                              id="edit_price_per_number"
+                              type="number"
+                              step="0.01"
+                              value={editForm.price_per_number}
+                              onChange={(e) => setEditForm(prev => prev ? ({ ...prev, price_per_number: e.target.value }) : null)}
+                              className="h-9"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label htmlFor="edit_min_tickets" className="text-xs">Mín. Boletos</Label>
+                            <Input
+                              id="edit_min_tickets"
+                              type="number"
+                              value={editForm.min_tickets_per_purchase}
+                              onChange={(e) => setEditForm(prev => prev ? ({ ...prev, min_tickets_per_purchase: e.target.value }) : null)}
+                              className="h-9"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="edit_max_tickets" className="text-xs">Máx. Boletos</Label>
+                            <Input
+                              id="edit_max_tickets"
+                              type="number"
+                              value={editForm.max_tickets_per_purchase}
+                              onChange={(e) => setEditForm(prev => prev ? ({ ...prev, max_tickets_per_purchase: e.target.value }) : null)}
+                              className="h-9"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            id="edit_is_sold_out"
+                            checked={editForm.is_sold_out}
+                            onCheckedChange={(checked) => setEditForm(prev => prev ? ({ ...prev, is_sold_out: checked }) : null)}
+                          />
+                          <Label htmlFor="edit_is_sold_out" className="text-xs">Marcar como AGOTADO</Label>
+                        </div>
+                        
+                        <div className="flex justify-end pt-2">
+                          <Button 
+                            size="sm"
+                            onClick={updateRaffle}
+                            className="bg-gradient-aqua"
+                            disabled={updating || !editForm.title || !editForm.description}
+                          >
+                            {updating ? 'Guardando...' : 'Guardar Cambios'}
+                          </Button>
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="packages" className="space-y-4 mt-0">
+                        {/* Create Package */}
+                        <Card>
+                          <CardHeader className="py-3 px-4">
+                            <CardTitle className="text-sm flex items-center gap-2">
+                              <Plus className="w-4 h-4" />
+                              Nuevo Paquete
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="px-4 pb-4 pt-0 space-y-3">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                              <div>
+                                <Label className="text-xs">Cantidad</Label>
+                                <Input
+                                  type="number"
+                                  value={newPackage.ticket_count}
+                                  onChange={(e) => setNewPackage(prev => ({ ...prev, ticket_count: e.target.value }))}
+                                  placeholder="10"
+                                  className="h-8"
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-xs">Precio/Boleto</Label>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  value={newPackage.price_per_ticket}
+                                  onChange={(e) => setNewPackage(prev => ({ ...prev, price_per_ticket: e.target.value }))}
+                                  placeholder="1.00"
+                                  className="h-8"
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-xs">Orden</Label>
+                                <Input
+                                  type="number"
+                                  value={newPackage.display_order}
+                                  onChange={(e) => setNewPackage(prev => ({ ...prev, display_order: e.target.value }))}
+                                  placeholder="1"
+                                  className="h-8"
+                                />
+                              </div>
+                              <div className="flex items-end">
+                                <div className="flex items-center gap-1">
+                                  <Switch
+                                    id="pkg_popular"
+                                    checked={newPackage.is_popular}
+                                    onCheckedChange={(checked) => setNewPackage(prev => ({ ...prev, is_popular: checked }))}
+                                  />
+                                  <Label htmlFor="pkg_popular" className="text-xs">Popular</Label>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                            <Button size="sm" onClick={handleCreatePackage} className="bg-gradient-aqua">
+                              <Plus className="w-3 h-3 mr-1" />
+                              Crear
+                            </Button>
+                          </CardContent>
+                        </Card>
+
+                        {/* Existing Packages */}
+                        <Card>
+                          <CardHeader className="py-3 px-4">
+                            <CardTitle className="text-sm flex items-center gap-2">
+                              <Package className="w-4 h-4" />
+                              Paquetes ({packages.length})
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="px-4 pb-4 pt-0">
+                            {loadingPackages ? (
+                              <div className="space-y-2">
+                                <Skeleton className="h-12 w-full" />
+                                <Skeleton className="h-12 w-full" />
+                              </div>
+                            ) : packages.length === 0 ? (
+                              <p className="text-sm text-muted-foreground text-center py-4">
+                                No hay paquetes
+                              </p>
+                            ) : (
+                              <div className="space-y-2">
+                                {packages.map((pkg) => (
+                                  <div key={pkg.id} className="border rounded p-2 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <div>
+                                        <span className="font-medium text-sm">{pkg.ticket_count} boletos</span>
+                                        <span className="text-xs text-muted-foreground ml-2">
+                                          ${pkg.price_per_ticket}/u = {(pkg.ticket_count * pkg.price_per_ticket).toFixed(2)}
+                                        </span>
+                                      </div>
+                                      {pkg.is_popular && (
+                                        <Badge variant="secondary" className="text-xs">
+                                          <Star className="w-3 h-3 mr-1" />
+                                          Popular
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <span className="text-xs text-muted-foreground">#{pkg.display_order}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </TabsContent>
+
+                      <TabsContent value="instant-prizes" className="mt-0">
+                        <InstantPrizesManager 
+                          raffle={selectedRaffle} 
+                          onUpdate={() => {
+                            toast({
+                              title: "¡Éxito!",
+                              description: "Premios actualizados",
+                            });
+                          }} 
+                        />
+                      </TabsContent>
+                    </Tabs>
                   </CardContent>
                 </Card>
-              </TabsContent>
-
-              <TabsContent value="instant-prizes">
-                <InstantPrizesManager 
-                  raffle={editRaffle} 
-                  onUpdate={() => {
-                    toast({
-                      title: "¡Éxito!",
-                      description: "Premios instantáneos actualizados",
-                    });
-                  }} 
-                />
-              </TabsContent>
-            </Tabs>
-          )}
-        </DialogContent>
-      </Dialog>
+              ) : (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <Trophy className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">Selecciona una rifa para editar</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
