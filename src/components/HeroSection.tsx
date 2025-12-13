@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import heroBackground from '@/assets/logo-background-1.png';
-import toyotaFortuner from "/public/lovable-uploads/a070bca1-29cb-463b-bee8-960692557b67.png";
-import chevroletOnix from "/public/lovable-uploads/40dd58e7-1558-43d2-84a8-c2a6176de594.png";
 import { Link } from 'react-router-dom';
 import { supabase, rafflesAPI, type SiteSettings, type Raffle } from '@/lib/supabase';
 
@@ -53,179 +50,190 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
     }
   };
 
-  // Solo mostrar contenido si hay datos de la base de datos o si hay rifa activa
-  const displaysToShow = prizeDisplays.length > 0 ? prizeDisplays : (activeRaffle ? [{
+  const mainPrize = prizeDisplays[0] || (activeRaffle ? {
     id: 'raffle-main',
     title: activeRaffle.title || 'Rifa Activa',
     subtitle: activeRaffle.description || '',
     image_url: activeRaffle.prize_image || '/placeholder.svg',
     position: 1
-  }] : []);
+  } : null);
+
+  const pricePerNumber = settings?.price_per_number ?? activeRaffle?.price_per_number ?? '1.50';
 
   return (
-    <section className="relative hero-background mobile-section">
-      {/* Background Image */}
-      <div className="absolute inset-0">
-        <img
-          src={heroBackground}
-          alt="Hero background"
-          className="w-full h-full object-cover opacity-30"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-transparent to-background/80"></div>
+    <section className="relative min-h-[70vh] sm:min-h-[75vh] lg:min-h-[80vh] flex items-center bg-gradient-to-br from-background via-card to-background overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,hsl(var(--primary)/0.3),transparent_70%)]" />
       </div>
       
-      <div className="mobile-container text-center relative z-10">
-        {/* Actividad Badge - Now Editable - Moved higher up and centered */}
-        <div className="absolute top-1 sm:top-2 left-1/2 transform -translate-x-1/2 z-20">
-          <div className="bg-primary/90 backdrop-blur-sm px-3 py-1.5 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl">
-            <span className="text-primary-foreground font-bold mobile-text sm:text-lg">
-              {settings?.activity_title || 'ACTIVIDAD #1'}
-            </span>
-          </div>
+      <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 relative z-10">
+        {/* Activity Badge */}
+        <div className="text-center mb-4 sm:mb-6">
+          <span className="inline-block bg-primary/90 text-primary-foreground px-4 py-1.5 sm:px-6 sm:py-2 rounded-full text-sm sm:text-base font-bold">
+            {settings?.activity_title || 'ACTIVIDAD #1'}
+          </span>
         </div>
 
-        {/* Imagen Principal Hero */}
-        <div className="relative max-w-6xl mx-auto mb-6 sm:mb-12">
-          <div className="relative bg-black rounded-2xl overflow-hidden shadow-2xl">
-            
-            <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10">
-              <div className="bg-primary text-black px-3 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl text-center">
-                <div className="mobile-body font-medium">POR SÓLO</div>
-                <div className="text-xl sm:text-3xl font-black">${settings?.price_per_number ?? activeRaffle?.price_per_number ?? '1.50'}</div>
-                <div className="mobile-body font-medium">CADA NÚMERO</div>
-              </div>
-            </div>
-
-            {/* Imagen de los premios dinámicos */}
-            <div className="relative aspect-video bg-gradient-to-br from-background/20 to-card/20 p-2 sm:p-4 lg:p-8" style={{backgroundImage: `url(${heroBackground})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundBlendMode: 'overlay'}}>
-              <div className={`mobile-grid h-full ${
-                displaysToShow.length === 1 ? 'grid-cols-1' :
-                displaysToShow.length === 2 ? 'grid-cols-1 sm:grid-cols-2' :
-                displaysToShow.length === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' :
-                displaysToShow.length === 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' :
-                'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
-              }`}>
-                {displaysToShow.map((display, index) => {
-                  const suerteTitles = ['PRIMERA SUERTE', 'SEGUNDA SUERTE', 'TERCERA SUERTE', 'CUARTA SUERTE', 'QUINTA SUERTE'];
-                  return (
-                    <div key={display.id} className="relative">
-                      <div className="absolute top-4 sm:top-10 md:top-14 left-1 sm:left-2 z-20">
-                        <div className="bg-primary text-primary-foreground px-1.5 py-0.5 sm:px-2 sm:py-1 rounded mobile-body font-bold">
-                          {suerteTitles[index] || `SUERTE ${index + 1}`}
-                        </div>
-                      </div>
-                      <img 
-                        src={display.image_url || '/placeholder.svg'} 
-                        alt={display.title}
-                        className="w-full h-full object-contain rounded-lg bg-muted/10"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = '/placeholder.svg';
-                        }}
-                        />
-                        <div className="absolute bottom-1 left-1 sm:bottom-2 sm:left-2 text-foreground bg-background/90 backdrop-blur-sm rounded p-1 sm:p-2">
-                          <h4 className="mobile-body sm:text-lg lg:text-xl font-bold text-primary">{display.title}</h4>
-                          {display.subtitle && <p className="mobile-body text-foreground">{display.subtitle}</p>}
-                        </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Efectos visuales */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
-            </div>
-
-            {/* Texto central dinámico - Título de la rifa activa */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="text-center">
-                <h3 className="text-4xl md:text-6xl font-black text-white mb-2">
-                  {activeRaffle?.title?.split(' ')[0] || 'GÁNATE'}
-                </h3>
-                {prizeDisplays.length > 0 ? (
-                  prizeDisplays.map((display, index) => (
-                    <div key={display.id}>
-                      <div className="text-2xl md:text-4xl lg:text-5xl font-black text-primary">
-                        {display.title}
-                      </div>
-                      {display.subtitle && (
-                        <div className="text-xl md:text-2xl lg:text-3xl font-bold text-white">{display.subtitle}</div>
-                      )}
-                      {index < prizeDisplays.length - 1 && (
-                        <div className="text-2xl md:text-4xl font-black text-white">+</div>
-                      )}
-                    </div>
-                  ))
-                ) : (
-                  activeRaffle && (
-                    <div className="text-2xl md:text-4xl lg:text-5xl font-black text-primary">
-                      {activeRaffle.title}
-                    </div>
-                  )
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Botones de Acción */}
-        <div className="flex flex-col sm:flex-row mobile-gap justify-center items-center max-w-md mx-auto">
-          <Link to="/comprar" className="w-full">
-            <Button 
-              size="lg" 
-              className="w-full bg-primary hover:bg-primary/90 text-black font-bold mobile-text px-4 py-3 sm:px-8 sm:py-4"
-            >
-              COMPRAR NÚMEROS
-            </Button>
-          </Link>
-          <Link to="/detalles" className="w-full">
-            <Button 
-              variant="outline" 
-              size="lg" 
-              className="w-full border-primary text-primary hover:bg-primary hover:text-black font-bold mobile-text px-4 py-3 sm:px-8 sm:py-4"
-            >
-              VER DETALLES
-            </Button>
-          </Link>
-        </div>
-
-        {/* Información adicional - Compacta */}
-        <div className="mt-4">
-          {/* Barra de progreso */}
-          {activeRaffle && (
-            <div className="max-w-md mx-auto mb-4 bg-card/80 backdrop-blur-sm rounded-lg p-2 border border-primary/20">
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-foreground">Progreso</span>
-                <span className="text-primary font-bold">{activeRaffle.numbers_sold || 0}/{activeRaffle.total_numbers || 0}</span>
-              </div>
-              <Progress value={activeRaffle.sold_percentage || 0} className="h-1.5 mb-1" />
-              <div className="text-center">
-                <span className="text-sm font-bold text-primary">{(activeRaffle.sold_percentage || 0).toFixed(1)}%</span>
-              </div>
-            </div>
-          )}
+        {/* Main Content - Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center max-w-6xl mx-auto">
           
-          <div className="grid grid-cols-3 gap-2 max-w-lg mx-auto">
-            <div className="text-center">
-              <div className="text-base font-bold text-primary">
-                {activeRaffle?.total_numbers ? (activeRaffle.total_numbers - (activeRaffle.numbers_sold || 0)) : 'N/A'}
-              </div>
-              <div className="text-gray-600 text-[10px]">Disponibles</div>
+          {/* Left: Text Content */}
+          <div className="text-center lg:text-left order-2 lg:order-1">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-foreground mb-3 sm:mb-4 leading-tight">
+              ¡GÁNATE UN{' '}
+              <span className="text-primary">
+                {mainPrize?.title || 'VEHÍCULO'}
+              </span>!
+            </h1>
+            
+            {mainPrize?.subtitle && (
+              <p className="text-muted-foreground text-sm sm:text-base lg:text-lg mb-4 sm:mb-6">
+                {mainPrize.subtitle}
+              </p>
+            )}
+
+            {/* Price Badge */}
+            <div className="inline-block bg-card border border-primary/30 rounded-xl p-3 sm:p-4 mb-6">
+              <p className="text-muted-foreground text-xs sm:text-sm">Por solo</p>
+              <p className="text-3xl sm:text-4xl lg:text-5xl font-black text-primary">
+                ${pricePerNumber}
+              </p>
+              <p className="text-muted-foreground text-xs sm:text-sm">cada número</p>
             </div>
-            <div className="text-center">
-              <div className="text-base font-bold text-primary">
-                ${activeRaffle?.price_per_number ?? settings?.price_per_number ?? 'N/A'}
-              </div>
-              <div className="text-gray-600 text-[10px]">Por Número</div>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
+              <Link to="/comprar">
+                <Button 
+                  size="lg" 
+                  className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base sm:text-lg px-8 py-4 sm:py-6 shadow-lg hover:shadow-aqua transition-all"
+                >
+                  COMPRAR AHORA
+                </Button>
+              </Link>
+              <Link to="/detalles">
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="w-full sm:w-auto border-primary text-primary hover:bg-primary hover:text-primary-foreground font-bold text-base sm:text-lg px-8 py-4 sm:py-6"
+                >
+                  VER DETALLES
+                </Button>
+              </Link>
             </div>
-            <div className="text-center">
-              <div className="text-base font-bold text-primary">
-                {prizeDisplays.length > 0 ? prizeDisplays.length : 'N/A'}
+
+            {/* Progress Bar (Mobile) */}
+            {activeRaffle && (
+              <div className="mt-6 lg:hidden">
+                <div className="bg-card/80 backdrop-blur-sm rounded-lg p-3 border border-primary/20">
+                  <div className="flex justify-between text-xs mb-2">
+                    <span className="text-muted-foreground">Progreso de venta</span>
+                    <span className="text-primary font-bold">
+                      {activeRaffle.numbers_sold || 0}/{activeRaffle.total_numbers || 0}
+                    </span>
+                  </div>
+                  <Progress value={activeRaffle.sold_percentage || 0} className="h-2" />
+                  <p className="text-center mt-1">
+                    <span className="text-lg font-bold text-primary">
+                      {(activeRaffle.sold_percentage || 0).toFixed(1)}%
+                    </span>
+                    <span className="text-muted-foreground text-xs ml-1">vendido</span>
+                  </p>
+                </div>
               </div>
-              <div className="text-gray-600 text-[10px]">Premios</div>
+            )}
+          </div>
+
+          {/* Right: Prize Image */}
+          <div className="order-1 lg:order-2">
+            <div className="relative">
+              {/* Glow Effect */}
+              <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full scale-75" />
+              
+              {/* Prize Image Container */}
+              <div className="relative bg-gradient-to-br from-card to-muted/20 rounded-2xl overflow-hidden border border-primary/20 shadow-2xl">
+                <img 
+                  src={mainPrize?.image_url || '/placeholder.svg'} 
+                  alt={mainPrize?.title || 'Premio Principal'}
+                  className="w-full aspect-[4/3] object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/placeholder.svg';
+                  }}
+                />
+                
+                {/* Prize Label */}
+                <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
+                  <span className="bg-primary text-primary-foreground px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm font-bold">
+                    PRIMERA SUERTE
+                  </span>
+                </div>
+
+                {/* Prize Info Overlay */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                  <h3 className="text-white font-bold text-lg sm:text-xl">{mainPrize?.title}</h3>
+                  {mainPrize?.subtitle && (
+                    <p className="text-white/80 text-sm">{mainPrize.subtitle}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Additional Prizes Thumbnails */}
+              {prizeDisplays.length > 1 && (
+                <div className="flex gap-2 mt-3 justify-center">
+                  {prizeDisplays.slice(1, 4).map((prize, index) => (
+                    <div 
+                      key={prize.id}
+                      className="w-16 h-12 sm:w-20 sm:h-14 rounded-lg overflow-hidden border border-primary/20 bg-card"
+                    >
+                      <img 
+                        src={prize.image_url || '/placeholder.svg'} 
+                        alt={prize.title}
+                        className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity"
+                      />
+                    </div>
+                  ))}
+                  {prizeDisplays.length > 4 && (
+                    <div className="w-16 h-12 sm:w-20 sm:h-14 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center">
+                      <span className="text-primary font-bold text-sm">+{prizeDisplays.length - 4}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
+
+        {/* Stats Bar (Desktop) */}
+        {activeRaffle && (
+          <div className="hidden lg:block max-w-4xl mx-auto mt-8">
+            <div className="bg-card/60 backdrop-blur-sm rounded-xl p-4 border border-primary/20">
+              <div className="grid grid-cols-4 gap-4 items-center">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-primary">
+                    {activeRaffle.total_numbers ? (activeRaffle.total_numbers - (activeRaffle.numbers_sold || 0)) : 0}
+                  </p>
+                  <p className="text-muted-foreground text-xs">Números Disponibles</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-primary">${pricePerNumber}</p>
+                  <p className="text-muted-foreground text-xs">Por Número</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-primary">{prizeDisplays.length || 1}</p>
+                  <p className="text-muted-foreground text-xs">Premios</p>
+                </div>
+                <div className="col-span-1">
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-muted-foreground">Progreso</span>
+                    <span className="text-primary font-bold">{(activeRaffle.sold_percentage || 0).toFixed(1)}%</span>
+                  </div>
+                  <Progress value={activeRaffle.sold_percentage || 0} className="h-2" />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
