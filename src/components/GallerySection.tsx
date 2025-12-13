@@ -2,17 +2,14 @@ import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { supabase } from '@/integrations/supabase/client';
 import { rafflesAPI } from '@/lib/supabase';
-import toyotaFortuner from "/public/lovable-uploads/a070bca1-29cb-463b-bee8-960692557b67.png";
-import chevroletOnix from "/public/lovable-uploads/40dd58e7-1558-43d2-84a8-c2a6176de594.png";
 
 interface GallerySectionProps {
   settings?: { price_per_number?: string } | null;
 }
 
 const GallerySection = ({ settings }: GallerySectionProps) => {
-  const [prizes, setPrizes] = useState([]);
-  const [photos, setPhotos] = useState([]);
-  const [media, setMedia] = useState([]);
+  const [prizes, setPrizes] = useState<any[]>([]);
+  const [photos, setPhotos] = useState<any[]>([]);
   const [rafflePrice, setRafflePrice] = useState<number | string | null>(null);
 
   useEffect(() => {
@@ -22,30 +19,21 @@ const GallerySection = ({ settings }: GallerySectionProps) => {
 
   const loadGalleryContent = async () => {
     try {
-      // Load prizes
-      const { data: prizesData } = await supabase
-        .from('prizes')
-        .select('*')
-        .eq('is_active', true)
-        .order('position');
-      
-      // Load photo gallery
-      const { data: photosData } = await supabase
-        .from('photo_gallery')
-        .select('*')
-        .eq('is_active', true)
-        .order('position');
-      
-      // Load media gallery
-      const { data: mediaData } = await supabase
-        .from('media_gallery')
-        .select('*')
-        .eq('is_active', true)
-        .order('position');
+      const [prizesRes, photosRes] = await Promise.all([
+        supabase
+          .from('prizes')
+          .select('*')
+          .eq('is_active', true)
+          .order('position'),
+        supabase
+          .from('photo_gallery')
+          .select('*')
+          .eq('is_active', true)
+          .order('position')
+      ]);
 
-      setPrizes(prizesData || []);
-      setPhotos(photosData || []);
-      setMedia(mediaData || []);
+      setPrizes(prizesRes.data || []);
+      setPhotos(photosRes.data || []);
     } catch (error) {
       console.error('Error loading gallery content:', error);
     }
@@ -59,90 +47,74 @@ const GallerySection = ({ settings }: GallerySectionProps) => {
       console.error('Error loading raffle price:', e);
     }
   };
-  // Combine all images for the gallery display
+
   const allImages = [
-    ...(prizes as any[]).map((p: any) => p.image_url).filter(Boolean),
-    ...(photos as any[]).map((p: any) => p.image_url).filter(Boolean)
+    ...prizes.map((p) => ({ url: p.image_url, name: p.name, description: p.description })).filter(i => i.url),
+    ...photos.map((p) => ({ url: p.image_url, name: p.title, description: p.description })).filter(i => i.url)
   ];
 
-  // Fallback to default images if no content is configured
-  const galleryImages = allImages.length > 0 ? allImages : [
-    toyotaFortuner,
-    chevroletOnix,
-    toyotaFortuner, 
-    chevroletOnix
-  ];
+  // Don't render if no content
+  if (allImages.length === 0 && prizes.length === 0) {
+    return null;
+  }
 
   return (
-    <section className="py-8 sm:py-12 lg:py-16 bg-card/50">
+    <section className="py-6 sm:py-10 lg:py-12 bg-card/50">
       <div className="container mx-auto px-4">
-        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center text-foreground mb-8 sm:mb-12">
-          Galería de Premios
+        <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-center text-foreground mb-6 sm:mb-8">
+          🎁 Galería de Premios
         </h2>
         
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-          {galleryImages.map((image, index) => (
-            <div key={index} className="aspect-square overflow-hidden rounded-lg">
-              <img 
-                src={image} 
-                alt={`Premio ${index + 1}`}
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* Stats Section */}
-        <div className="mt-8 sm:mt-12 lg:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-          <Card className="text-center p-8 bg-card border-primary/20">
-            <div className="text-4xl font-bold text-primary mb-2">2</div>
-            <div className="text-xl font-semibold text-foreground mb-1">Vehículos</div>
-            <div className="text-muted-foreground">Premios principales</div>
-          </Card>
-          
-          <Card className="text-center p-8 bg-card border-primary/20">
-            <div className="text-4xl font-bold text-primary mb-2">
-              ${rafflePrice ?? (settings?.price_per_number || "1.50")}
-            </div>
-            <div className="text-xl font-semibold text-foreground mb-1">Por número</div>
-            <div className="text-muted-foreground">Precio accesible</div>
-          </Card>
-          
-          <Card className="text-center p-8 bg-card border-primary/20">
-            <div className="text-4xl font-bold text-primary mb-2">0km</div>
-            <div className="text-xl font-semibold text-foreground mb-1">Vehículos nuevos</div>
-            <div className="text-muted-foreground">Directos de agencia</div>
-          </Card>
-        </div>
-
-        {/* Videos y medios configurados */}
-        {media.length > 0 && (
-            <div className="mt-8 sm:mt-12 lg:mt-16 text-center">
-              <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-6 sm:mb-8">
-                Videos y Contenido
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {(media as any[]).map((item: any, index: number) => (
-                <div key={index} className="bg-card/80 rounded-lg overflow-hidden border border-border">
-                    {item.media_type === 'video' ? (
-                      <div className="aspect-square bg-background flex items-center justify-center">
-                        <div className="text-foreground text-center p-4">
-                          <p className="font-bold text-primary">{item.title}</p>
-                          <p className="text-sm text-muted-foreground">Video: {item.media_url}</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <img
-                      src={item.media_url} 
-                      alt={item.title}
-                        className="w-full aspect-square object-cover"
-                      />
+        {/* Prize Images Grid */}
+        {allImages.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+            {allImages.map((item, index) => (
+              <div 
+                key={index} 
+                className="group relative aspect-square overflow-hidden rounded-lg border border-border hover:border-primary/50 transition-colors"
+              >
+                <img 
+                  src={item.url} 
+                  alt={item.name || `Premio ${index + 1}`}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute bottom-0 left-0 right-0 p-3">
+                    <p className="text-white font-semibold text-sm truncate">{item.name}</p>
+                    {item.description && (
+                      <p className="text-white/80 text-xs truncate">{item.description}</p>
                     )}
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
+            ))}
+          </div>
         )}
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+          <Card className="text-center p-4 sm:p-6 bg-card border-primary/20 hover:border-primary/40 transition-colors">
+            <div className="text-2xl sm:text-3xl font-bold text-primary mb-1">
+              {prizes.length || 2}
+            </div>
+            <div className="text-sm font-semibold text-foreground">Vehículos</div>
+            <div className="text-muted-foreground text-xs">Premios principales</div>
+          </Card>
+          
+          <Card className="text-center p-4 sm:p-6 bg-card border-primary/20 hover:border-primary/40 transition-colors">
+            <div className="text-2xl sm:text-3xl font-bold text-primary mb-1">
+              ${rafflePrice ?? (settings?.price_per_number || "1.50")}
+            </div>
+            <div className="text-sm font-semibold text-foreground">Por número</div>
+            <div className="text-muted-foreground text-xs">Precio accesible</div>
+          </Card>
+          
+          <Card className="text-center p-4 sm:p-6 bg-card border-primary/20 hover:border-primary/40 transition-colors">
+            <div className="text-2xl sm:text-3xl font-bold text-primary mb-1">0km</div>
+            <div className="text-sm font-semibold text-foreground">Nuevos</div>
+            <div className="text-muted-foreground text-xs">Directos de agencia</div>
+          </Card>
+        </div>
       </div>
     </section>
   );
