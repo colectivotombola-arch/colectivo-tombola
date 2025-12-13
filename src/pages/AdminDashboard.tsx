@@ -1,22 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
-  LayoutDashboard, 
   Car, 
   Settings, 
   ImageIcon, 
-  LogOut,
-  Plus,
   Eye,
   Trophy,
   Video
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { rafflesAPI } from '@/lib/supabase';
+import { AdminLayout } from '@/components/AdminLayout';
+
 const AdminDashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     activeRaffles: 0,
     totalNumbers: 0,
@@ -69,30 +69,11 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card border-b border-border">
-        <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <LayoutDashboard className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
-              <div>
-                <h1 className="text-lg sm:text-2xl font-bold text-foreground">Panel Admin</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Proyectos Flores</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <Badge variant="outline" className="border-primary text-primary hidden sm:flex text-xs">
-                {user?.email}
-              </Badge>
-              <Button variant="outline" onClick={signOut} className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm px-2 sm:px-4">
-                <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span>Salir</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <AdminLayout 
+      title="Panel Admin" 
+      subtitle="Proyectos Flores"
+      showBackButton={false}
+    >
 
       <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
         {/* Welcome Section */}
@@ -134,8 +115,10 @@ const AdminDashboard = () => {
               {quickActions.map((action, index) => (
                 <Card 
                   key={index} 
-                  className="cursor-pointer hover:shadow-aqua transition-all duration-300 border-primary/20"
-                  onClick={() => window.location.href = action.href}
+                  className="cursor-pointer hover:shadow-aqua transition-all duration-300 border-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  onClick={() => navigate(action.href)}
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && navigate(action.href)}
                 >
                   <CardContent className="p-4 sm:p-6 text-center">
                     <action.icon className="w-8 h-8 sm:w-12 sm:h-12 text-primary mx-auto mb-2 sm:mb-4" />
@@ -176,7 +159,7 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </AdminLayout>
   );
 };
 
