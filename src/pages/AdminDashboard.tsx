@@ -57,13 +57,14 @@ const AdminDashboard = () => {
   ];
 
   const quickActions = [
-    { title: 'Gestionar Rifas', description: 'Ver y administrar rifas activas, paquetes y premios instantáneos', icon: Car, href: '/admin/raffles' },
-    { title: 'Ver Números', description: 'Consultar números vendidos y exportar', icon: Eye, href: '/admin/sold-numbers' },
+    { title: 'Gestionar Rifas', description: 'Ver y administrar rifas activas', icon: Car, href: '/admin/raffles' },
+    { title: 'Paquetes/Combos', description: 'Configurar precios y cantidades', icon: Car, href: '/admin/packages' },
+    { title: 'Ver Números', description: 'Consultar números vendidos', icon: Eye, href: '/admin/sold-numbers' },
     { title: 'Confirmaciones', description: 'Gestionar compras pendientes', icon: Eye, href: '/admin/confirmations' },
-    { title: 'Pantallas Premios', description: 'Configurar suertes dinámicas', icon: Trophy, href: '/admin/prize-displays' },
+    { title: 'Galería Premios', description: 'Imágenes de premios', icon: ImageIcon, href: '/admin/gallery' },
     { title: 'Galería Videos', description: 'TikTok e Instagram', icon: Video, href: '/admin/media-gallery' },
     { title: 'Galería Fotos', description: 'Fotos generales del sitio', icon: ImageIcon, href: '/admin/photo-gallery' },
-    { title: 'Galería Premios', description: 'Imágenes de premios', icon: ImageIcon, href: '/admin/gallery' },
+    { title: 'Pantallas Premios', description: 'Suertes dinámicas', icon: Trophy, href: '/admin/prize-displays' },
     { title: 'Diseño', description: 'Personalizar apariencia', icon: Settings, href: '/admin/design' },
     { title: 'Configuración', description: 'Ajustes del sitio web', icon: Settings, href: '/admin/settings' },
   ];

@@ -1,20 +1,19 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { rafflesAPI, rafflePackagesAPI, type Raffle, type RafflePackage } from '@/lib/supabase';
-import { ArrowLeft, Plus, Trash2, Star, Package } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Plus, Trash2, Star, Package } from 'lucide-react';
+import { AdminLayout } from '@/components/AdminLayout';
+import { toInt, toFloat } from '@/lib/numberUtils';
 
 const AdminPackages = () => {
-  const { user, signOut } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
   
   const [raffles, setRaffles] = useState<Raffle[]>([]);
   const [selectedRaffle, setSelectedRaffle] = useState<Raffle | null>(null);
@@ -163,41 +162,25 @@ const AdminPackages = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-primary">Cargando paquetes...</div>
-      </div>
+      <AdminLayout 
+        title="Gestión de Paquetes" 
+        subtitle="Combos de boletos por rifa"
+      >
+        <div className="max-w-6xl mx-auto space-y-6">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-48 w-full" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/admin')}
-                className="flex items-center space-x-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Volver</span>
-              </Button>
-              <h1 className="text-2xl font-bold text-foreground">Gestión de Paquetes</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-muted-foreground">{user?.email}</span>
-              <Button variant="outline" onClick={signOut}>
-                Salir
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto space-y-8">
+    <AdminLayout 
+      title="Gestión de Paquetes" 
+      subtitle="Configura los combos de boletos para cada sorteo"
+    >
+      <div className="max-w-6xl mx-auto space-y-6">
           
           {/* Selector de Rifa */}
           <Card>
@@ -405,8 +388,7 @@ const AdminPackages = () => {
             </>
           )}
         </div>
-      </div>
-    </div>
+    </AdminLayout>
   );
 };
 
