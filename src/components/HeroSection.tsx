@@ -69,7 +69,7 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
       
       <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 relative z-10">
         {/* Activity Badge */}
-        <div className="text-center mb-4 sm:mb-6">
+        <div className="text-center mt-4 sm:mt-8 mb-4 sm:mb-6">
           <span className="inline-block bg-primary/90 text-primary-foreground px-4 py-1.5 sm:px-6 sm:py-2 rounded-full text-sm sm:text-base font-bold">
             {settings?.activity_title || 'ACTIVIDAD #1'}
           </span>
