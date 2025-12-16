@@ -3,11 +3,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { AdminLayout } from '@/components/AdminLayout';
-import { Upload, Save, Trash2, Plus, ImageIcon } from 'lucide-react';
+import { ImageUpload } from '@/components/ImageUpload';
+import { Save, Trash2, Plus, ImageIcon, GripVertical, Eye, EyeOff } from 'lucide-react';
 
 interface Prize {
   id?: string;
@@ -16,6 +20,7 @@ interface Prize {
   value: number;
   image_url?: string;
   position: number;
+  is_active: boolean;
   raffle_id?: string;
 }
 
@@ -25,6 +30,7 @@ const AdminGallery = () => {
   const [prizes, setPrizes] = useState<Prize[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<number, string>>({});
 
   useEffect(() => {
     loadPrizes();
@@ -38,7 +44,7 @@ const AdminGallery = () => {
         .order('position');
       
       if (error) throw error;
-      setPrizes(data || []);
+      setPrizes((data || []).map(p => ({ ...p, is_active: p.is_active ?? true })));
     } catch (error) {
       console.error('Error loading prizes:', error);
       toast({
@@ -57,7 +63,8 @@ const AdminGallery = () => {
       description: '',
       value: 0,
       position: prizes.length + 1,
-      image_url: ''
+      image_url: '',
+      is_active: true
     };
     setPrizes([...prizes, newPrize]);
   };
@@ -66,14 +73,59 @@ const AdminGallery = () => {
     const updatedPrizes = [...prizes];
     updatedPrizes[index] = { ...updatedPrizes[index], [field]: value };
     setPrizes(updatedPrizes);
+    
+    // Clear error for this field
+    if (errors[index]) {
+      const newErrors = { ...errors };
+      delete newErrors[index];
+      setErrors(newErrors);
+    }
   };
 
   const removePrize = (index: number) => {
+    if (!confirm('¿Estás seguro de eliminar este premio?')) return;
     const updatedPrizes = prizes.filter((_, i) => i !== index);
     setPrizes(updatedPrizes);
   };
 
+  const movePrize = (index: number, direction: 'up' | 'down') => {
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === prizes.length - 1) return;
+    
+    const newPrizes = [...prizes];
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    [newPrizes[index], newPrizes[newIndex]] = [newPrizes[newIndex], newPrizes[index]];
+    setPrizes(newPrizes);
+  };
+
+  const validatePrizes = (): boolean => {
+    const newErrors: Record<number, string> = {};
+    let isValid = true;
+
+    prizes.forEach((prize, index) => {
+      if (!prize.name.trim()) {
+        newErrors[index] = 'El título es obligatorio';
+        isValid = false;
+      } else if (!prize.image_url?.trim()) {
+        newErrors[index] = 'La imagen es obligatoria';
+        isValid = false;
+      }
+    });
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
   const handleSave = async () => {
+    if (!validatePrizes()) {
+      toast({
+        title: "Error de validación",
+        description: "Todos los premios deben tener título e imagen",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       // Delete all existing prizes
@@ -84,8 +136,12 @@ const AdminGallery = () => {
         const { error } = await supabase
           .from('prizes')
           .insert(prizes.map((prize, index) => ({
-            ...prize,
-            position: index + 1
+            name: prize.name,
+            description: prize.description,
+            value: prize.value,
+            image_url: prize.image_url,
+            position: index + 1,
+            is_active: prize.is_active
           })));
         
         if (error) throw error;
@@ -120,32 +176,22 @@ const AdminGallery = () => {
   return (
     <AdminLayout 
       title="Galería de Premios" 
-      subtitle="Gestiona los premios que se mostrarán en tu sitio"
+      subtitle="Imágenes de premios que se muestran en la web"
     >
       <div className="max-w-6xl mx-auto space-y-6">
         
         {/* Herramientas */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Plus className="w-5 h-5" />
-              <span>Herramientas de Gestión</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={addPrize} className="bg-primary hover:bg-primary/90 text-black">
-              <Plus className="w-4 h-4 mr-2" />
-              Agregar Premio
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Lista de Premios */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <ImageIcon className="w-5 h-5" />
-              <span>Premios Configurados ({prizes.length})</span>
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <ImageIcon className="w-5 h-5" />
+                Premios Configurados ({prizes.length})
+              </span>
+              <Button onClick={addPrize} className="bg-primary hover:bg-primary/90 text-black">
+                <Plus className="w-4 h-4 mr-2" />
+                Agregar Premio
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -155,74 +201,107 @@ const AdminGallery = () => {
               </div>
             ) : (
               prizes.map((prize, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-4">
+                <div 
+                  key={index} 
+                  className={`border rounded-lg p-4 space-y-4 ${errors[index] ? 'border-destructive' : ''}`}
+                >
                   <div className="flex justify-between items-center">
-                    <h4 className="font-semibold text-lg">Premio #{index + 1}</h4>
-                    <Button
-                      onClick={() => removePrize(index)}
-                      variant="destructive"
-                      size="sm"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor={`name-${index}`}>Nombre del Premio</Label>
-                      <Input
-                        id={`name-${index}`}
-                        value={prize.name}
-                        onChange={(e) => updatePrize(index, 'name', e.target.value)}
-                        placeholder="Ej: iPhone 15 Pro Max"
-                      />
+                    <div className="flex items-center gap-3">
+                      <GripVertical className="w-4 h-4 text-muted-foreground cursor-move" />
+                      <h4 className="font-semibold text-lg">Premio #{index + 1}</h4>
+                      <Badge variant={prize.is_active ? "default" : "secondary"}>
+                        {prize.is_active ? <Eye className="w-3 h-3 mr-1" /> : <EyeOff className="w-3 h-3 mr-1" />}
+                        {prize.is_active ? 'Visible' : 'Oculto'}
+                      </Badge>
                     </div>
-                    
-                    <div>
-                      <Label htmlFor={`value-${index}`}>Valor del Premio ($)</Label>
-                      <Input
-                        id={`value-${index}`}
-                        type="number"
-                        value={prize.value}
-                        onChange={(e) => updatePrize(index, 'value', parseFloat(e.target.value) || 0)}
-                        placeholder="1000"
-                      />
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => movePrize(index, 'up')}
+                        disabled={index === 0}
+                      >
+                        ↑
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => movePrize(index, 'down')}
+                        disabled={index === prizes.length - 1}
+                      >
+                        ↓
+                      </Button>
+                      <Button
+                        onClick={() => removePrize(index)}
+                        variant="destructive"
+                        size="sm"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
-                  
-                  <div>
-                    <Label htmlFor={`description-${index}`}>Descripción</Label>
-                    <Input
-                      id={`description-${index}`}
-                      value={prize.description}
-                      onChange={(e) => updatePrize(index, 'description', e.target.value)}
-                      placeholder="Descripción detallada del premio"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor={`image-${index}`}>URL de la Imagen</Label>
-                    <Input
-                      id={`image-${index}`}
-                      value={prize.image_url || ''}
-                      onChange={(e) => updatePrize(index, 'image_url', e.target.value)}
-                      placeholder="https://ejemplo.com/imagen.jpg"
-                    />
-                  </div>
-                  
-                  {prize.image_url && (
-                    <div className="mt-2">
-                      <img 
-                        src={prize.image_url} 
-                        alt={prize.name}
-                        className="w-32 h-32 object-cover rounded-lg border"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                        }}
-                      />
-                    </div>
+
+                  {errors[index] && (
+                    <p className="text-sm text-destructive">{errors[index]}</p>
                   )}
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor={`name-${index}`}>Título del Premio *</Label>
+                        <Input
+                          id={`name-${index}`}
+                          value={prize.name}
+                          onChange={(e) => updatePrize(index, 'name', e.target.value)}
+                          placeholder="Ej: iPhone 15 Pro Max"
+                          className={!prize.name.trim() && errors[index] ? 'border-destructive' : ''}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor={`description-${index}`}>Descripción (opcional)</Label>
+                        <Textarea
+                          id={`description-${index}`}
+                          value={prize.description}
+                          onChange={(e) => updatePrize(index, 'description', e.target.value)}
+                          placeholder="Descripción breve del premio"
+                          rows={2}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor={`value-${index}`}>Valor ($)</Label>
+                          <Input
+                            id={`value-${index}`}
+                            type="number"
+                            value={prize.value}
+                            onChange={(e) => updatePrize(index, 'value', parseFloat(e.target.value) || 0)}
+                            placeholder="1000"
+                          />
+                        </div>
+                        <div className="flex items-end">
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id={`active-${index}`}
+                              checked={prize.is_active}
+                              onCheckedChange={(checked) => updatePrize(index, 'is_active', checked)}
+                            />
+                            <Label htmlFor={`active-${index}`}>Activo</Label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <ImageUpload
+                        value={prize.image_url || ''}
+                        onChange={(url) => updatePrize(index, 'image_url', url)}
+                        label="Imagen del Premio *"
+                        bucket="prize-images"
+                      />
+                    </div>
+                  </div>
                 </div>
               ))
             )}

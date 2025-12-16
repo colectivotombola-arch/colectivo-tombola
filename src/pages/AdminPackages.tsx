@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { rafflesAPI, rafflePackagesAPI, type Raffle, type RafflePackage } from '@/lib/supabase';
-import { Plus, Trash2, Star, Package } from 'lucide-react';
+import { Plus, Trash2, Star, Package, ArrowUp, ArrowDown, DollarSign } from 'lucide-react';
 import { AdminLayout } from '@/components/AdminLayout';
 import { toInt, toFloat } from '@/lib/numberUtils';
 
@@ -62,7 +62,7 @@ const AdminPackages = () => {
     
     try {
       const data = await rafflePackagesAPI.getByRaffle(selectedRaffle.id!);
-      setPackages(data);
+      setPackages(data.sort((a, b) => (a.display_order || 0) - (b.display_order || 0)));
     } catch (error) {
       console.error('Error loading packages:', error);
       toast({
@@ -84,6 +84,11 @@ const AdminPackages = () => {
     }
 
     try {
+      // If marking as popular, unmark others first
+      if (newPackage.is_popular) {
+        await unmarkOtherPopular();
+      }
+
       const packageData = {
         raffle_id: selectedRaffle.id!,
         ticket_count: parseInt(newPackage.ticket_count),
@@ -117,8 +122,23 @@ const AdminPackages = () => {
     }
   };
 
+  const unmarkOtherPopular = async () => {
+    const popularPackages = packages.filter(p => p.is_popular);
+    for (const pkg of popularPackages) {
+      await rafflePackagesAPI.update(pkg.id!, { ...pkg, is_popular: false });
+    }
+  };
+
   const handleUpdatePackage = async (pkg: RafflePackage) => {
     try {
+      // If marking as popular, unmark others first
+      if (pkg.is_popular) {
+        const otherPopular = packages.filter(p => p.is_popular && p.id !== pkg.id);
+        for (const other of otherPopular) {
+          await rafflePackagesAPI.update(other.id!, { ...other, is_popular: false });
+        }
+      }
+
       await rafflePackagesAPI.update(pkg.id!, pkg);
       
       toast({
@@ -160,6 +180,35 @@ const AdminPackages = () => {
     }
   };
 
+  const movePackage = async (pkg: RafflePackage, direction: 'up' | 'down') => {
+    const currentIndex = packages.findIndex(p => p.id === pkg.id);
+    if (direction === 'up' && currentIndex === 0) return;
+    if (direction === 'down' && currentIndex === packages.length - 1) return;
+
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    const otherPkg = packages[newIndex];
+
+    try {
+      await Promise.all([
+        rafflePackagesAPI.update(pkg.id!, { ...pkg, display_order: otherPkg.display_order }),
+        rafflePackagesAPI.update(otherPkg.id!, { ...otherPkg, display_order: pkg.display_order })
+      ]);
+      
+      loadPackages();
+    } catch (error) {
+      console.error('Error moving package:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo cambiar el orden",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const calculateTotal = (ticketCount: number, pricePerTicket: number) => {
+    return (ticketCount * pricePerTicket).toFixed(2);
+  };
+
   if (loading) {
     return (
       <AdminLayout 
@@ -198,7 +247,7 @@ const AdminPackages = () => {
                     onClick={() => setSelectedRaffle(raffle)}
                   >
                     <CardContent className="p-4">
-                      <h3 className="font-bold text-sm">{raffle.title}</h3>
+                      <h3 className="font-bold text-sm truncate">{raffle.title}</h3>
                       <p className="text-xs text-muted-foreground">{raffle.status}</p>
                       <div className="text-xs mt-2">
                         Precio: ${raffle.price_per_number} | 
@@ -222,7 +271,7 @@ const AdminPackages = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div>
                       <Label htmlFor="ticket_count">Cantidad de Boletos</Label>
                       <Input
@@ -234,7 +283,7 @@ const AdminPackages = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="price_per_ticket">Precio por Boleto</Label>
+                      <Label htmlFor="price_per_ticket">Precio por Boleto ($)</Label>
                       <Input
                         id="price_per_ticket"
                         type="number"
@@ -245,13 +294,24 @@ const AdminPackages = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="display_order">Orden de Mostrar</Label>
+                      <Label>Total Paquete</Label>
+                      <div className="h-10 px-3 py-2 border border-border rounded-md bg-muted flex items-center">
+                        <DollarSign className="w-4 h-4 mr-1 text-green-600" />
+                        <span className="font-bold text-green-600">
+                          {newPackage.ticket_count && newPackage.price_per_ticket 
+                            ? calculateTotal(parseInt(newPackage.ticket_count), parseFloat(newPackage.price_per_ticket))
+                            : '0.00'}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="display_order">Orden</Label>
                       <Input
                         id="display_order"
                         type="number"
                         value={newPackage.display_order}
                         onChange={(e) => setNewPackage(prev => ({ ...prev, display_order: e.target.value }))}
-                        placeholder="1"
+                        placeholder={String(packages.length + 1)}
                       />
                     </div>
                     <div className="flex items-center space-x-2 pt-6">
@@ -285,10 +345,10 @@ const AdminPackages = () => {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {packages.map((pkg) => (
+                      {packages.map((pkg, index) => (
                         <div key={pkg.id} className="border rounded-lg p-4">
                           {editingPackage?.id === pkg.id ? (
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                               <div>
                                 <Label>Cantidad de Boletos</Label>
                                 <Input
@@ -311,6 +371,15 @@ const AdminPackages = () => {
                                 />
                               </div>
                               <div>
+                                <Label>Total</Label>
+                                <div className="h-10 px-3 py-2 border border-border rounded-md bg-muted flex items-center">
+                                  <DollarSign className="w-4 h-4 mr-1 text-green-600" />
+                                  <span className="font-bold text-green-600">
+                                    {calculateTotal(editingPackage.ticket_count, editingPackage.price_per_ticket)}
+                                  </span>
+                                </div>
+                              </div>
+                              <div>
                                 <Label>Orden</Label>
                                 <Input
                                   type="number"
@@ -329,7 +398,7 @@ const AdminPackages = () => {
                                 />
                                 <Label>Más Popular</Label>
                               </div>
-                              <div className="md:col-span-4 flex gap-2">
+                              <div className="md:col-span-5 flex gap-2">
                                 <Button 
                                   onClick={() => handleUpdatePackage(editingPackage)}
                                   className="bg-gradient-aqua hover:shadow-aqua"
@@ -344,11 +413,35 @@ const AdminPackages = () => {
                           ) : (
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-4">
+                                <div className="flex flex-col gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0"
+                                    onClick={() => movePackage(pkg, 'up')}
+                                    disabled={index === 0}
+                                  >
+                                    <ArrowUp className="w-3 h-3" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0"
+                                    onClick={() => movePackage(pkg, 'down')}
+                                    disabled={index === packages.length - 1}
+                                  >
+                                    <ArrowDown className="w-3 h-3" />
+                                  </Button>
+                                </div>
                                 <div>
                                   <div className="text-lg font-bold">{pkg.ticket_count} boletos</div>
                                   <div className="text-sm text-muted-foreground">
-                                    ${pkg.price_per_ticket} c/u = ${(pkg.ticket_count * pkg.price_per_ticket).toFixed(2)}
+                                    ${pkg.price_per_ticket} c/u
                                   </div>
+                                </div>
+                                <div className="text-lg font-bold text-green-600 flex items-center">
+                                  <DollarSign className="w-4 h-4" />
+                                  {calculateTotal(pkg.ticket_count, pkg.price_per_ticket)}
                                 </div>
                                 {pkg.is_popular && (
                                   <Badge className="bg-primary">
