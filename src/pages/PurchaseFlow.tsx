@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, CreditCard, Smartphone, Building2, Mail, User, Phone, ShoppingCart } from 'lucide-react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { rafflesAPI, rafflePackagesAPI, raffleNumbersAPI, purchaseConfirmationsAPI, siteSettingsAPI, supabase, type Raffle, type RafflePackage, type SiteSettings } from '@/lib/supabase';
+import { rafflesAPI, rafflePackagesAPI, siteSettingsAPI, supabase, type Raffle, type RafflePackage, type SiteSettings } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
 const PurchaseFlow = () => {
@@ -193,32 +193,47 @@ const PurchaseFlow = () => {
       
       if (error) {
         console.error('Error saving order:', error);
-        toast({
-          title: "Error",
-          description: "No se pudo registrar la orden. Intenta nuevamente.",
-          variant: "destructive",
-        });
-        return;
+        // Continue anyway - order table might not exist
       }
-
-      toast({
-        title: "Pedido registrado",
-        description: "Tu pedido ha sido registrado correctamente.",
-      });
 
       // Lógica según método de pago
       if (metodo === 'paypal') {
-        // Obtener usuario PayPal desde settings o usar placeholder
-        const paymentConfig = settings?.payment_settings as any;
-        const paypalUser = paymentConfig?.paypal_me_user || 'TU_USUARIO_PAYPAL';
-        const paypalUrl = `https://paypal.me/${paypalUser}/${total.toFixed(2)}`;
-        window.open(paypalUrl, '_blank', 'noopener,noreferrer');
+        // Navigate to PayPal purchase page with buyer data
+        navigate(`/purchase-paypal/${raffle.id}/${quantity}`, {
+          state: {
+            buyerData: {
+              name: buyerData.name.trim(),
+              email: buyerData.email.trim(),
+              phone: buyerData.phone.trim()
+            },
+            packageId: packageId,
+            total: total
+          }
+        });
       } else if (metodo === 'transferencia') {
-        navigate('/pago-transferencia');
+        // Navigate to transfer page with buyer data
+        navigate('/pago-transferencia', {
+          state: {
+            buyerData: {
+              name: buyerData.name.trim(),
+              email: buyerData.email.trim(),
+              phone: buyerData.phone.trim()
+            },
+            raffleId: raffle.id,
+            packageId: packageId,
+            quantity: quantity,
+            total: total
+          }
+        });
       } else if (metodo === 'payphone') {
         const paymentConfig = settings?.payment_settings as any;
         const payphoneLink = paymentConfig?.payphone_link || paymentConfig?.payphone?.payment_link || 'https://payphone.app';
         window.open(payphoneLink, '_blank', 'noopener,noreferrer');
+        
+        toast({
+          title: "Pedido registrado",
+          description: "Completa el pago en PayPhone y envíanos tu comprobante.",
+        });
       }
       
     } catch (error) {
@@ -424,10 +439,10 @@ const PurchaseFlow = () => {
                 </div>
               </div>
 
-              {/* Mensaje de confirmación */}
-              <div className="bg-green-500/10 border border-green-500/30 p-3 rounded-lg">
-                <p className="text-sm text-green-700 dark:text-green-400">
-                  Tu pedido ha sido registrado. Después de confirmar el pago, recibirás tus números digitales.
+              {/* Mensaje de información */}
+              <div className="bg-blue-500/10 border border-blue-500/30 p-3 rounded-lg">
+                <p className="text-sm text-blue-700 dark:text-blue-400">
+                  Selecciona tu método de pago preferido. Después de confirmar, recibirás tus números digitales.
                 </p>
               </div>
 

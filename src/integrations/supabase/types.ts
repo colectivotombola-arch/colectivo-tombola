@@ -953,30 +953,59 @@ export type Database = {
       }
       transferencias: {
         Row: {
+          comprobante_url: string | null
           created_at: string
           email: string
           id: string
           monto_pagado: number
           nombre: string
+          notes: string | null
           numero_referencia: string | null
+          package_id: string | null
+          quantity: number | null
+          raffle_id: string | null
+          status: string | null
+          updated_at: string | null
         }
         Insert: {
+          comprobante_url?: string | null
           created_at?: string
           email: string
           id?: string
           monto_pagado: number
           nombre: string
+          notes?: string | null
           numero_referencia?: string | null
+          package_id?: string | null
+          quantity?: number | null
+          raffle_id?: string | null
+          status?: string | null
+          updated_at?: string | null
         }
         Update: {
+          comprobante_url?: string | null
           created_at?: string
           email?: string
           id?: string
           monto_pagado?: number
           nombre?: string
+          notes?: string | null
           numero_referencia?: string | null
+          package_id?: string | null
+          quantity?: number | null
+          raffle_id?: string | null
+          status?: string | null
+          updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transferencias_raffle_id_fkey"
+            columns: ["raffle_id"]
+            isOneToOne: false
+            referencedRelation: "raffles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
