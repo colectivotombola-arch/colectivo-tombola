@@ -1,27 +1,166 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Building2, CheckCircle } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { ArrowLeft, Building2, CheckCircle, Upload, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { siteSettingsAPI, supabase, type SiteSettings } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
 const PagoTransferencia = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [loading, setLoading] = useState(false);
+  const [loadingSettings, setLoadingSettings] = useState(true);
   const [submitted, setSubmitted] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [settings, setSettings] = useState<Partial<SiteSettings> | null>(null);
+  
+  // Get data from navigation state
+  const buyerData = location.state?.buyerData || {};
+  const raffleId = location.state?.raffleId || null;
+  const packageId = location.state?.packageId || null;
+  const quantity = location.state?.quantity || 1;
+  const passedTotal = location.state?.total || 0;
   
   const [formData, setFormData] = useState({
-    nombre: '',
-    email: '',
-    monto_pagado: '',
-    numero_referencia: ''
+    nombre: buyerData.name || '',
+    email: buyerData.email || '',
+    telefono: buyerData.phone || '',
+    monto_pagado: passedTotal > 0 ? passedTotal.toString() : '',
+    numero_referencia: '',
+    comprobante_url: ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      const settingsData = await siteSettingsAPI.getPublic();
+      if (settingsData) {
+        let processedSettings = { ...settingsData };
+        if (settingsData.payment_settings) {
+          try {
+            processedSettings.payment_settings = typeof settingsData.payment_settings === 'string' 
+              ? JSON.parse(settingsData.payment_settings) 
+              : settingsData.payment_settings;
+          } catch (e) {
+            console.error('Error parsing payment_settings:', e);
+            processedSettings.payment_settings = {};
+          }
+        }
+        setSettings(processedSettings);
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error);
+    } finally {
+      setLoadingSettings(false);
+    }
+  };
+
+  const getBankDetails = () => {
+    const paymentConfig = settings?.payment_settings as any;
+    return {
+      bank_name: paymentConfig?.bank_name || 'No configurado',
+      account_type: paymentConfig?.account_type || 'Ahorros',
+      account_number: paymentConfig?.bank_account || 'No configurado',
+      account_holder: paymentConfig?.bank_holder || 'No configurado',
+      instructions: paymentConfig?.transfer_instructions || ''
+    };
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Error",
+        description: "Solo se permiten imágenes",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "La imagen no puede ser mayor a 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setUploading(true);
+    
+    try {
+      // Create preview
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewUrl(objectUrl);
+      
+      // Upload to Supabase Storage
+      const fileName = `comprobantes/${Date.now()}-${file.name}`;
+      const { data, error } = await supabase.storage
+        .from('uploads')
+        .upload(fileName, file);
+      
+      if (error) {
+        console.error('Upload error:', error);
+        // Try to create the bucket if it doesn't exist
+        const { error: bucketError } = await supabase.storage.createBucket('uploads', {
+          public: true
+        });
+        
+        if (!bucketError) {
+          // Retry upload
+          const { data: retryData, error: retryError } = await supabase.storage
+            .from('uploads')
+            .upload(fileName, file);
+          
+          if (retryError) throw retryError;
+          
+          const { data: urlData } = supabase.storage
+            .from('uploads')
+            .getPublicUrl(fileName);
+          
+          setFormData(prev => ({ ...prev, comprobante_url: urlData.publicUrl }));
+        } else {
+          throw error;
+        }
+      } else {
+        const { data: urlData } = supabase.storage
+          .from('uploads')
+          .getPublicUrl(fileName);
+        
+        setFormData(prev => ({ ...prev, comprobante_url: urlData.publicUrl }));
+      }
+      
+      toast({
+        title: "Comprobante subido",
+        description: "La imagen se ha cargado correctamente",
+      });
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo subir el comprobante. Continúa sin él y envíalo por WhatsApp.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -55,8 +194,14 @@ const PagoTransferencia = () => {
         .insert({
           nombre: formData.nombre.trim(),
           email: formData.email.trim(),
+          telefono: formData.telefono.trim() || null,
           monto_pagado: parseFloat(formData.monto_pagado),
-          numero_referencia: formData.numero_referencia.trim() || null
+          numero_referencia: formData.numero_referencia.trim() || null,
+          comprobante_url: formData.comprobante_url || null,
+          raffle_id: raffleId,
+          package_id: packageId,
+          quantity: quantity,
+          status: 'pendiente'
         });
       
       if (error) throw error;
@@ -64,7 +209,7 @@ const PagoTransferencia = () => {
       setSubmitted(true);
       toast({
         title: "Comprobante enviado",
-        description: "Tu comprobante ha sido registrado correctamente",
+        description: "Tu comprobante ha sido registrado correctamente. Te contactaremos pronto.",
       });
     } catch (error) {
       console.error('Error:', error);
@@ -88,6 +233,11 @@ const PagoTransferencia = () => {
             <p className="text-muted-foreground text-sm">
               Hemos recibido tu comprobante de transferencia. Te contactaremos pronto para confirmar tu compra y asignarte tus números.
             </p>
+            <div className="bg-muted/50 p-3 rounded-lg text-sm">
+              <p className="font-medium">Resumen:</p>
+              <p>Cantidad: {quantity} boletos</p>
+              <p>Monto: ${formData.monto_pagado}</p>
+            </div>
             <Button onClick={() => navigate('/')} className="w-full">
               Volver al inicio
             </Button>
@@ -97,17 +247,22 @@ const PagoTransferencia = () => {
     );
   }
 
+  const bankDetails = getBankDetails();
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-card border-b border-border">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center space-x-3">
-            <Link to="/comprar">
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
-            </Link>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8"
+              onClick={() => navigate(-1)}
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
             <h1 className="text-lg font-bold text-foreground">Pago por Transferencia</h1>
           </div>
         </div>
@@ -126,24 +281,51 @@ const PagoTransferencia = () => {
             <p className="text-muted-foreground mb-3">
               Realiza la transferencia por el monto total de tu compra y envíanos tu comprobante.
             </p>
-            <div className="bg-muted/50 p-3 rounded-lg space-y-1">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Banco:</span>
-                <span className="font-medium">NOMBRE DEL BANCO</span>
+            
+            {loadingSettings ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="w-5 h-5 animate-spin text-primary" />
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Tipo de cuenta:</span>
-                <span className="font-medium">AHORROS</span>
+            ) : (
+              <div className="bg-muted/50 p-3 rounded-lg space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Banco:</span>
+                  <span className="font-medium">{bankDetails.bank_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Tipo de cuenta:</span>
+                  <span className="font-medium">{bankDetails.account_type}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Número de cuenta:</span>
+                  <span className="font-medium">{bankDetails.account_number}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Titular:</span>
+                  <span className="font-medium">{bankDetails.account_holder}</span>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Número de cuenta:</span>
-                <span className="font-medium">0000000000</span>
+            )}
+            
+            {bankDetails.instructions && (
+              <div className="bg-yellow-500/10 border border-yellow-500/30 p-3 rounded-lg mt-3">
+                <p className="text-sm text-yellow-700 dark:text-yellow-400">
+                  {bankDetails.instructions}
+                </p>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Titular:</span>
-                <span className="font-medium">NOMBRE DEL TITULAR</span>
+            )}
+            
+            {passedTotal > 0 && (
+              <div className="bg-primary/10 p-3 rounded-lg mt-3">
+                <div className="flex justify-between text-base font-bold">
+                  <span>Total a transferir:</span>
+                  <span className="text-primary">${passedTotal.toFixed(2)}</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {quantity} boleto{quantity > 1 ? 's' : ''}
+                </p>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 
@@ -180,6 +362,17 @@ const PagoTransferencia = () => {
               </div>
 
               <div>
+                <Label htmlFor="telefono" className="text-sm">Teléfono</Label>
+                <Input
+                  id="telefono"
+                  value={formData.telefono}
+                  onChange={(e) => setFormData(prev => ({ ...prev, telefono: e.target.value }))}
+                  placeholder="Tu número de teléfono"
+                  className="h-9"
+                />
+              </div>
+
+              <div>
                 <Label htmlFor="monto_pagado" className="text-sm">Monto Pagado *</Label>
                 <Input
                   id="monto_pagado"
@@ -199,17 +392,73 @@ const PagoTransferencia = () => {
                   id="numero_referencia"
                   value={formData.numero_referencia}
                   onChange={(e) => setFormData(prev => ({ ...prev, numero_referencia: e.target.value }))}
-                  placeholder="Número de referencia o descripción"
+                  placeholder="Número de referencia de la transferencia"
                   className="h-9"
                 />
               </div>
 
+              {/* File Upload */}
+              <div>
+                <Label className="text-sm">Comprobante (opcional)</Label>
+                <div 
+                  className="mt-1 border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                  
+                  {uploading ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                      <p className="text-sm text-muted-foreground">Subiendo...</p>
+                    </div>
+                  ) : previewUrl ? (
+                    <div className="space-y-2">
+                      <img 
+                        src={previewUrl} 
+                        alt="Comprobante" 
+                        className="max-h-32 mx-auto rounded"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Haz clic para cambiar la imagen
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      <Upload className="w-8 h-8 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">
+                        Haz clic para subir una imagen del comprobante
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        PNG, JPG hasta 5MB
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Enviando...' : 'Enviar Comprobante'}
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  'Enviar Comprobante'
+                )}
               </Button>
             </form>
           </CardContent>
         </Card>
+        
+        <p className="text-xs text-muted-foreground text-center mt-4">
+          También puedes enviarnos el comprobante por WhatsApp si tienes problemas.
+        </p>
       </div>
     </div>
   );

@@ -3,8 +3,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { purchaseConfirmationsAPI, rafflesAPI, type PurchaseConfirmation, type Raffle } from '@/lib/supabase';
+import { purchaseConfirmationsAPI, rafflesAPI, supabase, type PurchaseConfirmation, type Raffle } from '@/lib/supabase';
 import { AdminLayout } from '@/components/AdminLayout';
 import { 
   CheckCircle, 
@@ -15,14 +16,35 @@ import {
   User,
   Hash,
   DollarSign,
-  RefreshCw
+  RefreshCw,
+  Building2,
+  ExternalLink,
+  CreditCard
 } from 'lucide-react';
+
+interface Transfer {
+  id: string;
+  nombre: string;
+  email: string;
+  telefono?: string;
+  monto_pagado: number;
+  numero_referencia?: string;
+  comprobante_url?: string;
+  raffle_id?: string;
+  package_id?: string;
+  quantity?: number;
+  status: string;
+  notes?: string;
+  created_at: string;
+  updated_at?: string;
+}
 
 const AdminConfirmations = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   
   const [confirmations, setConfirmations] = useState<PurchaseConfirmation[]>([]);
+  const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [raffles, setRaffles] = useState<Raffle[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
@@ -32,14 +54,17 @@ const AdminConfirmations = () => {
   }, []);
 
   const loadData = async () => {
+    setLoading(true);
     try {
-      const [confirmationsData, rafflesData] = await Promise.all([
+      const [confirmationsData, rafflesData, transfersData] = await Promise.all([
         purchaseConfirmationsAPI.getAll(),
-        rafflesAPI.getAll()
+        rafflesAPI.getAll(),
+        supabase.from('transferencias').select('*').order('created_at', { ascending: false })
       ]);
       
       setConfirmations(confirmationsData);
       setRaffles(rafflesData);
+      setTransfers(transfersData.data || []);
     } catch (error) {
       console.error('Error loading data:', error);
       toast({
@@ -52,7 +77,7 @@ const AdminConfirmations = () => {
     }
   };
 
-  const updateStatus = async (confirmationId: string, newStatus: string) => {
+  const updateConfirmationStatus = async (confirmationId: string, newStatus: string) => {
     setUpdating(confirmationId);
     try {
       const success = await purchaseConfirmationsAPI.updateStatus(confirmationId, newStatus);
@@ -85,7 +110,50 @@ const AdminConfirmations = () => {
     }
   };
 
-  const getRaffleName = (raffleId: string) => {
+  const updateTransferStatus = async (transferId: string, newStatus: string) => {
+    setUpdating(transferId);
+    try {
+      const { error } = await supabase
+        .from('transferencias')
+        .update({ status: newStatus })
+        .eq('id', transferId);
+      
+      if (error) throw error;
+      
+      setTransfers(prev => 
+        prev.map(t => 
+          t.id === transferId 
+            ? { ...t, status: newStatus }
+            : t
+        )
+      );
+      
+      // If approved, we could assign numbers here
+      if (newStatus === 'aprobado') {
+        toast({
+          title: "¡Aprobado!",
+          description: "La transferencia ha sido aprobada. Asigna los números manualmente.",
+        });
+      } else {
+        toast({
+          title: "Actualizado",
+          description: `Estado cambiado a ${newStatus}`,
+        });
+      }
+    } catch (error) {
+      console.error('Error updating transfer:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el estado",
+        variant: "destructive",
+      });
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  const getRaffleName = (raffleId: string | undefined) => {
+    if (!raffleId) return 'No especificada';
     const raffle = raffles.find(r => r.id === raffleId);
     return raffle?.title || 'Rifa no encontrada';
   };
@@ -93,10 +161,12 @@ const AdminConfirmations = () => {
   const getStatusColor = (status?: string) => {
     switch (status) {
       case 'paid':
+      case 'aprobado':
         return 'bg-green-100 text-green-800 border-green-200';
       case 'confirmed':
         return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'cancelled':
+      case 'rechazado':
         return 'bg-red-100 text-red-800 border-red-200';
       default:
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
@@ -107,13 +177,18 @@ const AdminConfirmations = () => {
     switch (status) {
       case 'paid':
       case 'confirmed':
+      case 'aprobado':
         return <CheckCircle className="w-4 h-4" />;
       case 'cancelled':
+      case 'rechazado':
         return <XCircle className="w-4 h-4" />;
       default:
         return <Clock className="w-4 h-4" />;
     }
   };
+
+  const pendingConfirmations = confirmations.filter(c => c.status === 'pending').length;
+  const pendingTransfers = transfers.filter(t => t.status === 'pendiente').length;
 
   if (loading) {
     return (
@@ -128,21 +203,27 @@ const AdminConfirmations = () => {
   return (
     <AdminLayout 
       title="Confirmaciones de Compra" 
-      subtitle={`Gestiona las ${confirmations.length} confirmaciones de compra`}
+      subtitle={`Gestiona las confirmaciones de PayPal y transferencias`}
     >
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         
-        {/* Botón de actualizar */}
-        <div className="flex justify-between items-center">
-          <div className="flex gap-4">
+        {/* Header with stats */}
+        <div className="flex flex-wrap justify-between items-center gap-4">
+          <div className="flex flex-wrap gap-4">
             <Badge variant="outline" className="flex items-center gap-2">
-              <Clock className="w-3 h-3" />
-              Pendientes: {confirmations.filter(c => c.status === 'pending').length}
+              <CreditCard className="w-3 h-3" />
+              PayPal: {confirmations.length}
             </Badge>
             <Badge variant="outline" className="flex items-center gap-2">
-              <CheckCircle className="w-3 h-3" />
-              Confirmadas: {confirmations.filter(c => c.status === 'paid').length}
+              <Building2 className="w-3 h-3" />
+              Transferencias: {transfers.length}
             </Badge>
+            {(pendingConfirmations > 0 || pendingTransfers > 0) && (
+              <Badge variant="destructive" className="flex items-center gap-2">
+                <Clock className="w-3 h-3" />
+                Pendientes: {pendingConfirmations + pendingTransfers}
+              </Badge>
+            )}
           </div>
           <Button onClick={loadData} variant="outline" className="touch-target">
             <RefreshCw className="w-4 h-4 mr-2" />
@@ -150,135 +231,277 @@ const AdminConfirmations = () => {
           </Button>
         </div>
 
-        {/* Lista de confirmaciones */}
-        <div className="space-y-4">
-          {confirmations.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-12">
-                <Mail className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p className="text-muted-foreground">No hay confirmaciones de compra</p>
-              </CardContent>
-            </Card>
-          ) : (
-            confirmations.map((confirmation) => (
-              <Card key={confirmation.id} className="overflow-hidden">
-                <CardHeader className="pb-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <Badge className={`${getStatusColor(confirmation.status)} flex items-center gap-1`}>
-                        {getStatusIcon(confirmation.status)}
-                        {confirmation.status || 'pending'}
-                      </Badge>
-                      <div className="text-sm text-muted-foreground">
-                        {new Date(confirmation.created_at || '').toLocaleDateString('es-ES', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
+        {/* Tabs for PayPal and Transfers */}
+        <Tabs defaultValue="paypal" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="paypal" className="flex items-center gap-2">
+              <CreditCard className="w-4 h-4" />
+              PayPal ({confirmations.length})
+            </TabsTrigger>
+            <TabsTrigger value="transfers" className="flex items-center gap-2">
+              <Building2 className="w-4 h-4" />
+              Transferencias ({transfers.length})
+            </TabsTrigger>
+          </TabsList>
+
+          {/* PayPal Confirmations */}
+          <TabsContent value="paypal" className="space-y-4 mt-4">
+            {confirmations.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <CreditCard className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-muted-foreground">No hay confirmaciones de PayPal</p>
+                </CardContent>
+              </Card>
+            ) : (
+              confirmations.map((confirmation) => (
+                <Card key={confirmation.id} className="overflow-hidden">
+                  <CardHeader className="pb-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <Badge className={`${getStatusColor(confirmation.status)} flex items-center gap-1`}>
+                          {getStatusIcon(confirmation.status)}
+                          {confirmation.status || 'pending'}
+                        </Badge>
+                        <div className="text-sm text-muted-foreground">
+                          {new Date(confirmation.created_at || '').toLocaleDateString('es-ES', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      {confirmation.status === 'pending' && (
-                        <>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        {confirmation.status === 'pending' && (
+                          <>
+                            <Button
+                              size="sm"
+                              onClick={() => updateConfirmationStatus(confirmation.id!, 'paid')}
+                              disabled={updating === confirmation.id}
+                              className="bg-green-600 hover:bg-green-700 touch-target"
+                            >
+                              {updating === confirmation.id ? 'Actualizando...' : 'Marcar como Pagado'}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => updateConfirmationStatus(confirmation.id!, 'cancelled')}
+                              disabled={updating === confirmation.id}
+                              className="touch-target"
+                            >
+                              Cancelar
+                            </Button>
+                          </>
+                        )}
+                        {confirmation.status === 'paid' && (
                           <Button
                             size="sm"
-                            onClick={() => updateStatus(confirmation.id!, 'paid')}
-                            disabled={updating === confirmation.id}
-                            className="bg-green-600 hover:bg-green-700 touch-target"
-                          >
-                            {updating === confirmation.id ? 'Actualizando...' : 'Marcar como Pagado'}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => updateStatus(confirmation.id!, 'cancelled')}
+                            variant="outline"
+                            onClick={() => updateConfirmationStatus(confirmation.id!, 'pending')}
                             disabled={updating === confirmation.id}
                             className="touch-target"
                           >
-                            Cancelar
+                            Marcar como Pendiente
                           </Button>
-                        </>
-                      )}
-                      {confirmation.status === 'paid' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => updateStatus(confirmation.id!, 'pending')}
-                          disabled={updating === confirmation.id}
-                          className="touch-target"
-                        >
-                          Marcar como Pendiente
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    
-                    {/* Información del cliente */}
-                    <div className="space-y-2">
-                      <h4 className="font-semibold flex items-center gap-2">
-                        <User className="w-4 h-4" />
-                        Cliente
-                      </h4>
-                      <div className="space-y-1 text-sm">
-                        <p><strong>Nombre:</strong> {confirmation.buyer_name}</p>
-                        <p className="flex items-center gap-1">
-                          <Mail className="w-3 h-3" />
-                          {confirmation.buyer_email}
-                        </p>
-                        <p className="flex items-center gap-1">
-                          <Phone className="w-3 h-3" />
-                          {confirmation.buyer_phone}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Información de la compra */}
-                    <div className="space-y-2">
-                      <h4 className="font-semibold flex items-center gap-2">
-                        <DollarSign className="w-4 h-4" />
-                        Compra
-                      </h4>
-                      <div className="space-y-1 text-sm">
-                        <p><strong>Rifa:</strong> {getRaffleName(confirmation.raffle_id)}</p>
-                        <p><strong>Cantidad:</strong> {confirmation.quantity} boletos</p>
-                        <p><strong>Total:</strong> ${confirmation.total_amount}</p>
-                        <p><strong>Método:</strong> {confirmation.payment_method || 'whatsapp'}</p>
-                      </div>
-                    </div>
-
-                    {/* Números asignados */}
-                    <div className="space-y-2">
-                      <h4 className="font-semibold flex items-center gap-2">
-                        <Hash className="w-4 h-4" />
-                        Números
-                      </h4>
-                      <div className="text-sm">
-                        <p><strong>Confirmación:</strong> {confirmation.confirmation_number}</p>
-                        {confirmation.assigned_numbers && confirmation.assigned_numbers.length > 0 && (
-                          <div className="mt-2">
-                            <p className="font-medium mb-1">Números asignados:</p>
-                            <div className="flex flex-wrap gap-1">
-                              {confirmation.assigned_numbers.map(num => (
-                                <Badge key={num} variant="outline" className="text-xs">
-                                  {num}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
                         )}
                       </div>
                     </div>
-                  </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <User className="w-4 h-4" />
+                          Cliente
+                        </h4>
+                        <div className="space-y-1 text-sm">
+                          <p><strong>Nombre:</strong> {confirmation.buyer_name}</p>
+                          <p className="flex items-center gap-1">
+                            <Mail className="w-3 h-3" />
+                            {confirmation.buyer_email}
+                          </p>
+                          <p className="flex items-center gap-1">
+                            <Phone className="w-3 h-3" />
+                            {confirmation.buyer_phone}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <DollarSign className="w-4 h-4" />
+                          Compra
+                        </h4>
+                        <div className="space-y-1 text-sm">
+                          <p><strong>Rifa:</strong> {getRaffleName(confirmation.raffle_id)}</p>
+                          <p><strong>Cantidad:</strong> {confirmation.quantity} boletos</p>
+                          <p><strong>Total:</strong> ${confirmation.total_amount}</p>
+                          <p><strong>Método:</strong> {confirmation.payment_method || 'PayPal'}</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <Hash className="w-4 h-4" />
+                          Números
+                        </h4>
+                        <div className="text-sm">
+                          <p><strong>Confirmación:</strong> {confirmation.confirmation_number}</p>
+                          {confirmation.assigned_numbers && confirmation.assigned_numbers.length > 0 && (
+                            <div className="mt-2">
+                              <p className="font-medium mb-1">Números asignados:</p>
+                              <div className="flex flex-wrap gap-1">
+                                {confirmation.assigned_numbers.map(num => (
+                                  <Badge key={num} variant="outline" className="text-xs">
+                                    {num}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </TabsContent>
+
+          {/* Bank Transfers */}
+          <TabsContent value="transfers" className="space-y-4 mt-4">
+            {transfers.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <Building2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-muted-foreground">No hay transferencias registradas</p>
                 </CardContent>
               </Card>
-            ))
-          )}
-        </div>
+            ) : (
+              transfers.map((transfer) => (
+                <Card key={transfer.id} className="overflow-hidden">
+                  <CardHeader className="pb-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <Badge className={`${getStatusColor(transfer.status)} flex items-center gap-1`}>
+                          {getStatusIcon(transfer.status)}
+                          {transfer.status}
+                        </Badge>
+                        <div className="text-sm text-muted-foreground">
+                          {new Date(transfer.created_at).toLocaleDateString('es-ES', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        {transfer.status === 'pendiente' && (
+                          <>
+                            <Button
+                              size="sm"
+                              onClick={() => updateTransferStatus(transfer.id, 'aprobado')}
+                              disabled={updating === transfer.id}
+                              className="bg-green-600 hover:bg-green-700 touch-target"
+                            >
+                              {updating === transfer.id ? 'Actualizando...' : 'Aprobar'}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => updateTransferStatus(transfer.id, 'rechazado')}
+                              disabled={updating === transfer.id}
+                              className="touch-target"
+                            >
+                              Rechazar
+                            </Button>
+                          </>
+                        )}
+                        {transfer.status === 'aprobado' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateTransferStatus(transfer.id, 'pendiente')}
+                            disabled={updating === transfer.id}
+                            className="touch-target"
+                          >
+                            Marcar como Pendiente
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <User className="w-4 h-4" />
+                          Cliente
+                        </h4>
+                        <div className="space-y-1 text-sm">
+                          <p><strong>Nombre:</strong> {transfer.nombre}</p>
+                          <p className="flex items-center gap-1">
+                            <Mail className="w-3 h-3" />
+                            {transfer.email}
+                          </p>
+                          {transfer.telefono && (
+                            <p className="flex items-center gap-1">
+                              <Phone className="w-3 h-3" />
+                              {transfer.telefono}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <DollarSign className="w-4 h-4" />
+                          Pago
+                        </h4>
+                        <div className="space-y-1 text-sm">
+                          <p><strong>Monto:</strong> ${transfer.monto_pagado}</p>
+                          {transfer.numero_referencia && (
+                            <p><strong>Referencia:</strong> {transfer.numero_referencia}</p>
+                          )}
+                          {transfer.quantity && (
+                            <p><strong>Boletos:</strong> {transfer.quantity}</p>
+                          )}
+                          <p><strong>Rifa:</strong> {getRaffleName(transfer.raffle_id)}</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <Hash className="w-4 h-4" />
+                          Comprobante
+                        </h4>
+                        <div className="text-sm">
+                          {transfer.comprobante_url ? (
+                            <a 
+                              href={transfer.comprobante_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-primary hover:underline"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                              Ver comprobante
+                            </a>
+                          ) : (
+                            <p className="text-muted-foreground">Sin comprobante adjunto</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </AdminLayout>
   );
