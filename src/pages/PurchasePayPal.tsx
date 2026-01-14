@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { rafflesAPI, siteSettingsAPI, supabase, type Raffle, type SiteSettings } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import PayPalWidget from '@/components/PayPalWidget';
 
 const PurchasePayPal = () => {
   const { raffleId, quantity } = useParams();
@@ -17,6 +16,13 @@ const PurchasePayPal = () => {
   const [raffle, setRaffle] = useState<Raffle | null>(null);
   const [settings, setSettings] = useState<Partial<SiteSettings> | null>(null);
   const [loading, setLoading] = useState(true);
+  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
+  const [assignedNumbers, setAssignedNumbers] = useState<number[]>([]);
+  const [errorMessage, setErrorMessage] = useState('');
+  
+  const paypalButtonRef = useRef<HTMLDivElement>(null);
+  const cardButtonRef = useRef<HTMLDivElement>(null);
+  const sdkLoadedRef = useRef(false);
 
   useEffect(() => {
     loadData();
@@ -31,7 +37,6 @@ const PurchasePayPal = () => {
       
       setRaffle(raffleData);
       
-      // Parse payment_settings from JSON if needed
       if (settingsData) {
         let processedSettings = { ...settingsData };
         if (settingsData.payment_settings) {
@@ -57,22 +62,51 @@ const PurchasePayPal = () => {
     }
   };
 
-  const handlePayPalSuccess = async (details: any) => {
-    try {
-      if (!buyerData) {
-        toast({
-          title: "Faltan datos",
-          description: "Vuelve y completa tus datos de comprador",
-          variant: "destructive",
-        });
-        navigate('/comprar');
-        return;
-      }
+  // Get PayPal config from settings
+  const getPayPalConfig = useCallback(() => {
+    const paymentSettings = settings?.payment_settings || {};
+    const environment = paymentSettings.paypal_environment || 'sandbox';
+    
+    // Get client ID based on environment
+    let clientId = '';
+    if (environment === 'live') {
+      clientId = paymentSettings.paypal_live_client_id || paymentSettings.paypal_client_id || '';
+    } else {
+      clientId = paymentSettings.paypal_sandbox_client_id || paymentSettings.paypal_client_id || '';
+    }
+    
+    // Fallback to default sandbox client ID if none configured
+    if (!clientId) {
+      clientId = 'AcThy7S3bmb6CLJVF9IhV0xsbEkrXmYm-rilgJHnf3t4XVE_3zQrtHSW_tudJvXPlZEE912X9tlsR624';
+    }
+    
+    const currency = paymentSettings.paypal_currency || 'USD';
+    
+    return { clientId, currency, environment };
+  }, [settings]);
 
+  // Process payment after PayPal approval
+  const processPayment = async (orderId: string, captureDetails: any) => {
+    if (!buyerData) {
+      setPaymentStatus('error');
+      setErrorMessage('Faltan datos del comprador. Por favor vuelve e ingresa tus datos.');
+      return;
+    }
+
+    setPaymentStatus('processing');
+
+    try {
       const ticketQuantity = parseInt(quantity || '1');
       const total = ticketQuantity * (raffle?.price_per_number || 0);
 
-      const { error } = await supabase.functions.invoke('process-paypal-purchase', {
+      console.log('Processing PayPal purchase:', {
+        raffle_id: raffle?.id,
+        quantity: ticketQuantity,
+        total_amount: total,
+        paypal_order_id: orderId,
+      });
+
+      const { data, error } = await supabase.functions.invoke('process-paypal-purchase', {
         body: {
           raffle_id: raffle?.id,
           quantity: ticketQuantity,
@@ -80,19 +114,27 @@ const PurchasePayPal = () => {
           buyer_name: buyerData.name,
           buyer_email: buyerData.email,
           buyer_phone: buyerData.phone,
-          paypal_order_id: details?.id,
+          paypal_order_id: orderId,
         }
       });
 
       if (error) throw error;
 
+      console.log('Payment processed successfully:', data);
+      
+      setAssignedNumbers(data?.assigned_numbers || []);
+      setPaymentStatus('success');
+      
       toast({
         title: "¡Pago exitoso!",
-        description: `Compra confirmada. Recibirás tus números por email. ID: ${details.id}`,
+        description: `Se te han asignado ${ticketQuantity} números. Revisa tu correo.`,
       });
-      setTimeout(() => navigate(`/`), 2000);
-    } catch (err) {
-      console.error('Error post-pago:', err);
+
+    } catch (err: any) {
+      console.error('Error processing payment:', err);
+      setPaymentStatus('error');
+      setErrorMessage(err.message || 'Ocurrió un error procesando tu compra. Si el cargo fue realizado, contáctanos.');
+      
       toast({
         title: "Error",
         description: "No se pudo confirmar la compra. Si el cargo fue realizado, contáctanos.",
@@ -101,34 +143,259 @@ const PurchasePayPal = () => {
     }
   };
 
-  const handlePayPalError = (error: any) => {
-    console.error('PayPal error:', error);
-    toast({
-      title: "Error en el pago",
-      description: "Hubo un problema procesando tu pago. Intenta nuevamente.",
-      variant: "destructive",
-    });
-  };
+  // Initialize PayPal buttons
+  const initializePayPal = useCallback(() => {
+    if (!(window as any).paypal || sdkLoadedRef.current) return;
+    if (!paypalButtonRef.current && !cardButtonRef.current) return;
+    
+    sdkLoadedRef.current = true;
+    
+    const ticketQuantity = parseInt(quantity || '1');
+    const total = ticketQuantity * (raffle?.price_per_number || 0);
+    const { currency } = getPayPalConfig();
+
+    const buttonConfig = {
+      style: { 
+        layout: 'vertical' as const, 
+        shape: 'rect' as const, 
+        label: 'paypal' as const,
+        height: 45
+      },
+      createOrder: (_data: any, actions: any) => {
+        console.log('Creating PayPal order:', { total, currency });
+        return actions.order.create({
+          purchase_units: [{
+            amount: { 
+              value: total.toFixed(2), 
+              currency_code: currency 
+            },
+            description: `Compra de ${ticketQuantity} boletos - ${raffle?.title || 'Rifa'}`
+          }]
+        });
+      },
+      onApprove: async (data: any, actions: any) => {
+        console.log('PayPal payment approved, capturing...', data);
+        try {
+          const captureDetails = await actions.order.capture();
+          console.log('Payment captured:', captureDetails);
+          await processPayment(data.orderID, captureDetails);
+        } catch (err) {
+          console.error('Error capturing payment:', err);
+          setPaymentStatus('error');
+          setErrorMessage('Error al capturar el pago. Intenta de nuevo.');
+        }
+      },
+      onCancel: () => {
+        console.log('Payment cancelled by user');
+        toast({
+          title: "Pago cancelado",
+          description: "Has cancelado el proceso de pago.",
+          variant: "destructive",
+        });
+      },
+      onError: (err: any) => {
+        console.error('PayPal error:', err);
+        setPaymentStatus('error');
+        setErrorMessage('Error de PayPal. Verifica tu conexión e intenta de nuevo.');
+        toast({
+          title: "Error de PayPal",
+          description: "Hubo un problema con PayPal. Intenta de nuevo.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    // Render PayPal button
+    if (paypalButtonRef.current) {
+      const ppBtn = (window as any).paypal.Buttons({ 
+        fundingSource: (window as any).paypal.FUNDING.PAYPAL, 
+        ...buttonConfig 
+      });
+      if (ppBtn.isEligible()) {
+        ppBtn.render(paypalButtonRef.current);
+      }
+    }
+
+    // Render Card button
+    if (cardButtonRef.current) {
+      const cardBtn = (window as any).paypal.Buttons({ 
+        fundingSource: (window as any).paypal.FUNDING.CARD, 
+        ...buttonConfig 
+      });
+      if (cardBtn.isEligible()) {
+        cardBtn.render(cardButtonRef.current);
+      }
+    }
+  }, [raffle, quantity, getPayPalConfig, toast]);
+
+  // Load PayPal SDK
+  useEffect(() => {
+    if (!settings || !raffle || sdkLoadedRef.current) return;
+    
+    const { clientId, currency, environment } = getPayPalConfig();
+    
+    console.log('Loading PayPal SDK:', { clientId: clientId.substring(0, 20) + '...', currency, environment });
+    
+    // Remove any existing PayPal scripts
+    const existingScripts = document.querySelectorAll('script[src*="paypal.com/sdk"]');
+    existingScripts.forEach(script => script.remove());
+    
+    // Clear PayPal namespace
+    if ((window as any).paypal) {
+      delete (window as any).paypal;
+    }
+    
+    const script = document.createElement('script');
+    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=${currency}&intent=capture&components=buttons&enable-funding=card`;
+    script.async = true;
+    script.id = 'paypal-sdk';
+    
+    script.onload = () => {
+      console.log('PayPal SDK loaded successfully');
+      // Small delay to ensure PayPal is fully initialized
+      setTimeout(initializePayPal, 100);
+    };
+    
+    script.onerror = (error) => {
+      console.error('Error loading PayPal SDK:', error);
+      setPaymentStatus('error');
+      setErrorMessage('No se pudo cargar PayPal. Verifica tu conexión.');
+    };
+    
+    document.head.appendChild(script);
+    
+    return () => {
+      const sdkScript = document.getElementById('paypal-sdk');
+      if (sdkScript) {
+        document.head.removeChild(sdkScript);
+      }
+    };
+  }, [settings, raffle, getPayPalConfig, initializePayPal]);
 
   if (loading || !raffle) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-primary">Cargando proceso de pago...</div>
+        <div className="flex items-center gap-2 text-primary">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span>Cargando proceso de pago...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Check for buyer data
+  if (!buyerData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Card className="max-w-md mx-4">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <AlertCircle className="w-12 h-12 mx-auto text-destructive" />
+              <h2 className="text-xl font-bold text-foreground">Faltan datos del comprador</h2>
+              <p className="text-muted-foreground">
+                Por favor vuelve al paso anterior e ingresa tus datos de contacto.
+              </p>
+              <Link to="/comprar">
+                <Button className="w-full">Volver al inicio</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   const ticketQuantity = parseInt(quantity || '1');
   const total = ticketQuantity * raffle.price_per_number;
-  
-  // Get PayPal client ID from settings
-  const paymentSettings = settings?.payment_settings || {};
-  
-  const paypalClientId = paymentSettings?.paypal_client_id || 
-    'AcThy7S3bmb6CLJVF9IhV0xsbEkrXmYm-rilgJHnf3t4XVE_3zQrtHSW_tudJvXPlZEE912X9tlsR624';
-  
-  const paypalCurrency = paymentSettings?.paypal_currency || 'USD';
-  const paypalMinAmount = paymentSettings?.paypal_min_amount || total;
+  const { environment } = getPayPalConfig();
+
+  // Success state
+  if (paymentStatus === 'success') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <CheckCircle className="w-16 h-16 mx-auto text-green-500" />
+              <h2 className="text-2xl font-bold text-foreground">¡Pago Exitoso!</h2>
+              <p className="text-muted-foreground">
+                Tu compra ha sido procesada correctamente.
+              </p>
+              
+              {assignedNumbers.length > 0 && (
+                <div className="bg-muted p-4 rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-2">Tus números asignados:</p>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {assignedNumbers.sort((a, b) => a - b).map(num => (
+                      <span 
+                        key={num} 
+                        className="bg-primary text-primary-foreground px-3 py-1 rounded-full font-bold"
+                      >
+                        {num}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <p className="text-sm text-muted-foreground">
+                También recibirás un correo con los detalles de tu compra.
+              </p>
+              
+              <Link to="/">
+                <Button className="w-full mt-4">Volver al inicio</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Error state
+  if (paymentStatus === 'error') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <AlertCircle className="w-16 h-16 mx-auto text-destructive" />
+              <h2 className="text-2xl font-bold text-foreground">Error en el pago</h2>
+              <p className="text-muted-foreground">{errorMessage}</p>
+              
+              <div className="flex flex-col gap-2">
+                <Button onClick={() => setPaymentStatus('idle')} variant="outline">
+                  Intentar de nuevo
+                </Button>
+                <Link to="/comprar">
+                  <Button variant="ghost" className="w-full">Volver al inicio</Button>
+                </Link>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Processing state
+  if (paymentStatus === 'processing') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Card className="max-w-md mx-4">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <Loader2 className="w-12 h-12 mx-auto text-primary animate-spin" />
+              <h2 className="text-xl font-bold text-foreground">Procesando tu pago...</h2>
+              <p className="text-muted-foreground">
+                Por favor espera mientras confirmamos tu compra.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -145,13 +412,32 @@ const PurchasePayPal = () => {
               <h1 className="text-xl font-bold text-foreground">Pago con PayPal</h1>
               <p className="text-sm text-muted-foreground">{raffle.title}</p>
             </div>
+            {environment === 'sandbox' && (
+              <span className="text-xs bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded">
+                SANDBOX
+              </span>
+            )}
           </div>
         </div>
       </header>
 
       <div className="container mx-auto mobile-container py-8 max-w-2xl">
+        {/* Buyer Info Summary */}
+        <Card className="mb-4">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Datos del comprador</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-sm space-y-1 text-muted-foreground">
+              <p><strong>Nombre:</strong> {buyerData.name}</p>
+              <p><strong>Email:</strong> {buyerData.email}</p>
+              <p><strong>Teléfono:</strong> {buyerData.phone}</p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Purchase Summary */}
-        <Card className="mb-8">
+        <Card className="mb-6">
           <CardHeader>
             <CardTitle>Resumen de tu compra</CardTitle>
           </CardHeader>
@@ -167,7 +453,7 @@ const PurchasePayPal = () => {
               </div>
               <div className="flex justify-between">
                 <span>Precio por boleto:</span>
-                <span className="font-medium">${raffle.price_per_number}</span>
+                <span className="font-medium">${raffle.price_per_number.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-lg font-bold border-t pt-2">
                 <span>Total a pagar:</span>
@@ -177,26 +463,43 @@ const PurchasePayPal = () => {
           </CardContent>
         </Card>
 
-        {/* PayPal Widget */}
-        <PayPalWidget
-          onSuccess={handlePayPalSuccess}
-          onError={handlePayPalError}
-          onCancel={() => navigate('/comprar')}
-          minAmount={paypalMinAmount}
-          currency={paypalCurrency}
-          clientId={paypalClientId}
-        />
+        {/* PayPal Buttons */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Selecciona método de pago</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              Paga de forma segura con PayPal o tarjeta de crédito/débito.
+            </p>
+            
+            {/* PayPal Button Container */}
+            <div ref={paypalButtonRef} className="min-h-[45px]"></div>
+            
+            {/* Card Button Container */}
+            <div ref={cardButtonRef} className="min-h-[45px]"></div>
+            
+            {/* Loading state for buttons */}
+            {!(window as any).paypal && (
+              <div className="flex items-center justify-center py-4 text-muted-foreground">
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                Cargando opciones de pago...
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Instructions */}
-        <Card className="mt-8">
+        <Card>
           <CardHeader>
             <CardTitle>Instrucciones</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <p>• Una vez completado el pago, recibirás tus números por email</p>
-              <p>• Los números se asignan automáticamente y de forma aleatoria</p>
-              <p>• Guarda tu comprobante de pago para futuras consultas</p>
+              <p>• Haz clic en el botón de PayPal o Tarjeta para iniciar el pago</p>
+              <p>• Completa el proceso de pago en la ventana que se abrirá</p>
+              <p>• Una vez completado, recibirás tus números automáticamente</p>
+              <p>• También recibirás un correo con los detalles de tu compra</p>
               <p>• Si tienes problemas, contacta con nuestro soporte</p>
             </div>
           </CardContent>
