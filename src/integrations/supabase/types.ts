@@ -1083,6 +1083,8 @@ export type Database = {
         Args: never
         Returns: {
           activity_title: string
+          contact_email: string
+          contact_phone: string
           created_at: string
           hero_subtitle: string
           hero_title: string
@@ -1091,6 +1093,7 @@ export type Database = {
           instagram_handle: string
           instagram_video_url: string
           logo_url: string
+          payment_settings: Json
           price_per_number: string
           primary_color: string
           purchase_rules: string
@@ -1100,6 +1103,7 @@ export type Database = {
           site_tagline: string
           terms_and_conditions: string
           updated_at: string
+          whatsapp_datalinks: Json
           whatsapp_number: string
         }[]
       }
