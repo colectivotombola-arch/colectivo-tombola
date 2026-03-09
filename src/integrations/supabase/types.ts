@@ -16,9 +16,12 @@ export type Database = {
     Tables: {
       bingo_games: {
         Row: {
+          auto_mode: boolean | null
           called_numbers: number[] | null
           created_at: string | null
+          current_number: number | null
           entry_fee: number | null
+          game_speed: number | null
           id: string
           instagram_stream_key: string | null
           is_streaming: boolean | null
@@ -26,12 +29,16 @@ export type Database = {
           name: string
           prize_pool: number | null
           status: string
+          total_participants: number | null
           updated_at: string | null
         }
         Insert: {
+          auto_mode?: boolean | null
           called_numbers?: number[] | null
           created_at?: string | null
+          current_number?: number | null
           entry_fee?: number | null
+          game_speed?: number | null
           id?: string
           instagram_stream_key?: string | null
           is_streaming?: boolean | null
@@ -39,12 +46,16 @@ export type Database = {
           name: string
           prize_pool?: number | null
           status?: string
+          total_participants?: number | null
           updated_at?: string | null
         }
         Update: {
+          auto_mode?: boolean | null
           called_numbers?: number[] | null
           created_at?: string | null
+          current_number?: number | null
           entry_fee?: number | null
+          game_speed?: number | null
           id?: string
           instagram_stream_key?: string | null
           is_streaming?: boolean | null
@@ -52,9 +63,60 @@ export type Database = {
           name?: string
           prize_pool?: number | null
           status?: string
+          total_participants?: number | null
           updated_at?: string | null
         }
         Relationships: []
+      }
+      bingo_participants: {
+        Row: {
+          card_data: Json
+          cards_purchased: number
+          created_at: string | null
+          game_id: string | null
+          id: string
+          payment_id: string | null
+          payment_status: string
+          player_email: string
+          player_name: string
+          player_phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          card_data?: Json
+          cards_purchased?: number
+          created_at?: string | null
+          game_id?: string | null
+          id?: string
+          payment_id?: string | null
+          payment_status?: string
+          player_email: string
+          player_name: string
+          player_phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          card_data?: Json
+          cards_purchased?: number
+          created_at?: string | null
+          game_id?: string | null
+          id?: string
+          payment_id?: string | null
+          payment_status?: string
+          player_email?: string
+          player_name?: string
+          player_phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bingo_participants_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "bingo_games"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       design_settings: {
         Row: {
@@ -1077,6 +1139,22 @@ export type Database = {
     Functions: {
       generate_confirmation_number: { Args: never; Returns: string }
       generate_ticket_number: { Args: never; Returns: string }
+      get_active_bingo_game: {
+        Args: never
+        Returns: {
+          auto_mode: boolean
+          called_numbers: number[]
+          created_at: string
+          current_number: number
+          game_speed: number
+          id: string
+          is_streaming: boolean
+          name: string
+          status: string
+          total_participants: number
+          updated_at: string
+        }[]
+      }
       get_current_user_email: { Args: never; Returns: string }
       get_current_user_role: {
         Args: never
