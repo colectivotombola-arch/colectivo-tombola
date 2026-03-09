@@ -965,6 +965,7 @@ export type Database = {
           quantity: number | null
           raffle_id: string | null
           status: string | null
+          telefono: string | null
           updated_at: string | null
         }
         Insert: {
@@ -980,6 +981,7 @@ export type Database = {
           quantity?: number | null
           raffle_id?: string | null
           status?: string | null
+          telefono?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -995,6 +997,7 @@ export type Database = {
           quantity?: number | null
           raffle_id?: string | null
           status?: string | null
+          telefono?: string | null
           updated_at?: string | null
         }
         Relationships: [
