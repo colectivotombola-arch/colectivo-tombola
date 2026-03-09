@@ -73,7 +73,7 @@ const PagoTransferencia = () => {
       bank_name: paymentConfig?.bank_name || 'No configurado',
       account_type: paymentConfig?.account_type || 'Ahorros',
       account_number: paymentConfig?.bank_account || 'No configurado',
-      account_holder: paymentConfig?.bank_holder || 'No configurado',
+      account_holder: paymentConfig?.account_holder || paymentConfig?.bank_holder || 'No configurado',
       instructions: paymentConfig?.transfer_instructions || ''
     };
   };
