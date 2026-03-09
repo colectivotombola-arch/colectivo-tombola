@@ -1104,6 +1104,7 @@ export type Database = {
           secondary_color: string
           site_name: string
           site_tagline: string
+          social_media: Json
           terms_and_conditions: string
           updated_at: string
           whatsapp_datalinks: Json
