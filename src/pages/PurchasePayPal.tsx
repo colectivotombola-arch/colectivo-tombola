@@ -65,7 +65,8 @@ const PurchasePayPal = () => {
   // Get PayPal config from settings
   const getPayPalConfig = useCallback(() => {
     const paymentSettings = settings?.payment_settings || {};
-    const environment = paymentSettings.paypal_environment || 'sandbox';
+    const envVar = import.meta.env.VITE_PAYPAL_ENVIRONMENT;
+    const environment = envVar || paymentSettings.paypal_environment || 'sandbox';
     
     // Get client ID based on environment
     let clientId = '';
@@ -75,9 +76,9 @@ const PurchasePayPal = () => {
       clientId = paymentSettings.paypal_sandbox_client_id || paymentSettings.paypal_client_id || '';
     }
     
-    // Fallback to default sandbox client ID if none configured
+    // Fallback to env var, then hardcoded sandbox ID
     if (!clientId) {
-      clientId = 'AcThy7S3bmb6CLJVF9IhV0xsbEkrXmYm-rilgJHnf3t4XVE_3zQrtHSW_tudJvXPlZEE912X9tlsR624';
+      clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || '';
     }
     
     const currency = paymentSettings.paypal_currency || 'USD';
