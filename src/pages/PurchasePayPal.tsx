@@ -23,6 +23,7 @@ const PurchasePayPal = () => {
   const paypalButtonRef = useRef<HTMLDivElement>(null);
   const cardButtonRef = useRef<HTMLDivElement>(null);
   const sdkLoadedRef = useRef(false);
+  const [sdkReady, setSdkReady] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -246,6 +247,7 @@ const PurchasePayPal = () => {
     
     // Reset state for reload
     sdkLoadedRef.current = false;
+    setSdkReady(false);
     
     // Remove any existing PayPal scripts
     const existingScripts = document.querySelectorAll('script[src*="paypal.com/sdk"]');
@@ -264,20 +266,21 @@ const PurchasePayPal = () => {
     script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=${currency}&intent=capture&components=buttons&enable-funding=card`;
     script.async = true;
     script.id = 'paypal-sdk';
-    script.setAttribute('data-namespace', 'paypal');
     
     script.onload = () => {
-      console.log('PayPal SDK loaded successfully');
-      setTimeout(initializePayPal, 300);
+      console.log('PayPal SDK loaded successfully, window.paypal:', !!(window as any).paypal);
+      setSdkReady(true);
+      // Small delay to ensure DOM refs are ready
+      setTimeout(() => initializePayPal(), 500);
     };
     
     script.onerror = (error) => {
-      console.error('Error loading PayPal SDK:', error);
+      console.error('Error loading PayPal SDK script. This may be caused by an ad blocker or CSP policy.', error);
       setPaymentStatus('error');
-      setErrorMessage('No se pudo cargar PayPal. Verifica tu conexión a internet e intenta de nuevo.');
+      setErrorMessage('No se pudo cargar PayPal. Desactiva tu bloqueador de anuncios o verifica tu conexión a internet.');
     };
     
-    document.head.appendChild(script);
+    document.body.appendChild(script);
     
     return () => {
       const sdkScript = document.getElementById('paypal-sdk');
@@ -493,7 +496,7 @@ const PurchasePayPal = () => {
             <div ref={cardButtonRef} className="min-h-[45px]"></div>
             
             {/* Loading state for buttons */}
-            {!(window as any).paypal && (
+            {!sdkReady && paymentStatus === 'idle' && (
               <div className="flex items-center justify-center py-4 text-muted-foreground">
                 <Loader2 className="w-5 h-5 animate-spin mr-2" />
                 Cargando opciones de pago...
