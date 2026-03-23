@@ -23,6 +23,7 @@ const PurchasePayPal = () => {
   const paypalButtonRef = useRef<HTMLDivElement>(null);
   const cardButtonRef = useRef<HTMLDivElement>(null);
   const sdkLoadedRef = useRef(false);
+  const [sdkReady, setSdkReady] = useState(false);
 
   useEffect(() => {
     loadData();
