@@ -18,7 +18,7 @@ const PayPalWidget = ({
   onCancel,
   minAmount = 1.00,
   currency = 'USD',
-  clientId = 'AcThy7S3bmb6CLJVF9IhV0xsbEkrXmYm-rilgJHnf3t4XVE_3zQrtHSW_tudJvXPlZEE912X9tlsR624'
+  clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || 'END6TSDQbHwRGdhtcn5O0jB-BYhuDO2T5EV8ipjK0cOO4uIfdQ0BxWBplPDvXTuycay7oJhJA5px8CPZ'
 }: PayPalWidgetProps) => {
   const cardButtonRef = useRef<HTMLDivElement>(null);
   const paypalButtonRef = useRef<HTMLDivElement>(null);
