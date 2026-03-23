@@ -118,6 +118,54 @@ export type Database = {
           },
         ]
       }
+      bingo_winners: {
+        Row: {
+          created_at: string | null
+          game_id: string
+          id: string
+          participant_id: string
+          updated_at: string | null
+          verified: boolean
+          win_type: string
+          winning_numbers: number[]
+        }
+        Insert: {
+          created_at?: string | null
+          game_id: string
+          id?: string
+          participant_id: string
+          updated_at?: string | null
+          verified?: boolean
+          win_type?: string
+          winning_numbers?: number[]
+        }
+        Update: {
+          created_at?: string | null
+          game_id?: string
+          id?: string
+          participant_id?: string
+          updated_at?: string | null
+          verified?: boolean
+          win_type?: string
+          winning_numbers?: number[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bingo_winners_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "bingo_games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bingo_winners_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "bingo_participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       design_settings: {
         Row: {
           border_radius: number | null
