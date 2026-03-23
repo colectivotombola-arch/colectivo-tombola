@@ -496,7 +496,7 @@ const PurchasePayPal = () => {
             <div ref={cardButtonRef} className="min-h-[45px]"></div>
             
             {/* Loading state for buttons */}
-            {!(window as any).paypal && (
+            {!sdkReady && paymentStatus === 'idle' && (
               <div className="flex items-center justify-center py-4 text-muted-foreground">
                 <Loader2 className="w-5 h-5 animate-spin mr-2" />
                 Cargando opciones de pago...
