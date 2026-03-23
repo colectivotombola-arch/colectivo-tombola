@@ -231,11 +231,21 @@ const PurchasePayPal = () => {
 
   // Load PayPal SDK
   useEffect(() => {
-    if (!settings || !raffle || sdkLoadedRef.current) return;
+    if (!settings || !raffle) return;
     
     const { clientId, currency, environment } = getPayPalConfig();
     
+    if (!clientId) {
+      console.error('No PayPal Client ID configured');
+      setErrorMessage('PayPal no está configurado. Contacta al administrador.');
+      setPaymentStatus('error');
+      return;
+    }
+    
     console.log('Loading PayPal SDK:', { clientId: clientId.substring(0, 20) + '...', currency, environment });
+    
+    // Reset state for reload
+    sdkLoadedRef.current = false;
     
     // Remove any existing PayPal scripts
     const existingScripts = document.querySelectorAll('script[src*="paypal.com/sdk"]');
@@ -246,30 +256,32 @@ const PurchasePayPal = () => {
       delete (window as any).paypal;
     }
     
+    // Clear button containers
+    if (paypalButtonRef.current) paypalButtonRef.current.innerHTML = '';
+    if (cardButtonRef.current) cardButtonRef.current.innerHTML = '';
+    
     const script = document.createElement('script');
     script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=${currency}&intent=capture&components=buttons&enable-funding=card`;
     script.async = true;
     script.id = 'paypal-sdk';
+    script.setAttribute('data-namespace', 'paypal');
     
     script.onload = () => {
       console.log('PayPal SDK loaded successfully');
-      // Small delay to ensure PayPal is fully initialized
-      setTimeout(initializePayPal, 100);
+      setTimeout(initializePayPal, 300);
     };
     
     script.onerror = (error) => {
       console.error('Error loading PayPal SDK:', error);
       setPaymentStatus('error');
-      setErrorMessage('No se pudo cargar PayPal. Verifica tu conexión.');
+      setErrorMessage('No se pudo cargar PayPal. Verifica tu conexión a internet e intenta de nuevo.');
     };
     
     document.head.appendChild(script);
     
     return () => {
       const sdkScript = document.getElementById('paypal-sdk');
-      if (sdkScript) {
-        document.head.removeChild(sdkScript);
-      }
+      if (sdkScript) sdkScript.remove();
     };
   }, [settings, raffle, getPayPalConfig, initializePayPal]);
 
