@@ -316,6 +316,14 @@ const PurchaseFlow = () => {
     return () => { const s = document.getElementById('paypal-sdk'); if (s) s.remove(); };
   }, [step, settings, raffle, getPayPalConfig, initializePayPal]);
 
+  if (loading || !raffle) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-primary">Cargando proceso de compra...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
