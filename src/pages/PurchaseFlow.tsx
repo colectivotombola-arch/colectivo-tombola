@@ -518,8 +518,9 @@ const PurchaseFlow = () => {
               </div>
 
               {/* Mensaje de información */}
-              <div className="bg-blue-500/10 border border-blue-500/30 p-3 rounded-lg">
-                <p className="text-sm text-blue-700 dark:text-blue-400">
+              <div className="bg-primary/10 border border-primary/30 p-3 rounded-lg">
+                <p className="text-sm text-primary">
+
                   Selecciona tu método de pago preferido. Después de confirmar, recibirás tus números digitales.
                 </p>
               </div>
