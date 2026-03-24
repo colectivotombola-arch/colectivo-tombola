@@ -173,7 +173,7 @@ const PurchaseFlow = () => {
     setStep(2);
   };
 
-  const handlePayment = async (metodo: 'paypal' | 'transferencia' | 'payphone') => {
+  const handlePayment = async (metodo: 'paypal' | 'transferencia') => {
     const quantity = getQuantity();
     const total = getTotal();
     
@@ -193,25 +193,9 @@ const PurchaseFlow = () => {
       
       if (error) {
         console.error('Error saving order:', error);
-        // Continue anyway - order table might not exist
       }
 
-      // Lógica según método de pago
-      if (metodo === 'paypal') {
-        // Navigate to PayPal purchase page with buyer data
-        navigate(`/purchase-paypal/${raffle.id}/${quantity}`, {
-          state: {
-            buyerData: {
-              name: buyerData.name.trim(),
-              email: buyerData.email.trim(),
-              phone: buyerData.phone.trim()
-            },
-            packageId: packageId,
-            total: total
-          }
-        });
-      } else if (metodo === 'transferencia') {
-        // Navigate to transfer page with buyer data
+      if (metodo === 'transferencia') {
         navigate('/pago-transferencia', {
           state: {
             buyerData: {
@@ -225,15 +209,6 @@ const PurchaseFlow = () => {
             total: total
           }
         });
-      } else if (metodo === 'payphone') {
-        const paymentConfig = settings?.payment_settings as any;
-        const payphoneLink = paymentConfig?.payphone_link || paymentConfig?.payphone?.payment_link || 'https://payphone.app';
-        window.open(payphoneLink, '_blank', 'noopener,noreferrer');
-        
-        toast({
-          title: "Pedido registrado",
-          description: "Completa el pago en PayPhone y envíanos tu comprobante.",
-        });
       }
       
     } catch (error) {
@@ -245,6 +220,107 @@ const PurchaseFlow = () => {
       });
     }
   };
+
+  // PayPal SDK refs and state
+  const paypalButtonRef = useRef<HTMLDivElement>(null);
+  const cardButtonRef = useRef<HTMLDivElement>(null);
+  const sdkLoadedRef = useRef(false);
+  const [sdkReady, setSdkReady] = useState(false);
+  const [paypalProcessing, setPaypalProcessing] = useState(false);
+
+  const getPayPalConfig = useCallback(() => {
+    const paymentSettings = settings?.payment_settings || {};
+    const envVar = import.meta.env.VITE_PAYPAL_ENVIRONMENT;
+    const environment = envVar || (paymentSettings as any).paypal_environment || 'live';
+    let clientId = '';
+    if (environment === 'live') {
+      clientId = (paymentSettings as any).paypal_live_client_id || (paymentSettings as any).paypal_client_id || '';
+    } else {
+      clientId = (paymentSettings as any).paypal_sandbox_client_id || (paymentSettings as any).paypal_client_id || '';
+    }
+    if (!clientId) {
+      clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || 'AYTM22fKDLvESVIkL24TETFA9igHtO_0IiocvjnehdX6aqcMTWmrE_oSXt8kw6A-nPEyje77exEjxRUw';
+    }
+    const currency = (paymentSettings as any).paypal_currency || 'USD';
+    return { clientId, currency, environment };
+  }, [settings]);
+
+  const initializePayPal = useCallback(() => {
+    if (!(window as any).paypal || sdkLoadedRef.current) return;
+    if (!paypalButtonRef.current && !cardButtonRef.current) return;
+    
+    sdkLoadedRef.current = true;
+    const quantity = getQuantity();
+    const total = getTotal();
+    const { currency } = getPayPalConfig();
+
+    const buttonConfig = {
+      style: { layout: 'vertical' as const, shape: 'rect' as const, label: 'paypal' as const, color: 'gold' as const, height: 45 },
+      createOrder: (_data: any, actions: any) => actions.order.create({
+        purchase_units: [{ amount: { value: total.toFixed(2), currency_code: currency }, description: `Compra de ${quantity} boletos - ${raffle?.title || 'Rifa'}` }]
+      }),
+      onApprove: async (data: any, actions: any) => {
+        setPaypalProcessing(true);
+        try {
+          const captureDetails = await actions.order.capture();
+          // Save order
+          await supabase.from('orders').insert({
+            nombre: buyerData.name.trim(), telefono: buyerData.phone.trim(), email: buyerData.email.trim(),
+            cantidad_boletos: quantity, total, metodo_pago: 'paypal', estado: 'completado'
+          });
+          // Process via edge function
+          const { data: result, error } = await supabase.functions.invoke('process-paypal-purchase', {
+            body: { raffle_id: raffle?.id, quantity, total_amount: total, buyer_name: buyerData.name.trim(), buyer_email: buyerData.email.trim(), buyer_phone: buyerData.phone.trim(), paypal_order_id: data.orderID }
+          });
+          if (error) throw error;
+          navigate('/pago-exitoso', { state: { assignedNumbers: result?.assigned_numbers || [], quantity, total } });
+        } catch (err: any) {
+          console.error('Error processing PayPal payment:', err);
+          toast({ title: "Error", description: "Error procesando el pago. Si el cargo fue realizado, contáctanos.", variant: "destructive" });
+        } finally {
+          setPaypalProcessing(false);
+        }
+      },
+      onCancel: () => toast({ title: "Pago cancelado", description: "Has cancelado el proceso de pago.", variant: "destructive" }),
+      onError: (err: any) => { console.error('PayPal error:', err); toast({ title: "Error de PayPal", description: "Hubo un problema con PayPal. Intenta de nuevo.", variant: "destructive" }); }
+    };
+
+    if (paypalButtonRef.current) {
+      const ppBtn = (window as any).paypal.Buttons({ fundingSource: (window as any).paypal.FUNDING.PAYPAL, ...buttonConfig });
+      if (ppBtn.isEligible()) ppBtn.render(paypalButtonRef.current);
+    }
+    if (cardButtonRef.current) {
+      const cardBtn = (window as any).paypal.Buttons({ fundingSource: (window as any).paypal.FUNDING.CARD, ...buttonConfig, style: { ...buttonConfig.style, color: 'black' as const } });
+      if (cardBtn.isEligible()) cardBtn.render(cardButtonRef.current);
+    }
+  }, [raffle, buyerData, getPayPalConfig, toast, navigate]);
+
+  // Load PayPal SDK when step 2 is active
+  useEffect(() => {
+    if (step !== 2 || !settings || !raffle) return;
+    
+    const { clientId, currency } = getPayPalConfig();
+    if (!clientId) return;
+
+    sdkLoadedRef.current = false;
+    setSdkReady(false);
+
+    const existingScripts = document.querySelectorAll('script[src*="paypal.com/sdk"]');
+    existingScripts.forEach(s => s.remove());
+    if ((window as any).paypal) delete (window as any).paypal;
+    if (paypalButtonRef.current) paypalButtonRef.current.innerHTML = '';
+    if (cardButtonRef.current) cardButtonRef.current.innerHTML = '';
+
+    const script = document.createElement('script');
+    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=${currency}&intent=capture&components=buttons&enable-funding=card`;
+    script.async = true;
+    script.id = 'paypal-sdk';
+    script.onload = () => { setSdkReady(true); setTimeout(() => initializePayPal(), 500); };
+    script.onerror = () => toast({ title: "Error", description: "No se pudo cargar PayPal. Desactiva tu bloqueador de anuncios.", variant: "destructive" });
+    document.body.appendChild(script);
+
+    return () => { const s = document.getElementById('paypal-sdk'); if (s) s.remove(); };
+  }, [step, settings, raffle, getPayPalConfig, initializePayPal]);
 
   return (
     <div className="min-h-screen bg-background">
