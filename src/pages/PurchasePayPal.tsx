@@ -77,9 +77,9 @@ const PurchasePayPal = () => {
       clientId = paymentSettings.paypal_sandbox_client_id || paymentSettings.paypal_client_id || '';
     }
     
-    // Fallback to env var, then hardcoded sandbox ID
+    // Fallback to env var, then hardcoded live ID
     if (!clientId) {
-      clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || '';
+      clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || 'AYTM22fKDLvESVIkL24TETFA9igHtO_0IiocvjnehdX6aqcMTWmrE_oSXt8kw6A-nPEyje77exEjxRUw';
     }
     
     const currency = paymentSettings.paypal_currency || 'USD';
