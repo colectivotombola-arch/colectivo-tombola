@@ -77,9 +77,9 @@ const PurchasePayPal = () => {
       clientId = paymentSettings.paypal_sandbox_client_id || paymentSettings.paypal_client_id || '';
     }
     
-    // Fallback to env var, then hardcoded sandbox ID
+    // Fallback to env var, then hardcoded live ID
     if (!clientId) {
-      clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || '';
+      clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || 'AYTM22fKDLvESVIkL24TETFA9igHtO_0IiocvjnehdX6aqcMTWmrE_oSXt8kw6A-nPEyje77exEjxRUw';
     }
     
     const currency = paymentSettings.paypal_currency || 'USD';
@@ -161,6 +161,7 @@ const PurchasePayPal = () => {
         layout: 'vertical' as const, 
         shape: 'rect' as const, 
         label: 'paypal' as const,
+        color: 'gold' as const,
         height: 45
       },
       createOrder: (_data: any, actions: any) => {
@@ -218,11 +219,12 @@ const PurchasePayPal = () => {
       }
     }
 
-    // Render Card button
+    // Render Card button (black style for guest checkout)
     if (cardButtonRef.current) {
       const cardBtn = (window as any).paypal.Buttons({ 
         fundingSource: (window as any).paypal.FUNDING.CARD, 
-        ...buttonConfig 
+        ...buttonConfig,
+        style: { ...buttonConfig.style, color: 'black' as const }
       });
       if (cardBtn.isEligible()) {
         cardBtn.render(cardButtonRef.current);
@@ -428,11 +430,6 @@ const PurchasePayPal = () => {
               <h1 className="text-xl font-bold text-foreground">Pago con PayPal</h1>
               <p className="text-sm text-muted-foreground">{raffle.title}</p>
             </div>
-            {environment === 'sandbox' && (
-              <span className="text-xs bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded">
-                SANDBOX
-              </span>
-            )}
           </div>
         </div>
       </header>
