@@ -546,7 +546,7 @@ const PurchaseFlow = () => {
 
                 <Button 
                   onClick={() => handlePayment('transferencia')} 
-                  className="w-full h-[45px] text-base bg-gray-700 hover:bg-gray-800 text-white"
+                  className="w-full h-[45px] text-base bg-muted-foreground hover:bg-muted-foreground/90 text-background"
                 >
                   <Building2 className="w-5 h-5 mr-2" />
                   Pagar por Transferencia Bancaria
