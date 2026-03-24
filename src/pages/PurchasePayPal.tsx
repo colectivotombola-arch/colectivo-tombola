@@ -430,11 +430,6 @@ const PurchasePayPal = () => {
               <h1 className="text-xl font-bold text-foreground">Pago con PayPal</h1>
               <p className="text-sm text-muted-foreground">{raffle.title}</p>
             </div>
-            {environment === 'sandbox' && (
-              <span className="text-xs bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded">
-                SANDBOX
-              </span>
-            )}
           </div>
         </div>
       </header>
