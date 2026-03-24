@@ -88,13 +88,12 @@ const PurchaseFlow = () => {
     }
   };
 
-  if (loading || !raffle) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-primary">Cargando proceso de compra...</div>
-      </div>
-    );
-  }
+  const getQuantity = () => {
+    if (packageId === 'custom') {
+      return parseInt(customQuantity) || 0;
+    }
+    return selectedPackage?.ticket_count || 0;
+  };
 
   const getQuantity = () => {
     if (packageId === 'custom') {
