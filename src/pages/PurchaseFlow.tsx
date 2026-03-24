@@ -522,30 +522,31 @@ const PurchaseFlow = () => {
                 </p>
               </div>
 
-              {/* Botones de pago */}
-              <div className="space-y-2">
-                <Button 
-                  onClick={() => handlePayment('paypal')} 
-                  className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  <CreditCard className="w-5 h-5 mr-2" />
-                  Pagar con PayPal
-                </Button>
+              {/* PayPal Smart Buttons */}
+              <div className="space-y-3">
+                <div ref={paypalButtonRef} className="min-h-[45px] w-full"></div>
+                <div ref={cardButtonRef} className="min-h-[45px] w-full"></div>
+                
+                {!sdkReady && !paypalProcessing && (
+                  <div className="flex items-center justify-center py-4 text-muted-foreground">
+                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    Cargando opciones de pago...
+                  </div>
+                )}
+
+                {paypalProcessing && (
+                  <div className="flex items-center justify-center py-4 text-muted-foreground">
+                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    Procesando tu pago...
+                  </div>
+                )}
 
                 <Button 
                   onClick={() => handlePayment('transferencia')} 
-                  className="w-full h-12 text-base bg-gray-700 hover:bg-gray-800 text-white"
+                  className="w-full h-[45px] text-base bg-gray-700 hover:bg-gray-800 text-white"
                 >
                   <Building2 className="w-5 h-5 mr-2" />
                   Pagar por Transferencia Bancaria
-                </Button>
-
-                <Button 
-                  onClick={() => handlePayment('payphone')} 
-                  className="w-full h-12 text-base bg-green-600 hover:bg-green-700 text-white"
-                >
-                  <Smartphone className="w-5 h-5 mr-2" />
-                  Pagar con PayPhone
                 </Button>
               </div>
 
