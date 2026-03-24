@@ -32,6 +32,13 @@ const PurchaseFlow = () => {
 
   // Errores de validación
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  
+  // PayPal SDK refs and state
+  const paypalButtonRef = useRef<HTMLDivElement>(null);
+  const cardButtonRef = useRef<HTMLDivElement>(null);
+  const sdkLoadedRef = useRef(false);
+  const [sdkReady, setSdkReady] = useState(false);
+  const [paypalProcessing, setPaypalProcessing] = useState(false);
 
   useEffect(() => {
     loadData();
