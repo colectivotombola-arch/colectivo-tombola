@@ -219,11 +219,12 @@ const PurchasePayPal = () => {
       }
     }
 
-    // Render Card button
+    // Render Card button (black style for guest checkout)
     if (cardButtonRef.current) {
       const cardBtn = (window as any).paypal.Buttons({ 
         fundingSource: (window as any).paypal.FUNDING.CARD, 
-        ...buttonConfig 
+        ...buttonConfig,
+        style: { ...buttonConfig.style, color: 'black' as const }
       });
       if (cardBtn.isEligible()) {
         cardBtn.render(cardButtonRef.current);
