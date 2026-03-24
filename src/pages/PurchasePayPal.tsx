@@ -161,6 +161,7 @@ const PurchasePayPal = () => {
         layout: 'vertical' as const, 
         shape: 'rect' as const, 
         label: 'paypal' as const,
+        color: 'gold' as const,
         height: 45
       },
       createOrder: (_data: any, actions: any) => {
