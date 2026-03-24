@@ -95,12 +95,6 @@ const PurchaseFlow = () => {
     return selectedPackage?.ticket_count || 0;
   };
 
-  const getQuantity = () => {
-    if (packageId === 'custom') {
-      return parseInt(customQuantity) || 0;
-    }
-    return selectedPackage?.ticket_count || 0;
-  };
 
   const getTotal = () => {
     const quantity = getQuantity();
