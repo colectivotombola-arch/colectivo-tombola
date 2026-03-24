@@ -492,7 +492,7 @@ const PurchaseFlow = () => {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
-                <CreditCard className="w-4 h-4" />
+                <ShoppingCart className="w-4 h-4" />
                 Selecciona tu método de pago
               </CardTitle>
             </CardHeader>
