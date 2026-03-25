@@ -16,11 +16,13 @@ import {
   Save, 
   Video, 
   Instagram, 
+  CreditCard,
   Facebook,
   Twitter,
   Globe,
   Mail,
   Building2,
+  CheckCircle,
 } from 'lucide-react';
 import { ImageUpload } from '@/components/ImageUpload';
 
