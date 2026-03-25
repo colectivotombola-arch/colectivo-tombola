@@ -16,14 +16,13 @@ import {
   Save, 
   Video, 
   Instagram, 
-  CreditCard, 
+  CreditCard,
   Facebook,
   Twitter,
   Globe,
   Mail,
   Building2,
   CheckCircle,
-  AlertCircle
 } from 'lucide-react';
 import { ImageUpload } from '@/components/ImageUpload';
 
@@ -41,23 +40,14 @@ const AdminSettings = () => {
     hero_subtitle: 'Rifas seguras y transparentes con los mejores premios del mercado'
   });
   
-  // Estados para métodos de pago - with sandbox/live support
-  const [paymentSettings, setPaymentSettings] = useState({
-    paypal_enabled: true,
-    paypal_environment: 'sandbox' as 'sandbox' | 'live',
-    paypal_sandbox_client_id: '',
-    paypal_live_client_id: '',
-    paypal_currency: 'USD',
-    paypal_min_amount: '1.00',
-    paypal_email: '',
+  // Estados para métodos de pago - solo transferencia bancaria visible en admin
+  const [paymentSettings, setPaymentSettings] = useState<Record<string, any>>({
     bank_transfer_enabled: true,
     bank_account: '',
     bank_name: '',
     account_holder: '',
     routing_number: '',
     bank_instructions: '',
-    hotmart_enabled: false,
-    hotmart_payment_link: ''
   });
 
   const [socialMedia, setSocialMedia] = useState({
@@ -107,14 +97,10 @@ const AdminSettings = () => {
             const payment = typeof data.payment_settings === 'string' 
               ? JSON.parse(data.payment_settings) 
               : data.payment_settings;
-            // Migrate old format to new format
+            // Merge saved payment settings, preserving PayPal keys untouched
             setPaymentSettings(prev => ({
               ...prev,
               ...payment,
-              paypal_min_amount: String(payment.paypal_min_amount || '1.00'),
-              paypal_environment: payment.paypal_environment || 'sandbox',
-              paypal_sandbox_client_id: payment.paypal_sandbox_client_id || payment.paypal_client_id || '',
-              paypal_live_client_id: payment.paypal_live_client_id || '',
             }));
           } catch (e) {
             console.log('No payment settings found');
@@ -145,32 +131,6 @@ const AdminSettings = () => {
   };
 
   const validatePaymentSettings = (): boolean => {
-    // Validate PayPal if enabled
-    if (paymentSettings.paypal_enabled) {
-      const activeClientId = paymentSettings.paypal_environment === 'sandbox' 
-        ? paymentSettings.paypal_sandbox_client_id 
-        : paymentSettings.paypal_live_client_id;
-      
-      if (!activeClientId?.trim()) {
-        toast({
-          title: "Error de validación",
-          description: `Client ID de PayPal (${paymentSettings.paypal_environment}) es requerido`,
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      const minAmount = parseFloat(paymentSettings.paypal_min_amount);
-      if (isNaN(minAmount) || minAmount < 1) {
-        toast({
-          title: "Error de validación",
-          description: "El monto mínimo de PayPal debe ser al menos $1.00",
-          variant: "destructive",
-        });
-        return false;
-      }
-    }
-
     // Validate SMTP port if provided
     if (emailSettings.smtp_port && !/^\d+$/.test(emailSettings.smtp_port)) {
       toast({
@@ -192,15 +152,9 @@ const AdminSettings = () => {
       // Normalize WhatsApp number
       const whatsappNumber = normalizeWhatsApp(settings.whatsapp_number || '', '+593');
 
-      // Prepare payment settings with active client_id for compatibility
-      const activeClientId = paymentSettings.paypal_environment === 'sandbox' 
-        ? paymentSettings.paypal_sandbox_client_id 
-        : paymentSettings.paypal_live_client_id;
-
+      // Preserve all existing payment settings (PayPal keys etc.) and merge bank transfer changes
       const normalizedPaymentSettings = {
         ...paymentSettings,
-        paypal_min_amount: toFloat(paymentSettings.paypal_min_amount, 1),
-        paypal_client_id: activeClientId, // For backward compatibility
       };
 
       // Combine all settings
@@ -245,11 +199,6 @@ const AdminSettings = () => {
     }
   };
 
-  const getActivePayPalClientId = () => {
-    return paymentSettings.paypal_environment === 'sandbox' 
-      ? paymentSettings.paypal_sandbox_client_id 
-      : paymentSettings.paypal_live_client_id;
-  };
 
   if (loading) {
     return (
@@ -473,143 +422,6 @@ const AdminSettings = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               
-              {/* PayPal Configuration - DARK THEME */}
-              <div className="border border-border rounded-lg p-4 bg-card">
-                <h4 className="font-semibold mb-4 flex items-center gap-2 text-foreground">
-                  <CreditCard className="w-4 h-4 text-blue-500" />
-                  Configuración PayPal
-                  {paymentSettings.paypal_enabled && (
-                    <Badge variant={paymentSettings.paypal_environment === 'live' ? 'default' : 'secondary'}>
-                      {paymentSettings.paypal_environment === 'live' ? 'PRODUCCIÓN' : 'SANDBOX'}
-                    </Badge>
-                  )}
-                </h4>
-                
-                <div className="space-y-4">
-                  {/* Enable + Environment */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center space-x-3">
-                      <Switch
-                        id="paypal_enabled"
-                        checked={paymentSettings.paypal_enabled}
-                        onCheckedChange={(checked) => setPaymentSettings(prev => ({ ...prev, paypal_enabled: checked }))}
-                      />
-                      <Label htmlFor="paypal_enabled" className="text-foreground">Habilitar PayPal</Label>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="paypal_environment" className="text-foreground">Entorno</Label>
-                      <select
-                        id="paypal_environment"
-                        value={paymentSettings.paypal_environment}
-                        onChange={(e) => setPaymentSettings(prev => ({ 
-                          ...prev, 
-                          paypal_environment: e.target.value as 'sandbox' | 'live' 
-                        }))}
-                        className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-                        disabled={!paymentSettings.paypal_enabled}
-                      >
-                        <option value="sandbox">Sandbox (Pruebas)</option>
-                        <option value="live">Live (Producción)</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Sandbox Client ID */}
-                  <div>
-                    <Label htmlFor="paypal_sandbox_client_id" className="text-foreground flex items-center gap-2">
-                      Client ID Sandbox
-                      {paymentSettings.paypal_environment === 'sandbox' && (
-                        <Badge variant="outline" className="text-xs">ACTIVO</Badge>
-                      )}
-                    </Label>
-                    <Input
-                      id="paypal_sandbox_client_id"
-                      value={paymentSettings.paypal_sandbox_client_id}
-                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, paypal_sandbox_client_id: e.target.value }))}
-                      placeholder="Client ID de PayPal Sandbox"
-                      disabled={!paymentSettings.paypal_enabled}
-                      className="bg-background border-border text-foreground"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Obtén tu Client ID en developer.paypal.com → Apps → Sandbox
-                    </p>
-                  </div>
-
-                  {/* Live Client ID */}
-                  <div>
-                    <Label htmlFor="paypal_live_client_id" className="text-foreground flex items-center gap-2">
-                      Client ID Live (Producción)
-                      {paymentSettings.paypal_environment === 'live' && (
-                        <Badge variant="outline" className="text-xs">ACTIVO</Badge>
-                      )}
-                    </Label>
-                    <Input
-                      id="paypal_live_client_id"
-                      value={paymentSettings.paypal_live_client_id}
-                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, paypal_live_client_id: e.target.value }))}
-                      placeholder="Client ID de PayPal Live"
-                      disabled={!paymentSettings.paypal_enabled}
-                      className="bg-background border-border text-foreground"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Obtén tu Client ID en developer.paypal.com → Apps → Live
-                    </p>
-                  </div>
-
-                  {/* Currency and Min Amount */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <Label htmlFor="paypal_currency" className="text-foreground">Moneda</Label>
-                      <select
-                        id="paypal_currency"
-                        value={paymentSettings.paypal_currency}
-                        onChange={(e) => setPaymentSettings(prev => ({ ...prev, paypal_currency: e.target.value }))}
-                        className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-                        disabled={!paymentSettings.paypal_enabled}
-                      >
-                        <option value="USD">USD</option>
-                        <option value="EUR">EUR</option>
-                        <option value="COP">COP</option>
-                        <option value="PEN">PEN</option>
-                      </select>
-                    </div>
-                    <div>
-                      <Label htmlFor="paypal_min_amount" className="text-foreground">Monto mínimo ($)</Label>
-                      <Input
-                        id="paypal_min_amount"
-                        type="number"
-                        step="0.01"
-                        min="1"
-                        value={paymentSettings.paypal_min_amount}
-                        onChange={(e) => setPaymentSettings(prev => ({ ...prev, paypal_min_amount: e.target.value }))}
-                        placeholder="1.00"
-                        disabled={!paymentSettings.paypal_enabled}
-                        className="bg-background border-border text-foreground"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="paypal_email" className="text-foreground">Email de PayPal (opcional)</Label>
-                      <Input
-                        id="paypal_email"
-                        value={paymentSettings.paypal_email}
-                        onChange={(e) => setPaymentSettings(prev => ({ ...prev, paypal_email: e.target.value }))}
-                        placeholder="pagos@tuempresa.com"
-                        disabled={!paymentSettings.paypal_enabled}
-                        className="bg-background border-border text-foreground"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Validation warning */}
-                  {paymentSettings.paypal_enabled && !getActivePayPalClientId() && (
-                    <div className="flex items-center gap-2 text-yellow-500 text-sm">
-                      <AlertCircle className="w-4 h-4" />
-                      Client ID de {paymentSettings.paypal_environment} es requerido
-                    </div>
-                  )}
-                </div>
-              </div>
 
               {/* Transferencia Bancaria - DARK THEME */}
               <div className="border border-border rounded-lg p-4 bg-card">
@@ -682,38 +494,6 @@ const AdminSettings = () => {
                     disabled={!paymentSettings.bank_transfer_enabled}
                     className="bg-background border-border text-foreground"
                   />
-                </div>
-              </div>
-
-              {/* Hotmart Pay - DARK THEME */}
-              <div className="border border-border rounded-lg p-4 bg-card">
-                <h4 className="font-semibold mb-4 flex items-center gap-2 text-foreground">
-                  <CreditCard className="w-4 h-4 text-orange-500" />
-                  Hotmart Pay
-                </h4>
-                <div className="flex items-center space-x-3 mb-4">
-                  <Switch
-                    id="hotmart_enabled"
-                    checked={paymentSettings.hotmart_enabled}
-                    onCheckedChange={(checked) => setPaymentSettings(prev => ({ ...prev, hotmart_enabled: checked }))}
-                  />
-                  <Label htmlFor="hotmart_enabled" className="text-foreground">Habilitar Hotmart Pay</Label>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="hotmart_payment_link" className="text-foreground">Enlace de pago de Hotmart</Label>
-                    <Input
-                      id="hotmart_payment_link"
-                      value={paymentSettings.hotmart_payment_link}
-                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, hotmart_payment_link: e.target.value }))}
-                      placeholder="https://pay.hotmart.com/..."
-                      disabled={!paymentSettings.hotmart_enabled}
-                      className="bg-background border-border text-foreground"
-                    />
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Crea un enlace de pago en tu cuenta de Hotmart y pégalo aquí
-                    </p>
-                  </div>
                 </div>
               </div>
             </CardContent>
