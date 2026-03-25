@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { purchaseConfirmationsAPI, rafflesAPI, supabase, type PurchaseConfirmation, type Raffle } from '@/lib/supabase';
+import { purchaseConfirmationsAPI, rafflesAPI, raffleNumbersAPI, supabase, type PurchaseConfirmation, type Raffle } from '@/lib/supabase';
 import { AdminLayout } from '@/components/AdminLayout';
+import { normalizeWhatsApp } from '@/lib/numberUtils';
 import { 
   CheckCircle, 
   XCircle, 
@@ -19,7 +20,8 @@ import {
   RefreshCw,
   Building2,
   ExternalLink,
-  CreditCard
+  CreditCard,
+  MessageCircle
 } from 'lucide-react';
 
 interface Transfer {
@@ -113,6 +115,55 @@ const AdminConfirmations = () => {
   const updateTransferStatus = async (transferId: string, newStatus: string) => {
     setUpdating(transferId);
     try {
+      const transfer = transfers.find(t => t.id === transferId);
+      if (!transfer) throw new Error('Transfer not found');
+
+      let assignedNumbers: number[] = [];
+
+      if (newStatus === 'aprobado' && transfer.raffle_id && transfer.quantity) {
+        // Get existing sold numbers for this raffle
+        const existingNumbers = await raffleNumbersAPI.getByRaffle(transfer.raffle_id);
+        const existingValues = existingNumbers.map(n => n.number_value);
+        
+        // Get raffle total to know range
+        const raffle = raffles.find(r => r.id === transfer.raffle_id);
+        const totalNumbers = raffle?.total_numbers || 1000;
+
+        // Generate unique random numbers
+        assignedNumbers = purchaseConfirmationsAPI.generateRandomNumbers(
+          transfer.quantity, 
+          totalNumbers, 
+          existingValues
+        );
+
+        // Create a purchase confirmation record with assigned numbers
+        const confirmationNumber = `RF${Date.now().toString(36).toUpperCase()}`;
+        await supabase.from('purchase_confirmations').insert({
+          raffle_id: transfer.raffle_id,
+          buyer_name: transfer.nombre,
+          buyer_email: transfer.email,
+          buyer_phone: transfer.telefono || '',
+          quantity: transfer.quantity,
+          total_amount: transfer.monto_pagado,
+          payment_method: 'transferencia',
+          confirmation_number: confirmationNumber,
+          status: 'paid',
+          assigned_numbers: assignedNumbers,
+        });
+
+        // Insert raffle_numbers for progress tracking
+        const numberInserts = assignedNumbers.map(num => ({
+          raffle_id: transfer.raffle_id!,
+          number_value: num,
+          buyer_name: transfer.nombre,
+          buyer_phone: transfer.telefono || '',
+          buyer_email: transfer.email,
+          payment_method: 'transferencia',
+          payment_status: 'paid',
+        }));
+        await supabase.from('raffle_numbers').insert(numberInserts);
+      }
+
       const { error } = await supabase
         .from('transferencias')
         .update({ status: newStatus })
@@ -123,16 +174,15 @@ const AdminConfirmations = () => {
       setTransfers(prev => 
         prev.map(t => 
           t.id === transferId 
-            ? { ...t, status: newStatus }
+            ? { ...t, status: newStatus, assigned_numbers: assignedNumbers }
             : t
         )
       );
       
-      // If approved, we could assign numbers here
       if (newStatus === 'aprobado') {
         toast({
           title: "¡Aprobado!",
-          description: "La transferencia ha sido aprobada. Asigna los números manualmente.",
+          description: `Transferencia aprobada. ${assignedNumbers.length} boletos asignados: ${assignedNumbers.join(', ')}`,
         });
       } else {
         toast({
@@ -140,16 +190,33 @@ const AdminConfirmations = () => {
           description: `Estado cambiado a ${newStatus}`,
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating transfer:', error);
       toast({
         title: "Error",
-        description: "No se pudo actualizar el estado",
+        description: error?.message || "No se pudo actualizar el estado",
         variant: "destructive",
       });
     } finally {
       setUpdating(null);
     }
+  };
+
+  const sendWhatsAppNumbers = (transfer: Transfer & { assigned_numbers?: number[] }) => {
+    if (!transfer.telefono) {
+      toast({ title: "Error", description: "El cliente no tiene número de teléfono", variant: "destructive" });
+      return;
+    }
+    const phone = normalizeWhatsApp(transfer.telefono);
+    const raffleName = getRaffleName(transfer.raffle_id);
+    const numbers = transfer.assigned_numbers?.join(', ') || 'Sin números asignados';
+    const message = `¡Hola ${transfer.nombre}! 🎉 Tus números para la rifa *${raffleName}* son: *${numbers}*. ¡Buena suerte!`;
+    const url = `https://wa.me/${phone.replace('+', '')}?text=${encodeURIComponent(message)}`;
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.click();
   };
 
   const getRaffleName = (raffleId: string | undefined) => {
