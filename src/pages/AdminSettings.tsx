@@ -200,11 +200,6 @@ const AdminSettings = () => {
     }
   };
 
-  const getActivePayPalClientId = () => {
-    return paymentSettings.paypal_environment === 'sandbox' 
-      ? paymentSettings.paypal_sandbox_client_id 
-      : paymentSettings.paypal_live_client_id;
-  };
 
   if (loading) {
     return (
