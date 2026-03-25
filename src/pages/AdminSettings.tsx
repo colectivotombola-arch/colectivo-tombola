@@ -497,8 +497,6 @@ const AdminSettings = () => {
                   />
                 </div>
               </div>
-
-              </div>
             </CardContent>
           </Card>
 
