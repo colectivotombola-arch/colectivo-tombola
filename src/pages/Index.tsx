@@ -138,6 +138,16 @@ const Index = () => {
                   </svg>
                 </a>
               )}
+              {settings?.whatsapp_number && (
+                <a 
+                  href={`https://wa.me/${(settings.whatsapp_number || '').replace(/\D/g, '')}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-muted-foreground hover:text-green-500 transition-colors p-1"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                </a>
+              )}
             </div>
           </div>
           
