@@ -557,7 +557,7 @@ const AdminConfirmations = () => {
                       <div className="space-y-2">
                         <h4 className="font-semibold flex items-center gap-2">
                           <Hash className="w-4 h-4" />
-                          Comprobante
+                          Comprobante & Números
                         </h4>
                         <div className="text-sm">
                           {transfer.comprobante_url ? (
@@ -572,6 +572,18 @@ const AdminConfirmations = () => {
                             </a>
                           ) : (
                             <p className="text-muted-foreground">Sin comprobante adjunto</p>
+                          )}
+                          {transfer.assigned_numbers && transfer.assigned_numbers.length > 0 && (
+                            <div className="mt-2">
+                              <p className="font-medium mb-1">Números asignados:</p>
+                              <div className="flex flex-wrap gap-1">
+                                {transfer.assigned_numbers.map(num => (
+                                  <Badge key={num} variant="outline" className="text-xs">
+                                    {num}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
                           )}
                         </div>
                       </div>
