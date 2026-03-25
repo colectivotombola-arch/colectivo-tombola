@@ -132,32 +132,6 @@ const AdminSettings = () => {
   };
 
   const validatePaymentSettings = (): boolean => {
-    // Validate PayPal if enabled
-    if (paymentSettings.paypal_enabled) {
-      const activeClientId = paymentSettings.paypal_environment === 'sandbox' 
-        ? paymentSettings.paypal_sandbox_client_id 
-        : paymentSettings.paypal_live_client_id;
-      
-      if (!activeClientId?.trim()) {
-        toast({
-          title: "Error de validación",
-          description: `Client ID de PayPal (${paymentSettings.paypal_environment}) es requerido`,
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      const minAmount = parseFloat(paymentSettings.paypal_min_amount);
-      if (isNaN(minAmount) || minAmount < 1) {
-        toast({
-          title: "Error de validación",
-          description: "El monto mínimo de PayPal debe ser al menos $1.00",
-          variant: "destructive",
-        });
-        return false;
-      }
-    }
-
     // Validate SMTP port if provided
     if (emailSettings.smtp_port && !/^\d+$/.test(emailSettings.smtp_port)) {
       toast({
