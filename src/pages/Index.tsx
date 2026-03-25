@@ -9,7 +9,7 @@ import FloatingWhatsApp from '@/components/FloatingWhatsApp';
 import { siteSettingsAPI, SiteSettings, rafflesAPI, Raffle } from '@/lib/supabase';
 import { Link } from 'react-router-dom';
 import { useDesignSettings } from '@/hooks/useDesignSettings';
-import { Instagram, Facebook } from 'lucide-react';
+import { Instagram, Facebook, MessageCircle } from 'lucide-react';
 
 const Index = () => {
   const [settings, setSettings] = useState<Partial<SiteSettings> | null>(null);
