@@ -153,15 +153,9 @@ const AdminSettings = () => {
       // Normalize WhatsApp number
       const whatsappNumber = normalizeWhatsApp(settings.whatsapp_number || '', '+593');
 
-      // Prepare payment settings with active client_id for compatibility
-      const activeClientId = paymentSettings.paypal_environment === 'sandbox' 
-        ? paymentSettings.paypal_sandbox_client_id 
-        : paymentSettings.paypal_live_client_id;
-
+      // Preserve all existing payment settings (PayPal keys etc.) and merge bank transfer changes
       const normalizedPaymentSettings = {
         ...paymentSettings,
-        paypal_min_amount: toFloat(paymentSettings.paypal_min_amount, 1),
-        paypal_client_id: activeClientId, // For backward compatibility
       };
 
       // Combine all settings
