@@ -41,23 +41,14 @@ const AdminSettings = () => {
     hero_subtitle: 'Rifas seguras y transparentes con los mejores premios del mercado'
   });
   
-  // Estados para métodos de pago - with sandbox/live support
-  const [paymentSettings, setPaymentSettings] = useState({
-    paypal_enabled: true,
-    paypal_environment: 'sandbox' as 'sandbox' | 'live',
-    paypal_sandbox_client_id: '',
-    paypal_live_client_id: '',
-    paypal_currency: 'USD',
-    paypal_min_amount: '1.00',
-    paypal_email: '',
+  // Estados para métodos de pago - solo transferencia bancaria visible en admin
+  const [paymentSettings, setPaymentSettings] = useState<Record<string, any>>({
     bank_transfer_enabled: true,
     bank_account: '',
     bank_name: '',
     account_holder: '',
     routing_number: '',
     bank_instructions: '',
-    hotmart_enabled: false,
-    hotmart_payment_link: ''
   });
 
   const [socialMedia, setSocialMedia] = useState({
