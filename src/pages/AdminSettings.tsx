@@ -498,36 +498,6 @@ const AdminSettings = () => {
                 </div>
               </div>
 
-              {/* Hotmart Pay - DARK THEME */}
-              <div className="border border-border rounded-lg p-4 bg-card">
-                <h4 className="font-semibold mb-4 flex items-center gap-2 text-foreground">
-                  <CreditCard className="w-4 h-4 text-orange-500" />
-                  Hotmart Pay
-                </h4>
-                <div className="flex items-center space-x-3 mb-4">
-                  <Switch
-                    id="hotmart_enabled"
-                    checked={paymentSettings.hotmart_enabled}
-                    onCheckedChange={(checked) => setPaymentSettings(prev => ({ ...prev, hotmart_enabled: checked }))}
-                  />
-                  <Label htmlFor="hotmart_enabled" className="text-foreground">Habilitar Hotmart Pay</Label>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="hotmart_payment_link" className="text-foreground">Enlace de pago de Hotmart</Label>
-                    <Input
-                      id="hotmart_payment_link"
-                      value={paymentSettings.hotmart_payment_link}
-                      onChange={(e) => setPaymentSettings(prev => ({ ...prev, hotmart_payment_link: e.target.value }))}
-                      placeholder="https://pay.hotmart.com/..."
-                      disabled={!paymentSettings.hotmart_enabled}
-                      className="bg-background border-border text-foreground"
-                    />
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Crea un enlace de pago en tu cuenta de Hotmart y pégalo aquí
-                    </p>
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>
