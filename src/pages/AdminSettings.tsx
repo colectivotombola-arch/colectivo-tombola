@@ -98,14 +98,10 @@ const AdminSettings = () => {
             const payment = typeof data.payment_settings === 'string' 
               ? JSON.parse(data.payment_settings) 
               : data.payment_settings;
-            // Migrate old format to new format
+            // Merge saved payment settings, preserving PayPal keys untouched
             setPaymentSettings(prev => ({
               ...prev,
               ...payment,
-              paypal_min_amount: String(payment.paypal_min_amount || '1.00'),
-              paypal_environment: payment.paypal_environment || 'sandbox',
-              paypal_sandbox_client_id: payment.paypal_sandbox_client_id || payment.paypal_client_id || '',
-              paypal_live_client_id: payment.paypal_live_client_id || '',
             }));
           } catch (e) {
             console.log('No payment settings found');
