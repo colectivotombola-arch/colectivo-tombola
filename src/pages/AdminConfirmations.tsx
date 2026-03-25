@@ -490,15 +490,27 @@ const AdminConfirmations = () => {
                           </>
                         )}
                         {transfer.status === 'aprobado' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => updateTransferStatus(transfer.id, 'pendiente')}
-                            disabled={updating === transfer.id}
-                            className="touch-target"
-                          >
-                            Marcar como Pendiente
-                          </Button>
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => updateTransferStatus(transfer.id, 'pendiente')}
+                              disabled={updating === transfer.id}
+                              className="touch-target"
+                            >
+                              Marcar como Pendiente
+                            </Button>
+                            {transfer.assigned_numbers && transfer.assigned_numbers.length > 0 && (
+                              <Button
+                                size="sm"
+                                onClick={() => sendWhatsAppNumbers(transfer)}
+                                className="bg-green-600 hover:bg-green-700 touch-target flex items-center gap-2"
+                              >
+                                <MessageCircle className="w-4 h-4" />
+                                Enviar Boletos por WhatsApp
+                              </Button>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
