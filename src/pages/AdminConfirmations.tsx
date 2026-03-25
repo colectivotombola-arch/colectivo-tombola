@@ -39,6 +39,7 @@ interface Transfer {
   notes?: string;
   created_at: string;
   updated_at?: string;
+  assigned_numbers?: number[];
 }
 
 const AdminConfirmations = () => {
