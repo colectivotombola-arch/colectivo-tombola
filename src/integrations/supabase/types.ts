@@ -1063,6 +1063,7 @@ export type Database = {
       }
       transferencias: {
         Row: {
+          assigned_numbers: number[] | null
           comprobante_url: string | null
           created_at: string
           email: string
@@ -1079,6 +1080,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          assigned_numbers?: number[] | null
           comprobante_url?: string | null
           created_at?: string
           email: string
@@ -1095,6 +1097,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          assigned_numbers?: number[] | null
           comprobante_url?: string | null
           created_at?: string
           email?: string

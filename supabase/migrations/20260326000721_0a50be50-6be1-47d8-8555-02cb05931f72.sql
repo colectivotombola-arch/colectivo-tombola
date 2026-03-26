@@ -1,0 +1,1 @@
+ALTER TABLE public.transferencias ADD COLUMN assigned_numbers integer[] DEFAULT '{}'::integer[];
