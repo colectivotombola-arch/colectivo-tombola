@@ -21,8 +21,22 @@ import {
   Building2,
   ExternalLink,
   CreditCard,
-  MessageCircle
+  MessageCircle,
+  Trash2,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface Transfer {
   id: string;
@@ -51,6 +65,8 @@ const AdminConfirmations = () => {
   const [raffles, setRaffles] = useState<Raffle[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
+  const [expandedPaypal, setExpandedPaypal] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     loadData();
@@ -220,6 +236,41 @@ const AdminConfirmations = () => {
     a.click();
   };
 
+  const sendWhatsAppConfirmation = (confirmation: PurchaseConfirmation) => {
+    if (!confirmation.buyer_phone) {
+      toast({ title: "Error", description: "El cliente no tiene número de teléfono", variant: "destructive" });
+      return;
+    }
+    const phone = normalizeWhatsApp(confirmation.buyer_phone);
+    const raffleName = getRaffleName(confirmation.raffle_id);
+    const numbers = confirmation.assigned_numbers?.join(', ') || 'Sin números asignados';
+    const message = `¡Hola ${confirmation.buyer_name}! 👋 Confirmamos tu pago para la rifa *${raffleName}*. 🎟️ Tus números asignados son: *${numbers}*. ¡Mucha suerte y gracias por participar! ✨`;
+    const url = `https://wa.me/${phone.replace('+', '')}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const resetSorteo = async () => {
+    setResetting(true);
+    try {
+      const [r1, r2, r3] = await Promise.all([
+        supabase.from('raffle_numbers').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('transferencias').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('purchase_confirmations').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+      ]);
+      if (r1.error) throw r1.error;
+      if (r2.error) throw r2.error;
+      if (r3.error) throw r3.error;
+      setConfirmations([]);
+      setTransfers([]);
+      toast({ title: "¡Sorteo reiniciado!", description: "Se han eliminado todas las ventas. La configuración del sitio permanece intacta." });
+    } catch (error: any) {
+      console.error('Error resetting:', error);
+      toast({ title: "Error", description: error?.message || "No se pudo reiniciar el sorteo", variant: "destructive" });
+    } finally {
+      setResetting(false);
+    }
+  };
+
   const getRaffleName = (raffleId: string | undefined) => {
     if (!raffleId) return 'No especificada';
     const raffle = raffles.find(r => r.id === raffleId);
@@ -293,10 +344,35 @@ const AdminConfirmations = () => {
               </Badge>
             )}
           </div>
-          <Button onClick={loadData} variant="outline" className="touch-target">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Actualizar
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={loadData} variant="outline" className="touch-target">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Actualizar
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" className="touch-target" disabled={resetting}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  {resetting ? 'Reiniciando...' : 'Reiniciar Sorteo'}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>¿Deseas vaciar las ventas actuales?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Se eliminarán todos los registros de boletos vendidos, transferencias y confirmaciones de compra. 
+                    <strong className="block mt-2">La configuración del sitio, métodos de pago, redes sociales y cuentas bancarias NO se borrarán.</strong>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={resetSorteo} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Sí, reiniciar sorteo
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
 
         {/* Tabs for PayPal and Transfers */}
@@ -378,60 +454,94 @@ const AdminConfirmations = () => {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <h4 className="font-semibold flex items-center gap-2">
-                          <User className="w-4 h-4" />
-                          Cliente
-                        </h4>
-                        <div className="space-y-1 text-sm">
-                          <p><strong>Nombre:</strong> {confirmation.buyer_name}</p>
-                          <p className="flex items-center gap-1">
-                            <Mail className="w-3 h-3" />
-                            {confirmation.buyer_email}
-                          </p>
-                          <p className="flex items-center gap-1">
-                            <Phone className="w-3 h-3" />
-                            {confirmation.buyer_phone}
-                          </p>
-                        </div>
+                    {/* Compact view */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                      <div className="flex items-center gap-4">
+                        <span><strong>{confirmation.buyer_name}</strong></span>
+                        <span className="text-muted-foreground">{confirmation.quantity} boletos</span>
+                        <span className="font-semibold">${confirmation.total_amount}</span>
                       </div>
-
-                      <div className="space-y-2">
-                        <h4 className="font-semibold flex items-center gap-2">
-                          <DollarSign className="w-4 h-4" />
-                          Compra
-                        </h4>
-                        <div className="space-y-1 text-sm">
-                          <p><strong>Rifa:</strong> {getRaffleName(confirmation.raffle_id)}</p>
-                          <p><strong>Cantidad:</strong> {confirmation.quantity} boletos</p>
-                          <p><strong>Total:</strong> ${confirmation.total_amount}</p>
-                          <p><strong>Método:</strong> {confirmation.payment_method || 'PayPal'}</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <h4 className="font-semibold flex items-center gap-2">
-                          <Hash className="w-4 h-4" />
-                          Números
-                        </h4>
-                        <div className="text-sm">
-                          <p><strong>Confirmación:</strong> {confirmation.confirmation_number}</p>
-                          {confirmation.assigned_numbers && confirmation.assigned_numbers.length > 0 && (
-                            <div className="mt-2">
-                              <p className="font-medium mb-1">Números asignados:</p>
-                              <div className="flex flex-wrap gap-1">
-                                {confirmation.assigned_numbers.map(num => (
-                                  <Badge key={num} variant="outline" className="text-xs">
-                                    {num}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setExpandedPaypal(prev => ({ ...prev, [confirmation.id!]: !prev[confirmation.id!] }))}
+                        className="flex items-center gap-1 text-xs"
+                      >
+                        {expandedPaypal[confirmation.id!] ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                        Ver Detalles de Envío
+                      </Button>
                     </div>
+
+                    {/* Expandable details */}
+                    {expandedPaypal[confirmation.id!] && (
+                      <div className="mt-4 space-y-4 border-t pt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <h4 className="font-semibold flex items-center gap-2">
+                              <User className="w-4 h-4" />
+                              Cliente
+                            </h4>
+                            <div className="space-y-1 text-sm">
+                              <p><strong>Nombre:</strong> {confirmation.buyer_name}</p>
+                              <p className="flex items-center gap-1">
+                                <Mail className="w-3 h-3" />
+                                {confirmation.buyer_email}
+                              </p>
+                              <p className="flex items-center gap-1">
+                                <Phone className="w-3 h-3" />
+                                {confirmation.buyer_phone}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <h4 className="font-semibold flex items-center gap-2">
+                              <DollarSign className="w-4 h-4" />
+                              Compra
+                            </h4>
+                            <div className="space-y-1 text-sm">
+                              <p><strong>Rifa:</strong> {getRaffleName(confirmation.raffle_id)}</p>
+                              <p><strong>Cantidad:</strong> {confirmation.quantity} boletos</p>
+                              <p><strong>Total:</strong> ${confirmation.total_amount}</p>
+                              <p><strong>Método:</strong> {confirmation.payment_method || 'PayPal'}</p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <h4 className="font-semibold flex items-center gap-2">
+                              <Hash className="w-4 h-4" />
+                              Números
+                            </h4>
+                            <div className="text-sm">
+                              <p><strong>Confirmación:</strong> {confirmation.confirmation_number}</p>
+                              <p className="mt-1"><strong>Estado:</strong> <Badge variant="outline" className="text-xs">Procesado Automáticamente</Badge></p>
+                              {confirmation.assigned_numbers && confirmation.assigned_numbers.length > 0 && (
+                                <div className="mt-2">
+                                  <p className="font-medium mb-1">Números asignados:</p>
+                                  <div className="flex flex-wrap gap-1">
+                                    {confirmation.assigned_numbers.map(num => (
+                                      <Badge key={num} variant="outline" className="text-xs">
+                                        {num}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        {confirmation.status === 'paid' && confirmation.assigned_numbers && confirmation.assigned_numbers.length > 0 && (
+                          <Button
+                            size="sm"
+                            onClick={() => sendWhatsAppConfirmation(confirmation)}
+                            className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            Reenviar Boletos por WhatsApp
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))
