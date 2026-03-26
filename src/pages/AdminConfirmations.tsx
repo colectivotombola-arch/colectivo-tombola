@@ -236,6 +236,41 @@ const AdminConfirmations = () => {
     a.click();
   };
 
+  const sendWhatsAppConfirmation = (confirmation: PurchaseConfirmation) => {
+    if (!confirmation.buyer_phone) {
+      toast({ title: "Error", description: "El cliente no tiene número de teléfono", variant: "destructive" });
+      return;
+    }
+    const phone = normalizeWhatsApp(confirmation.buyer_phone);
+    const raffleName = getRaffleName(confirmation.raffle_id);
+    const numbers = confirmation.assigned_numbers?.join(', ') || 'Sin números asignados';
+    const message = `¡Hola ${confirmation.buyer_name}! 👋 Confirmamos tu pago para la rifa *${raffleName}*. 🎟️ Tus números asignados son: *${numbers}*. ¡Mucha suerte y gracias por participar! ✨`;
+    const url = `https://wa.me/${phone.replace('+', '')}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const resetSorteo = async () => {
+    setResetting(true);
+    try {
+      const [r1, r2, r3] = await Promise.all([
+        supabase.from('raffle_numbers').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('transferencias').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('purchase_confirmations').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+      ]);
+      if (r1.error) throw r1.error;
+      if (r2.error) throw r2.error;
+      if (r3.error) throw r3.error;
+      setConfirmations([]);
+      setTransfers([]);
+      toast({ title: "¡Sorteo reiniciado!", description: "Se han eliminado todas las ventas. La configuración del sitio permanece intacta." });
+    } catch (error: any) {
+      console.error('Error resetting:', error);
+      toast({ title: "Error", description: error?.message || "No se pudo reiniciar el sorteo", variant: "destructive" });
+    } finally {
+      setResetting(false);
+    }
+  };
+
   const getRaffleName = (raffleId: string | undefined) => {
     if (!raffleId) return 'No especificada';
     const raffle = raffles.find(r => r.id === raffleId);
