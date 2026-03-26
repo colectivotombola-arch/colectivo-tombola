@@ -21,8 +21,22 @@ import {
   Building2,
   ExternalLink,
   CreditCard,
-  MessageCircle
+  MessageCircle,
+  Trash2,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface Transfer {
   id: string;
