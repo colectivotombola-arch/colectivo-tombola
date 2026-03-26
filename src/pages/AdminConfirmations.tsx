@@ -344,10 +344,35 @@ const AdminConfirmations = () => {
               </Badge>
             )}
           </div>
-          <Button onClick={loadData} variant="outline" className="touch-target">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Actualizar
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={loadData} variant="outline" className="touch-target">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Actualizar
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" className="touch-target" disabled={resetting}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  {resetting ? 'Reiniciando...' : 'Reiniciar Sorteo'}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>¿Deseas vaciar las ventas actuales?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Se eliminarán todos los registros de boletos vendidos, transferencias y confirmaciones de compra. 
+                    <strong className="block mt-2">La configuración del sitio, métodos de pago, redes sociales y cuentas bancarias NO se borrarán.</strong>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={resetSorteo} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Sí, reiniciar sorteo
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
 
         {/* Tabs for PayPal and Transfers */}
