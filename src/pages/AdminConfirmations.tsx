@@ -167,7 +167,7 @@ const AdminConfirmations = () => {
 
       const { error } = await supabase
         .from('transferencias')
-        .update({ status: newStatus })
+        .update({ status: newStatus, assigned_numbers: assignedNumbers.length > 0 ? assignedNumbers : undefined })
         .eq('id', transferId);
       
       if (error) throw error;
@@ -211,7 +211,7 @@ const AdminConfirmations = () => {
     const phone = normalizeWhatsApp(transfer.telefono);
     const raffleName = getRaffleName(transfer.raffle_id);
     const numbers = transfer.assigned_numbers?.join(', ') || 'Sin números asignados';
-    const message = `¡Hola ${transfer.nombre}! 🎉 Tus números para la rifa *${raffleName}* son: *${numbers}*. ¡Buena suerte!`;
+    const message = `¡Hola ${transfer.nombre}! 👋 Confirmamos tu pago para la rifa *${raffleName}*. 🎟️ Tus números asignados son: *${numbers}*. ¡Mucha suerte y gracias por participar! ✨`;
     const url = `https://wa.me/${phone.replace('+', '')}?text=${encodeURIComponent(message)}`;
     const a = document.createElement('a');
     a.href = url;
