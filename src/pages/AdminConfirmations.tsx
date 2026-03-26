@@ -454,60 +454,94 @@ const AdminConfirmations = () => {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <h4 className="font-semibold flex items-center gap-2">
-                          <User className="w-4 h-4" />
-                          Cliente
-                        </h4>
-                        <div className="space-y-1 text-sm">
-                          <p><strong>Nombre:</strong> {confirmation.buyer_name}</p>
-                          <p className="flex items-center gap-1">
-                            <Mail className="w-3 h-3" />
-                            {confirmation.buyer_email}
-                          </p>
-                          <p className="flex items-center gap-1">
-                            <Phone className="w-3 h-3" />
-                            {confirmation.buyer_phone}
-                          </p>
-                        </div>
+                    {/* Compact view */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                      <div className="flex items-center gap-4">
+                        <span><strong>{confirmation.buyer_name}</strong></span>
+                        <span className="text-muted-foreground">{confirmation.quantity} boletos</span>
+                        <span className="font-semibold">${confirmation.total_amount}</span>
                       </div>
-
-                      <div className="space-y-2">
-                        <h4 className="font-semibold flex items-center gap-2">
-                          <DollarSign className="w-4 h-4" />
-                          Compra
-                        </h4>
-                        <div className="space-y-1 text-sm">
-                          <p><strong>Rifa:</strong> {getRaffleName(confirmation.raffle_id)}</p>
-                          <p><strong>Cantidad:</strong> {confirmation.quantity} boletos</p>
-                          <p><strong>Total:</strong> ${confirmation.total_amount}</p>
-                          <p><strong>Método:</strong> {confirmation.payment_method || 'PayPal'}</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <h4 className="font-semibold flex items-center gap-2">
-                          <Hash className="w-4 h-4" />
-                          Números
-                        </h4>
-                        <div className="text-sm">
-                          <p><strong>Confirmación:</strong> {confirmation.confirmation_number}</p>
-                          {confirmation.assigned_numbers && confirmation.assigned_numbers.length > 0 && (
-                            <div className="mt-2">
-                              <p className="font-medium mb-1">Números asignados:</p>
-                              <div className="flex flex-wrap gap-1">
-                                {confirmation.assigned_numbers.map(num => (
-                                  <Badge key={num} variant="outline" className="text-xs">
-                                    {num}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setExpandedPaypal(prev => ({ ...prev, [confirmation.id!]: !prev[confirmation.id!] }))}
+                        className="flex items-center gap-1 text-xs"
+                      >
+                        {expandedPaypal[confirmation.id!] ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                        Ver Detalles de Envío
+                      </Button>
                     </div>
+
+                    {/* Expandable details */}
+                    {expandedPaypal[confirmation.id!] && (
+                      <div className="mt-4 space-y-4 border-t pt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <h4 className="font-semibold flex items-center gap-2">
+                              <User className="w-4 h-4" />
+                              Cliente
+                            </h4>
+                            <div className="space-y-1 text-sm">
+                              <p><strong>Nombre:</strong> {confirmation.buyer_name}</p>
+                              <p className="flex items-center gap-1">
+                                <Mail className="w-3 h-3" />
+                                {confirmation.buyer_email}
+                              </p>
+                              <p className="flex items-center gap-1">
+                                <Phone className="w-3 h-3" />
+                                {confirmation.buyer_phone}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <h4 className="font-semibold flex items-center gap-2">
+                              <DollarSign className="w-4 h-4" />
+                              Compra
+                            </h4>
+                            <div className="space-y-1 text-sm">
+                              <p><strong>Rifa:</strong> {getRaffleName(confirmation.raffle_id)}</p>
+                              <p><strong>Cantidad:</strong> {confirmation.quantity} boletos</p>
+                              <p><strong>Total:</strong> ${confirmation.total_amount}</p>
+                              <p><strong>Método:</strong> {confirmation.payment_method || 'PayPal'}</p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <h4 className="font-semibold flex items-center gap-2">
+                              <Hash className="w-4 h-4" />
+                              Números
+                            </h4>
+                            <div className="text-sm">
+                              <p><strong>Confirmación:</strong> {confirmation.confirmation_number}</p>
+                              <p className="mt-1"><strong>Estado:</strong> <Badge variant="outline" className="text-xs">Procesado Automáticamente</Badge></p>
+                              {confirmation.assigned_numbers && confirmation.assigned_numbers.length > 0 && (
+                                <div className="mt-2">
+                                  <p className="font-medium mb-1">Números asignados:</p>
+                                  <div className="flex flex-wrap gap-1">
+                                    {confirmation.assigned_numbers.map(num => (
+                                      <Badge key={num} variant="outline" className="text-xs">
+                                        {num}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        {confirmation.status === 'paid' && confirmation.assigned_numbers && confirmation.assigned_numbers.length > 0 && (
+                          <Button
+                            size="sm"
+                            onClick={() => sendWhatsAppConfirmation(confirmation)}
+                            className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            Reenviar Boletos por WhatsApp
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))
