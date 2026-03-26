@@ -65,6 +65,8 @@ const AdminConfirmations = () => {
   const [raffles, setRaffles] = useState<Raffle[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
+  const [expandedPaypal, setExpandedPaypal] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     loadData();
