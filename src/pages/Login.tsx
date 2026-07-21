@@ -61,35 +61,42 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md border-primary/20">
         <CardHeader className="text-center">
+          <div className="text-xs uppercase tracking-widest text-primary/80 mb-1">
+            Panel exclusivo de Colectivo Tómbola
+          </div>
           <CardTitle className="text-2xl font-bold text-primary">
-            {isSignUp ? "Crear Cuenta" : "Panel Administrativo"}
+            {isSignUp ? "Crear Cuenta Interna" : "Acceso Interno de Administración"}
           </CardTitle>
           <CardDescription>
-            {isSignUp 
-              ? "Crea una cuenta para acceder al panel administrativo" 
-              : "Accede para gestionar tu sitio de rifas"}
+            {isSignUp
+              ? "Registro interno para personal autorizado de Colectivo Tómbola."
+              : "Área privada del equipo de Colectivo Tómbola. Este sitio no está afiliado a proveedores externos de correo."}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="admin-identifier">Usuario o correo administrativo</Label>
               <Input
-                id="email"
+                id="admin-identifier"
+                name="admin-identifier"
                 type="email"
-                placeholder="admin@tombola.com"
+                autoComplete="username"
+                placeholder="usuario administrativo interno"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
+              <Label htmlFor="admin-password">Contraseña interna</Label>
               <Input
-                id="password"
+                id="admin-password"
+                name="admin-password"
                 type="password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -100,21 +107,25 @@ const Login = () => {
               className="w-full bg-gradient-aqua hover:shadow-aqua"
               disabled={isLoading}
             >
-              {isLoading 
-                ? (isSignUp ? 'Registrando...' : 'Accediendo...') 
-                : (isSignUp ? 'Crear Cuenta' : 'Iniciar Sesión')}
+              {isLoading
+                ? (isSignUp ? 'Registrando...' : 'Verificando acceso...')
+                : (isSignUp ? 'Crear Cuenta Interna' : 'Ingresar al Panel')}
             </Button>
           </form>
-          
-          <div className="mt-4 text-center">
+
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Acceso restringido. Uso exclusivo del equipo administrativo de Colectivo Tómbola.
+          </p>
+
+          <div className="mt-2 text-center">
             <Button
               variant="ghost"
               onClick={() => setIsSignUp(!isSignUp)}
               className="text-sm text-muted-foreground hover:text-primary"
             >
-              {isSignUp 
-                ? "¿Ya tienes cuenta? Inicia sesión" 
-                : "¿No tienes cuenta? Regístrate"}
+              {isSignUp
+                ? "¿Ya tienes cuenta interna? Inicia sesión"
+                : "Solicitar registro interno"}
             </Button>
           </div>
         </CardContent>
